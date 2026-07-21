@@ -6,6 +6,15 @@ Project requirements, domain model, and architecture decision records are in `do
 Read the MVP specification and relevant ADRs before changing the product scope or Android
 integration architecture.
 
+## Reference projects
+
+Use these projects as behavioural and UX references when evolving the translator:
+
+- [Decky-Translator](https://github.com/cat-in-a-box/Decky-Translator): screenshot OCR,
+  translation, and a temporary translated-screen overlay.
+- [PlayTranslate](https://github.com/dominostars/playtranslate): Android-oriented capture and
+  translation workflow. GameTranslator intentionally keeps the first version simpler.
+
 ## Local Android build environment
 
 - Android SDK: `/home/sho/Android/Sdk`
