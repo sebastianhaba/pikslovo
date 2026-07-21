@@ -1,0 +1,362 @@
+using Android.App;
+using Android.Content;
+using Android.Content.PM;
+using Android.Graphics;
+using Android.Hardware.Display;
+using Android.Media;
+using Android.Media.Projection;
+using Android.OS;
+using Android.Provider;
+using Android.Views;
+using Android.Widget;
+using GameTranslator.Services;
+
+namespace GameTranslator.Droid.Services;
+
+[Service(Exported = false, ForegroundServiceType = ForegroundService.TypeMediaProjection)]
+public sealed class TranslationForegroundService : Service
+{
+    public const string StartSessionAction = "com.gametranslator.action.START_SESSION";
+    public const string CaptureAndTranslateAction = "com.gametranslator.action.CAPTURE_AND_TRANSLATE";
+    public const string DismissOverlayAction = "com.gametranslator.action.DISMISS_OVERLAY";
+    public const string StopSessionAction = "com.gametranslator.action.STOP_SESSION";
+    public const string ProjectionResultCodeExtra = "projection_result_code";
+    public const string ProjectionResultDataExtra = "projection_result_data";
+
+    private const int NotificationId = 1001;
+    private const string NotificationChannelId = "translation_session";
+    private readonly object _stateLock = new();
+    private MediaProjection? _mediaProjection;
+    private VirtualDisplay? _virtualDisplay;
+    private ImageReader? _imageReader;
+    private AndroidOverlayPresenter? _overlayPresenter;
+    private FloatingTranslationTrigger? _floatingTrigger;
+    private bool _isProcessing;
+    private bool _isStopping;
+
+    public static bool IsSessionActive { get; private set; }
+
+    public override IBinder? OnBind(Intent? intent) => null;
+
+    public override StartCommandResult OnStartCommand(Intent? intent, StartCommandFlags flags, int startId)
+    {
+        try
+        {
+            switch (intent?.Action)
+            {
+                case StartSessionAction:
+                    StartSession(intent);
+                    break;
+                case CaptureAndTranslateAction:
+                    _ = CaptureAndTranslateAsync();
+                    break;
+                case DismissOverlayAction:
+                    DismissOverlay();
+                    break;
+                case StopSessionAction:
+                    StopSession();
+                    break;
+            }
+        }
+        catch (Java.Lang.SecurityException)
+        {
+            ShowMessage("Zgoda na nagrywanie ekranu wygasla. Uruchom tlumacza ponownie i zaakceptuj nowy monit.");
+            StopSession();
+        }
+        catch (Exception exception)
+        {
+            Android.Util.Log.Error("GameTranslator", exception.ToString());
+            ShowMessage($"Nie udalo sie uruchomic sesji: {exception.Message}");
+            StopSession();
+        }
+
+        return StartCommandResult.NotSticky;
+    }
+
+    public override void OnDestroy()
+    {
+        StopSession();
+        base.OnDestroy();
+    }
+
+    private void StartSession(Intent intent)
+    {
+        // Android 14 permits one virtual display for each projection token.
+        // A duplicated START_SESSION intent must not reuse the current token.
+        if (IsSessionActive || _mediaProjection is not null)
+        {
+            return;
+        }
+
+        CreateNotificationChannel();
+        StartForeground(NotificationId, BuildNotification(), ForegroundService.TypeMediaProjection);
+
+        var resultCode = (Result)intent.GetIntExtra(ProjectionResultCodeExtra, (int)Result.Canceled);
+        Intent? resultData;
+        if (OperatingSystem.IsAndroidVersionAtLeast(33))
+        {
+            resultData = intent.GetParcelableExtra(
+                ProjectionResultDataExtra,
+                Java.Lang.Class.FromType(typeof(Intent))) as Intent;
+        }
+        else
+        {
+            resultData = intent.GetParcelableExtra(ProjectionResultDataExtra) as Intent;
+        }
+        if (resultCode != Result.Ok || resultData is null)
+        {
+            ShowMessage("Nie udzielono zgody na przechwytywanie ekranu.");
+            StopSession();
+            return;
+        }
+
+        var manager = (MediaProjectionManager?)GetSystemService(MediaProjectionService);
+        _mediaProjection = manager?.GetMediaProjection((int)resultCode, resultData);
+        if (_mediaProjection is null)
+        {
+            ShowMessage("Nie udalo sie uruchomic przechwytywania ekranu.");
+            StopSession();
+            return;
+        }
+
+        _mediaProjection.RegisterCallback(new ProjectionCallback(this), new Handler(Looper.MainLooper!));
+        CreateCaptureSurface();
+        _overlayPresenter = new AndroidOverlayPresenter(this);
+        _floatingTrigger = new FloatingTranslationTrigger(this);
+        if (Settings.CanDrawOverlays(this))
+        {
+            _floatingTrigger.Show(() => _ = CaptureAndTranslateAsync());
+        }
+        IsSessionActive = true;
+        ShowMessage("Tlumacz jest aktywny.");
+    }
+
+    private void CreateCaptureSurface()
+    {
+        var displayManager = Resources?.DisplayMetrics;
+        var width = displayManager?.WidthPixels ?? 0;
+        var height = displayManager?.HeightPixels ?? 0;
+        var density = displayManager?.DensityDpi ?? 0;
+        if (width <= 0 || height <= 0 || density <= 0 || _mediaProjection is null)
+        {
+            throw new InvalidOperationException("Nie mozna odczytac rozmiaru ekranu.");
+        }
+
+        // ImageFormat.RGBA_8888 is represented as value 1 by the Android API.
+        _imageReader = ImageReader.NewInstance(width, height, (ImageFormatType)1, 2);
+        _virtualDisplay = _mediaProjection.CreateVirtualDisplay(
+            "GameTranslatorCapture",
+            width,
+            height,
+            (int)density,
+            (DisplayFlags)(int)VirtualDisplayFlags.AutoMirror,
+            _imageReader.Surface,
+            null,
+            null);
+    }
+
+    private async Task CaptureAndTranslateAsync()
+    {
+        lock (_stateLock)
+        {
+            if (!IsSessionActive || _isProcessing)
+            {
+                return;
+            }
+
+            if (_overlayPresenter?.IsShowing == true)
+            {
+                DismissOverlay();
+                return;
+            }
+
+            _isProcessing = true;
+        }
+
+        try
+        {
+            if (!Settings.CanDrawOverlays(this))
+            {
+                ShowMessage("Przyznaj uprawnienie do wyswietlania nad innymi aplikacjami.");
+                return;
+            }
+
+            var bitmap = await CaptureBitmapAsync().ConfigureAwait(false);
+            if (bitmap is null)
+            {
+                ShowMessage("Nie udalo sie pobrac klatki ekranu.");
+                return;
+            }
+
+            using (bitmap)
+            using (var stream = new MemoryStream())
+            {
+                bitmap.Compress(Bitmap.CompressFormat.Png!, 100, stream);
+                var settings = AndroidSettingsStore.Load(this).Translation;
+                var result = await AppServices.TranslationOrchestrator
+                    .TranslateAsync(stream.ToArray(), settings, CancellationToken.None)
+                    .ConfigureAwait(false);
+                if (result is null)
+                {
+                    return;
+                }
+
+                if (result.Regions.Count == 0)
+                {
+                    ShowMessage("Nie znaleziono tekstu na ekranie.");
+                    return;
+                }
+
+                var overlay = AndroidOverlayRenderer.Render(bitmap, result);
+                new Handler(Looper.MainLooper!).Post(() =>
+                {
+                    _overlayPresenter?.Show(overlay, DismissOverlay);
+                });
+            }
+        }
+        catch (Exception exception)
+        {
+            ShowMessage(exception.Message);
+        }
+        finally
+        {
+            lock (_stateLock)
+            {
+                _isProcessing = false;
+            }
+        }
+    }
+
+    private async Task<Bitmap?> CaptureBitmapAsync()
+    {
+        await Task.Delay(100).ConfigureAwait(false);
+        var image = _imageReader?.AcquireLatestImage();
+        if (image is null)
+        {
+            return null;
+        }
+
+        try
+        {
+            var planes = image.GetPlanes();
+            if (planes is null)
+            {
+                return null;
+            }
+
+            var plane = planes.FirstOrDefault();
+            if (plane is null)
+            {
+                return null;
+            }
+
+            var rowPadding = plane.RowStride - (plane.PixelStride * image.Width);
+            using var paddedBitmap = Bitmap.CreateBitmap(
+                image.Width + (rowPadding / plane.PixelStride),
+                image.Height,
+                Bitmap.Config.Argb8888!);
+            var buffer = plane.Buffer;
+            if (buffer is null)
+            {
+                return null;
+            }
+
+            paddedBitmap.CopyPixelsFromBuffer(buffer);
+            return Bitmap.CreateBitmap(paddedBitmap, 0, 0, image.Width, image.Height);
+        }
+        finally
+        {
+            image.Close();
+            image.Dispose();
+        }
+    }
+
+    private void DismissOverlay()
+    {
+        new Handler(Looper.MainLooper!).Post(() => _overlayPresenter?.Dismiss());
+    }
+
+    private void StopSession()
+    {
+        if (_isStopping)
+        {
+            return;
+        }
+
+        _isStopping = true;
+        lock (_stateLock)
+        {
+            IsSessionActive = false;
+            _isProcessing = false;
+        }
+
+        DismissOverlay();
+        _floatingTrigger?.Dismiss();
+        _floatingTrigger = null;
+        _virtualDisplay?.Release();
+        _virtualDisplay?.Dispose();
+        _virtualDisplay = null;
+        _imageReader?.Close();
+        _imageReader?.Dispose();
+        _imageReader = null;
+        try
+        {
+            _mediaProjection?.Stop();
+            _mediaProjection?.Dispose();
+            _mediaProjection = null;
+            StopForeground(StopForegroundFlags.Remove);
+            StopSelf();
+        }
+        finally
+        {
+            _isStopping = false;
+        }
+    }
+
+    private void CreateNotificationChannel()
+    {
+        if (Build.VERSION.SdkInt < BuildVersionCodes.O)
+        {
+            return;
+        }
+
+        var channel = new NotificationChannel(
+            NotificationChannelId,
+            "Aktywna sesja tlumacza",
+            NotificationImportance.Low);
+        var notificationManager = (NotificationManager?)GetSystemService(NotificationService);
+        notificationManager?.CreateNotificationChannel(channel);
+    }
+
+    private Notification BuildNotification()
+    {
+        var stopIntent = new Intent(this, typeof(TranslationForegroundService));
+        stopIntent.SetAction(StopSessionAction);
+        var pendingIntent = PendingIntent.GetService(
+            this,
+            0,
+            stopIntent,
+            PendingIntentFlags.Immutable | PendingIntentFlags.UpdateCurrent);
+
+        return new Notification.Builder(this, NotificationChannelId)
+            .SetContentTitle("GameTranslator jest aktywny")
+            .SetContentText("Hotkey i przycisk plywajacy sa gotowe.")
+            .SetSmallIcon(Resource.Mipmap.icon)
+            .SetOngoing(true)
+            .AddAction(new Notification.Action.Builder(null, "Zatrzymaj", pendingIntent).Build())
+            .Build();
+    }
+
+    private void ShowMessage(string message)
+    {
+        new Handler(Looper.MainLooper!).Post(() => Toast.MakeText(this, message, ToastLength.Long)?.Show());
+    }
+
+    private sealed class ProjectionCallback(TranslationForegroundService service) : MediaProjection.Callback
+    {
+        public override void OnStop()
+        {
+            service.StopSession();
+        }
+    }
+}

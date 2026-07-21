@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+	<string name="Hello">Hello World, Click Me!</string>
+	<string name="ApplicationName">GameTranslator</string>
+	<string name="hotkey_accessibility_description">Obsluga globalnego skrotu do pokazania tlumaczenia ekranu podczas aktywnej sesji.</string>
+</resources>

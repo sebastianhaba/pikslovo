@@ -1,0 +1,37 @@
+namespace GameTranslator.Core;
+
+public sealed record TranslationSettings(
+    string ApiKey,
+    string SourceLanguage,
+    string TargetLanguage)
+{
+    public bool IsValid =>
+        !string.IsNullOrWhiteSpace(ApiKey) &&
+        !string.IsNullOrWhiteSpace(SourceLanguage) &&
+        !string.IsNullOrWhiteSpace(TargetLanguage);
+}
+
+public readonly record struct PixelRect(int Left, int Top, int Right, int Bottom)
+{
+    public int Width => Math.Max(1, Right - Left);
+    public int Height => Math.Max(1, Bottom - Top);
+}
+
+public sealed record TextRegion(string Text, PixelRect Bounds);
+
+public sealed record OcrDocument(IReadOnlyList<TextRegion> Regions);
+
+public sealed record TranslatedRegion(string SourceText, string TranslatedText, PixelRect Bounds);
+
+public sealed record TranslationResult(IReadOnlyList<TranslatedRegion> Regions);
+
+public sealed class TranslationException : Exception
+{
+    public TranslationException(string message) : base(message)
+    {
+    }
+
+    public TranslationException(string message, Exception innerException) : base(message, innerException)
+    {
+    }
+}
