@@ -23,7 +23,8 @@ W zakresie:
 - Aktywna sesja MediaProjection z widocznym powiadomieniem.
 - Wywolanie tlumaczenia: przycisk plywajacy, globalny hotkey oraz publiczny
   broadcast.
-- OCR przez Vision `TEXT_DETECTION`.
+- OCR przez Vision `DOCUMENT_TEXT_DETECTION`, aby uzyskac strukture tekstu i
+  wartosci pewnosci dla regionow OCR.
 - Tlumaczenie przez Translation Basic v2.
 - Pelnoekranowa nakladka ze zrzutem, czerwona ramka i nieprzezroczystymi
   czarnymi polami tlumaczen w polozeniach tekstu rozpoznanego przez OCR.

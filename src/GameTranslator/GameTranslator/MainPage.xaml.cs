@@ -1,4 +1,5 @@
 using GameTranslator.Core;
+using System.Globalization;
 
 #if __ANDROID__
 using GameTranslator.Droid;
@@ -31,6 +32,7 @@ public sealed partial class MainPage : Page
         ApiKeyBox.Password = settings.Translation.ApiKey;
         SelectLanguage(SourceLanguageBox, settings.Translation.SourceLanguage);
         SelectLanguage(TargetLanguageBox, settings.Translation.TargetLanguage);
+        RecognitionConfidenceBox.Text = settings.Translation.RecognitionConfidence.ToString("0.##", CultureInfo.InvariantCulture);
         HotkeyCodeBox.Text = settings.HotkeyCode == 0 ? string.Empty : settings.HotkeyCode.ToString();
         HoldToPreviewToggle.IsOn = settings.HoldToPreview;
         GlobalHotkeyToggle.IsOn = settings.GlobalHotkeyEnabled;
@@ -38,6 +40,7 @@ public sealed partial class MainPage : Page
 #else
         SelectLanguage(SourceLanguageBox, "ja");
         SelectLanguage(TargetLanguageBox, "pl");
+        RecognitionConfidenceBox.Text = TranslationSettings.DefaultRecognitionConfidence.ToString("0.##", CultureInfo.InvariantCulture);
 #endif
     }
 
@@ -147,10 +150,18 @@ public sealed partial class MainPage : Page
             return false;
         }
 
+        var recognitionConfidenceText = RecognitionConfidenceBox.Text?.Trim() ?? string.Empty;
+        if (!TryParseRecognitionConfidence(recognitionConfidenceText, out var recognitionConfidence))
+        {
+            StatusText.Text = "Pewnosc rozpoznawania tekstu musi byc liczba od 0 do 1.";
+            return false;
+        }
+
         var settings = new TranslationSettings(
             ApiKeyBox.Password.Trim(),
             GetLanguage(SourceLanguageBox),
-            GetLanguage(TargetLanguageBox));
+            GetLanguage(TargetLanguageBox),
+            recognitionConfidence);
         if (!settings.IsValid)
         {
             StatusText.Text = "Wpisz klucz API i wybierz oba jezyki.";
@@ -191,5 +202,16 @@ public sealed partial class MainPage : Page
         }
 
         box.SelectedIndex = 0;
+    }
+
+    private static bool TryParseRecognitionConfidence(string text, out float value)
+    {
+        if (!float.TryParse(text, CultureInfo.InvariantCulture, out value) &&
+            !float.TryParse(text, CultureInfo.CurrentCulture, out value))
+        {
+            return false;
+        }
+
+        return float.IsFinite(value) && value is >= 0f and <= 1f;
     }
 }

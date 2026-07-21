@@ -42,6 +42,12 @@
           </StackPanel>
         </Grid>
 
+        <StackPanel Spacing="8">
+          <TextBlock Text="Pewnosc rozpoznawania tekstu" Foreground="Black" />
+          <TextBox x:Name="RecognitionConfidenceBox" Text="0.6" PlaceholderText="0.6" />
+          <TextBlock Text="Tekst o pewnosci ponizej progu nie zostanie przetlumaczony. Zakres od 0 do 1." Opacity="0.7" TextWrapping="Wrap" />
+        </StackPanel>
+
         <StackPanel Spacing="10">
           <TextBlock Text="Globalny hotkey" FontSize="18" Foreground="Black" />
           <StackPanel Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">

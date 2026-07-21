@@ -30,7 +30,7 @@ public sealed class TranslationOrchestrator
         try
         {
             var document = await _ocrProvider
-                .RecognizeAsync(imageBytes, settings.ApiKey, cancellationToken)
+                .RecognizeAsync(imageBytes, settings, cancellationToken)
                 .ConfigureAwait(false);
 
             if (document.Regions.Count == 0)

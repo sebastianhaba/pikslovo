@@ -2,7 +2,10 @@ namespace GameTranslator.Core;
 
 public interface IOcrProvider
 {
-    Task<OcrDocument> RecognizeAsync(ReadOnlyMemory<byte> imageBytes, string apiKey, CancellationToken cancellationToken);
+    Task<OcrDocument> RecognizeAsync(
+        ReadOnlyMemory<byte> imageBytes,
+        TranslationSettings settings,
+        CancellationToken cancellationToken);
 }
 
 public interface ITranslationProvider

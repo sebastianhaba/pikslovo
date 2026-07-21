@@ -3,12 +3,17 @@ namespace GameTranslator.Core;
 public sealed record TranslationSettings(
     string ApiKey,
     string SourceLanguage,
-    string TargetLanguage)
+    string TargetLanguage,
+    float RecognitionConfidence = 0.6f)
 {
+    public const float DefaultRecognitionConfidence = 0.6f;
+
     public bool IsValid =>
         !string.IsNullOrWhiteSpace(ApiKey) &&
         !string.IsNullOrWhiteSpace(SourceLanguage) &&
-        !string.IsNullOrWhiteSpace(TargetLanguage);
+        !string.IsNullOrWhiteSpace(TargetLanguage) &&
+        float.IsFinite(RecognitionConfidence) &&
+        RecognitionConfidence is >= 0f and <= 1f;
 }
 
 public readonly record struct PixelRect(int Left, int Top, int Right, int Bottom)

@@ -11,16 +11,16 @@ public sealed class GoogleVisionOcrProvider(HttpClient httpClient) : IOcrProvide
 
     public async Task<OcrDocument> RecognizeAsync(
         ReadOnlyMemory<byte> imageBytes,
-        string apiKey,
+        TranslationSettings settings,
         CancellationToken cancellationToken)
     {
         var request = new VisionRequest(
             [new VisionImageRequest(
                 new VisionImage(Convert.ToBase64String(imageBytes.Span)),
-                [new VisionFeature("TEXT_DETECTION")])]);
+                [new VisionFeature("DOCUMENT_TEXT_DETECTION")])]);
 
         using var response = await httpClient
-            .PostAsJsonAsync($"{Endpoint}?key={Uri.EscapeDataString(apiKey)}", request, cancellationToken)
+            .PostAsJsonAsync($"{Endpoint}?key={Uri.EscapeDataString(settings.ApiKey)}", request, cancellationToken)
             .ConfigureAwait(false);
 
         if (!response.IsSuccessStatusCode)
@@ -42,6 +42,7 @@ public sealed class GoogleVisionOcrProvider(HttpClient httpClient) : IOcrProvide
         var regions = annotation?.FullTextAnnotation?.Pages?
             .SelectMany(page => page.Blocks ?? [])
             .SelectMany(block => block.Paragraphs ?? [])
+            .Where(paragraph => paragraph.Confidence >= settings.RecognitionConfidence)
             .Select(ToRegion)
             .Where(region => region is not null)
             .Cast<TextRegion>()
@@ -117,6 +118,9 @@ public sealed class GoogleVisionOcrProvider(HttpClient httpClient) : IOcrProvide
 
     private sealed class VisionParagraph
     {
+        [JsonPropertyName("confidence")]
+        public float Confidence { get; init; }
+
         [JsonPropertyName("boundingBox")]
         public VisionBoundingBox? BoundingBox { get; init; }
 
