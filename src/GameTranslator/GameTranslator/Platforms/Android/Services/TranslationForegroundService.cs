@@ -10,6 +10,7 @@ using Android.Provider;
 using Android.Views;
 using Android.Widget;
 using GameTranslator.Services;
+using Java.Interop;
 
 namespace GameTranslator.Droid.Services;
 
@@ -133,10 +134,11 @@ public sealed class TranslationForegroundService : Service
 
     private void CreateCaptureSurface()
     {
-        var displayManager = Resources?.DisplayMetrics;
-        var width = displayManager?.WidthPixels ?? 0;
-        var height = displayManager?.HeightPixels ?? 0;
-        var density = displayManager?.DensityDpi ?? 0;
+        var windowManager = GetSystemService(WindowService)?.JavaCast<IWindowManager>();
+        var bounds = windowManager?.CurrentWindowMetrics?.Bounds;
+        var width = bounds?.Width() ?? 0;
+        var height = bounds?.Height() ?? 0;
+        var density = Resources?.Configuration?.DensityDpi ?? 0;
         if (width <= 0 || height <= 0 || density <= 0 || _mediaProjection is null)
         {
             throw new InvalidOperationException("Nie mozna odczytac rozmiaru ekranu.");

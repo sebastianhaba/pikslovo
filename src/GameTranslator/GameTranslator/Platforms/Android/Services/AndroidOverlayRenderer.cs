@@ -30,14 +30,17 @@ internal sealed partial class AndroidOverlayPresenter
         _bitmap = bitmap;
         _imageView = new DismissableOverlayImageView(_context, onDismiss);
         _imageView.SetImageBitmap(_bitmap);
-        _imageView.SetScaleType(ImageView.ScaleType.FitXy);
+        _imageView.SetScaleType(ImageView.ScaleType.Center);
 
         var layout = new WindowManagerLayoutParams(
-            ViewGroup.LayoutParams.MatchParent,
-            ViewGroup.LayoutParams.MatchParent,
+            _bitmap.Width,
+            _bitmap.Height,
             WindowManagerTypes.ApplicationOverlay,
             WindowManagerFlags.NotFocusable | WindowManagerFlags.LayoutInScreen | WindowManagerFlags.LayoutNoLimits,
-            Format.Rgba8888);
+            Format.Rgba8888)
+        {
+            Gravity = GravityFlags.Top | GravityFlags.Start,
+        };
         _windowManager.AddView(_imageView, layout);
     }
 
