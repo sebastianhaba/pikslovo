@@ -1,5 +1,11 @@
 # GameTranslator
 
+## Project documentation
+
+Project requirements, domain model, and architecture decision records are in `docs/`.
+Read the MVP specification and relevant ADRs before changing the product scope or Android
+integration architecture.
+
 ## Local Android build environment
 
 - Android SDK: `/home/sho/Android/Sdk`
