@@ -19,7 +19,11 @@ internal static class AndroidTranslationHost
         activity.StopService(new Intent(activity, typeof(TranslationForegroundService)));
         RequestNotificationPermission(activity);
         var manager = (Android.Media.Projection.MediaProjectionManager?)activity.GetSystemService(Context.MediaProjectionService);
-        activity.StartActivityForResult(manager!.CreateScreenCaptureIntent(), ProjectionRequestCode);
+        var captureIntent = OperatingSystem.IsAndroidVersionAtLeast(34)
+            ? manager!.CreateScreenCaptureIntent(
+                Android.Media.Projection.MediaProjectionConfig.CreateConfigForDefaultDisplay())
+            : manager!.CreateScreenCaptureIntent();
+        activity.StartActivityForResult(captureIntent, ProjectionRequestCode);
     }
 
     public static void HandleProjectionResult(MainActivity activity, Result resultCode, Intent? data)
