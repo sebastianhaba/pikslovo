@@ -21,6 +21,7 @@ internal static class AndroidSettingsStore
     private const string SourceLanguageName = "source_language";
     private const string TargetLanguageName = "target_language";
     private const string RecognitionConfidenceName = "recognition_confidence";
+    private const string FontScaleName = "font_scale";
     private const string HotkeyCodeName = "hotkey_code";
     private const string HoldToPreviewName = "hold_to_preview";
     private const string GlobalHotkeyEnabledName = "global_hotkey_enabled";
@@ -34,7 +35,8 @@ internal static class AndroidSettingsStore
                 Decrypt(preferences.GetString(ApiKeyName, null)),
                 preferences.GetString(SourceLanguageName, "ja") ?? "ja",
                 preferences.GetString(TargetLanguageName, "pl") ?? "pl",
-                preferences.GetFloat(RecognitionConfidenceName, TranslationSettings.DefaultRecognitionConfidence)),
+                preferences.GetFloat(RecognitionConfidenceName, TranslationSettings.DefaultRecognitionConfidence),
+                preferences.GetFloat(FontScaleName, TranslationSettings.DefaultFontScale)),
             preferences.GetInt(HotkeyCodeName, 0),
             preferences.GetBoolean(HoldToPreviewName, false),
             preferences.GetBoolean(GlobalHotkeyEnabledName, false));
@@ -47,6 +49,7 @@ internal static class AndroidSettingsStore
         editor.PutString(SourceLanguageName, settings.Translation.SourceLanguage);
         editor.PutString(TargetLanguageName, settings.Translation.TargetLanguage);
         editor.PutFloat(RecognitionConfidenceName, settings.Translation.RecognitionConfidence);
+        editor.PutFloat(FontScaleName, settings.Translation.FontScale);
         editor.PutInt(HotkeyCodeName, settings.HotkeyCode);
         editor.PutBoolean(HoldToPreviewName, settings.HoldToPreview);
         editor.PutBoolean(GlobalHotkeyEnabledName, settings.GlobalHotkeyEnabled);

@@ -210,7 +210,7 @@ public sealed class TranslationForegroundService : Service
                     return;
                 }
 
-                var overlay = AndroidOverlayRenderer.Render(bitmap, result);
+                var overlay = AndroidOverlayRenderer.Render(bitmap, result, settings.FontScale);
                 new Handler(Looper.MainLooper!).Post(() =>
                 {
                     _overlayPresenter?.Show(overlay, DismissOverlay);

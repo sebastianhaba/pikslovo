@@ -44,6 +44,20 @@
 
         <StackPanel Spacing="8">
           <StackPanel Orientation="Horizontal" HorizontalAlignment="Stretch">
+            <TextBlock Text="Skalowanie czcionki" Foreground="Black" />
+            <TextBlock x:Name="FontScaleValue" Margin="12,0,0,0" Foreground="Black" />
+          </StackPanel>
+          <Slider x:Name="FontScaleSlider"
+                  Minimum="1"
+                  Maximum="3"
+                  StepFrequency="0.1"
+                  Value="1"
+                  ValueChanged="FontScaleSlider_ValueChanged" />
+          <TextBlock Text="Powiększa tekst tłumaczenia na nakładce. Zakres od 1x do 3x, krok 0,1." Opacity="0.7" TextWrapping="Wrap" />
+        </StackPanel>
+
+        <StackPanel Spacing="8">
+          <StackPanel Orientation="Horizontal" HorizontalAlignment="Stretch">
             <TextBlock Text="Pewność rozpoznawania tekstu" Foreground="Black" />
             <TextBlock x:Name="RecognitionConfidenceValue" Margin="12,0,0,0" Foreground="Black" />
           </StackPanel>

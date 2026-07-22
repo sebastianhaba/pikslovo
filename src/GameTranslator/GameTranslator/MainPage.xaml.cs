@@ -37,6 +37,7 @@ public sealed partial class MainPage : Page
         ApiKeyBox.Password = settings.Translation.ApiKey;
         SelectLanguage(SourceLanguageBox, settings.Translation.SourceLanguage);
         SelectLanguage(TargetLanguageBox, settings.Translation.TargetLanguage);
+        FontScaleSlider.Value = settings.Translation.FontScale;
         RecognitionConfidenceSlider.Value = settings.Translation.RecognitionConfidence;
         HotkeyCodeBox.Text = settings.HotkeyCode == 0 ? string.Empty : settings.HotkeyCode.ToString();
         HoldToPreviewToggle.IsOn = settings.HoldToPreview;
@@ -45,8 +46,10 @@ public sealed partial class MainPage : Page
 #else
         SelectLanguage(SourceLanguageBox, "ja");
         SelectLanguage(TargetLanguageBox, "pl");
+        FontScaleSlider.Value = TranslationSettings.DefaultFontScale;
         RecognitionConfidenceSlider.Value = TranslationSettings.DefaultRecognitionConfidence;
 #endif
+        UpdateFontScaleValue();
         UpdateRecognitionConfidenceValue();
     }
 
@@ -173,13 +176,15 @@ public sealed partial class MainPage : Page
             return false;
         }
 
+        var fontScale = (float)FontScaleSlider.Value;
         var recognitionConfidence = (float)RecognitionConfidenceSlider.Value;
 
         var settings = new TranslationSettings(
             ApiKeyBox.Password.Trim(),
             GetLanguage(SourceLanguageBox),
             GetLanguage(TargetLanguageBox),
-            recognitionConfidence);
+            recognitionConfidence,
+            fontScale);
         if (!settings.IsValid)
         {
             StatusText.Text = "Wpisz klucz API i wybierz oba języki.";
@@ -225,6 +230,16 @@ public sealed partial class MainPage : Page
     private void RecognitionConfidenceSlider_ValueChanged(object sender, RangeBaseValueChangedEventArgs e)
     {
         UpdateRecognitionConfidenceValue();
+    }
+
+    private void FontScaleSlider_ValueChanged(object sender, RangeBaseValueChangedEventArgs e)
+    {
+        UpdateFontScaleValue();
+    }
+
+    private void UpdateFontScaleValue()
+    {
+        FontScaleValue.Text = $"{FontScaleSlider.Value.ToString("0.0", CultureInfo.CurrentCulture)}x";
     }
 
     private void UpdateRecognitionConfidenceValue()

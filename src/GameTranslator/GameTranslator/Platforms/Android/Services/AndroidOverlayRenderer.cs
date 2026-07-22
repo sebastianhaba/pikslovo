@@ -87,7 +87,7 @@ internal static class AndroidOverlayRenderer
     private const float PreferredMinimumTextSize = 16f;
     private const float AbsoluteMinimumTextSize = 8f;
 
-    public static Bitmap Render(Bitmap source, TranslationResult result)
+    public static Bitmap Render(Bitmap source, TranslationResult result, float fontScale)
     {
         var output = source.Copy(Bitmap.Config.Argb8888!, true)!;
         using var canvas = new Android.Graphics.Canvas(output);
@@ -99,8 +99,7 @@ internal static class AndroidOverlayRenderer
         foreach (var region in result.Regions)
         {
             var bounds = Clamp(region.Bounds, output.Width, output.Height);
-            canvas.DrawRect(bounds.Left, bounds.Top, bounds.Right, bounds.Bottom, background);
-            DrawWrappedText(canvas, region.TranslatedText, bounds, text);
+            DrawWrappedText(canvas, region.TranslatedText, bounds, text, background, fontScale, output.Height);
         }
 
         canvas.DrawRect(3, 3, output.Width - 3, output.Height - 3, border);
@@ -113,7 +112,14 @@ internal static class AndroidOverlayRenderer
         Math.Clamp(Math.Max(bounds.Right, bounds.Left + 1), 1, width),
         Math.Clamp(Math.Max(bounds.Bottom, bounds.Top + 1), 1, height));
 
-    private static void DrawWrappedText(Android.Graphics.Canvas canvas, string value, PixelRect bounds, Paint paint)
+    private static void DrawWrappedText(
+        Android.Graphics.Canvas canvas,
+        string value,
+        PixelRect bounds,
+        Paint paint,
+        Paint background,
+        float fontScale,
+        int outputHeight)
     {
         if (string.IsNullOrWhiteSpace(value))
         {
@@ -137,11 +143,21 @@ internal static class AndroidOverlayRenderer
             lines = Wrap(value, paint, (int)usableWidth);
         }
 
+        // Fit the baseline size first. Scaling before this loop would always be undone
+        // to make the text fit the original OCR rectangle.
+        var scale = float.IsFinite(fontScale) ? Math.Clamp(fontScale, 1f, 3f) : TranslationSettings.DefaultFontScale;
+        paint.TextSize *= scale;
+        lines = Wrap(value, paint, (int)usableWidth);
+
+        var requiredHeight = (int)MathF.Ceiling(RequiredHeight(lines, paint) + (verticalPadding * 2));
+        var backgroundBottom = Math.Min(outputHeight, Math.Max(bounds.Bottom, bounds.Top + requiredHeight));
+        canvas.DrawRect(bounds.Left, bounds.Top, bounds.Right, backgroundBottom, background);
+
         var baseline = bounds.Top + verticalPadding - paint.Ascent();
         var lineHeight = LineHeight(paint);
         foreach (var line in lines)
         {
-            if (baseline + paint.Descent() > bounds.Bottom - verticalPadding)
+            if (baseline + paint.Descent() > backgroundBottom - verticalPadding)
             {
                 break;
             }
