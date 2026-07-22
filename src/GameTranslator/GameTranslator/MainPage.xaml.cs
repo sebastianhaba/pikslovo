@@ -1,6 +1,7 @@
 using GameTranslator.Core;
 using Microsoft.UI.Xaml.Controls.Primitives;
 using System.Globalization;
+using System.Threading.Tasks;
 
 #if __ANDROID__
 using GameTranslator.Droid;
@@ -62,6 +63,7 @@ public sealed partial class MainPage : Page
 #endif
         UpdateFontScaleValue();
         UpdateRecognitionConfidenceValue();
+        UpdateSettingSummaries();
         UpdateSessionToggle();
     }
 
@@ -105,7 +107,120 @@ public sealed partial class MainPage : Page
         HomeView.ChangeView(null, 0, null, true);
     }
 
-    private void Setting_Changed(object sender, RoutedEventArgs e) => SaveSettings(requireValidTranslationSettings: false);
+    private void Setting_Changed(object sender, RoutedEventArgs e)
+    {
+        SaveSettings(requireValidTranslationSettings: false);
+        UpdateSettingSummaries();
+    }
+
+    private async void EditSourceLanguage_Click(object sender, RoutedEventArgs e) => await EditLanguageAsync(SourceLanguageBox, "Język źródłowy");
+
+    private async void EditTargetLanguage_Click(object sender, RoutedEventArgs e) => await EditLanguageAsync(TargetLanguageBox, "Język docelowy");
+
+    private async Task EditLanguageAsync(ComboBox source, string title)
+    {
+        var picker = new ComboBox { HorizontalAlignment = HorizontalAlignment.Stretch };
+        foreach (var entry in source.Items)
+        {
+            if (entry is ComboBoxItem item)
+            {
+                picker.Items.Add(new ComboBoxItem { Tag = item.Tag, Content = item.Content });
+            }
+        }
+
+        picker.SelectedIndex = source.SelectedIndex;
+        if (await ShowEditorAsync(title, picker))
+        {
+            source.SelectedIndex = picker.SelectedIndex;
+            UpdateSettingSummaries();
+        }
+    }
+
+    private async void EditApiKey_Click(object sender, RoutedEventArgs e)
+    {
+        var editor = new PasswordBox { Password = ApiKeyBox.Password, PlaceholderText = "AIza..." };
+        var content = new StackPanel { Spacing = 12 };
+        content.Children.Add(new TextBlock
+        {
+            Text = "Klucz jest przechowywany lokalnie w Android Keystore.",
+            TextWrapping = TextWrapping.Wrap
+        });
+        content.Children.Add(editor);
+
+        if (await ShowEditorAsync("Google Cloud API key", content))
+        {
+            ApiKeyBox.Password = editor.Password;
+            SaveSettings(requireValidTranslationSettings: false);
+            UpdateSettingSummaries();
+        }
+    }
+
+    private async void EditFontScale_Click(object sender, RoutedEventArgs e)
+    {
+        var value = new TextBlock { Text = FormatFontScale(FontScaleSlider.Value) };
+        var editor = new Slider
+        {
+            Minimum = FontScaleSlider.Minimum,
+            Maximum = FontScaleSlider.Maximum,
+            StepFrequency = FontScaleSlider.StepFrequency,
+            Value = FontScaleSlider.Value
+        };
+        editor.ValueChanged += (_, args) => value.Text = FormatFontScale(args.NewValue);
+        var content = new StackPanel { Spacing = 12 };
+        content.Children.Add(value);
+        content.Children.Add(editor);
+
+        if (await ShowEditorAsync("Skalowanie czcionki", content))
+        {
+            FontScaleSlider.Value = editor.Value;
+        }
+    }
+
+    private async void EditRecognitionConfidence_Click(object sender, RoutedEventArgs e)
+    {
+        var value = new TextBlock { Text = FormatRecognitionConfidence(RecognitionConfidenceSlider.Value) };
+        var editor = new Slider
+        {
+            Minimum = RecognitionConfidenceSlider.Minimum,
+            Maximum = RecognitionConfidenceSlider.Maximum,
+            StepFrequency = RecognitionConfidenceSlider.StepFrequency,
+            Value = RecognitionConfidenceSlider.Value
+        };
+        editor.ValueChanged += (_, args) => value.Text = FormatRecognitionConfidence(args.NewValue);
+        var content = new StackPanel { Spacing = 12 };
+        content.Children.Add(value);
+        content.Children.Add(editor);
+
+        if (await ShowEditorAsync("Pewność rozpoznawania", content))
+        {
+            RecognitionConfidenceSlider.Value = editor.Value;
+        }
+    }
+
+    private async void EditHotkeyCode_Click(object sender, RoutedEventArgs e)
+    {
+        var editor = new TextBox { Text = HotkeyCodeBox.Text, PlaceholderText = "np. 131 dla F1" };
+        if (await ShowEditorAsync("Klawisz skrótu", editor))
+        {
+            HotkeyCodeBox.Text = editor.Text;
+            SaveSettings(requireValidTranslationSettings: false);
+            UpdateSettingSummaries();
+        }
+    }
+
+    private async Task<bool> ShowEditorAsync(string title, object content)
+    {
+        var dialog = new ContentDialog
+        {
+            XamlRoot = XamlRoot,
+            Title = title,
+            Content = content,
+            PrimaryButtonText = "Zapisz",
+            CloseButtonText = "Anuluj",
+            DefaultButton = ContentDialogButton.Primary
+        };
+        return await dialog.ShowAsync() == ContentDialogResult.Primary;
+    }
 
     private void RequestOverlayPermission_Click(object sender, RoutedEventArgs e)
     {
@@ -267,6 +382,8 @@ public sealed partial class MainPage : Page
 
     private static string GetLanguage(ComboBox box) => (box.SelectedItem as ComboBoxItem)?.Tag?.ToString() ?? string.Empty;
 
+    private static string GetLanguageLabel(ComboBox box) => (box.SelectedItem as ComboBoxItem)?.Content?.ToString() ?? "Nie wybrano";
+
     private static void SelectLanguage(ComboBox box, string language)
     {
         for (var index = 0; index < box.Items.Count; index++)
@@ -293,7 +410,19 @@ public sealed partial class MainPage : Page
         SaveSettings(requireValidTranslationSettings: false);
     }
 
-    private void UpdateFontScaleValue() => FontScaleValue.Text = $"{FontScaleSlider.Value.ToString("0.0", CultureInfo.CurrentCulture)}x";
+    private void UpdateFontScaleValue() => FontScaleValue.Text = FormatFontScale(FontScaleSlider.Value);
 
-    private void UpdateRecognitionConfidenceValue() => RecognitionConfidenceValue.Text = RecognitionConfidenceSlider.Value.ToString("0.0", CultureInfo.CurrentCulture);
+    private void UpdateRecognitionConfidenceValue() => RecognitionConfidenceValue.Text = FormatRecognitionConfidence(RecognitionConfidenceSlider.Value);
+
+    private void UpdateSettingSummaries()
+    {
+        SourceLanguageValue.Text = GetLanguageLabel(SourceLanguageBox);
+        TargetLanguageValue.Text = GetLanguageLabel(TargetLanguageBox);
+        ApiKeyValue.Text = string.IsNullOrWhiteSpace(ApiKeyBox.Password) ? "Wymagany do uruchomienia tłumacza" : "Klucz zapisany";
+        HotkeyCodeValue.Text = string.IsNullOrWhiteSpace(HotkeyCodeBox.Text) ? "Nie ustawiono" : $"Kod {HotkeyCodeBox.Text}";
+    }
+
+    private static string FormatFontScale(double value) => $"{value.ToString("0.0", CultureInfo.CurrentCulture)}x";
+
+    private static string FormatRecognitionConfidence(double value) => value.ToString("0.0", CultureInfo.CurrentCulture);
 }
