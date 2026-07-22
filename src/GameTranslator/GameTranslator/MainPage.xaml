@@ -70,6 +70,11 @@
           <TextBlock Text="Tekst o pewności poniżej progu nie zostanie przetłumaczony. Zakres od 0 do 1, krok 0,1." Opacity="0.7" TextWrapping="Wrap" />
         </StackPanel>
 
+        <StackPanel Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
+          <ToggleSwitch x:Name="HideIdenticalTranslationsToggle" />
+          <TextBlock Text="Ukrywaj identyczne tłumaczenia" TextWrapping="Wrap" VerticalAlignment="Center" Foreground="Black" />
+        </StackPanel>
+
         <StackPanel Spacing="10">
           <TextBlock Text="Globalny hotkey" FontSize="18" Foreground="Black" />
           <StackPanel Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">

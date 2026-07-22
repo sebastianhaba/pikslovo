@@ -4,7 +4,7 @@
 
 | Pojecie | Znaczenie |
 | --- | --- |
-| `Configuration` | Klucz API, jezyk zrodlowy, jezyk docelowy, prog pewnosci OCR, skala czcionki i ustawienia triggerow. |
+| `Configuration` | Klucz API, jezyk zrodlowy, jezyk docelowy, prog pewnosci OCR, skala czcionki, ukrywanie identycznych tlumaczen i ustawienia triggerow. |
 | `TranslationSession` | Jawnie wlaczony cykl zycia MediaProjection, uslugi pierwszoplanowej i triggerow. |
 | `Trigger` | Zdarzenie rozpoczynajace lub konczace pokazanie wyniku: przycisk, hotkey albo broadcast. |
 | `CaptureFrame` | Tymczasowa bitmapa pojedynczej klatki z VirtualDisplay. |
@@ -19,7 +19,10 @@
   przechowywany szyfrowanie; pozostale ustawienia zwykle. Prog pewnosci OCR
   ma zakres od `0` do `1` i domyslnie wynosi `0.6`; regiony ponizej progu nie
   sa wysylane do tlumaczenia. Skala czcionki nakladki ma zakres od `1.0` do
-  `3.0` i domyslnie wynosi `1.0`.
+  `3.0` i domyslnie wynosi `1.0`. Opcja ukrywania identycznych tlumaczen jest
+  domyslnie wylaczona; po wlaczeniu nie rysujemy regionu, gdy tekst OCR i
+  tlumaczenie sa rowne po usunieciu bialych znakow na brzegach i bez rozrozniania
+  wielkosci liter.
 - `TranslationSession` jest jedynym wlascicielem MediaProjection, uslugi
   pierwszoplanowej, uchwytu VirtualDisplay, nakladki i anulowania biezacej
   operacji.

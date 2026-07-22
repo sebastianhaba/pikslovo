@@ -50,6 +50,11 @@ public sealed class TranslationOrchestrator
 
             var regions = document.Regions
                 .Select((region, index) => new TranslatedRegion(region.Text, translatedTexts[index], region.Bounds))
+                .Where(region => !settings.HideIdenticalTranslations ||
+                    !string.Equals(
+                        region.SourceText.Trim(),
+                        region.TranslatedText.Trim(),
+                        StringComparison.OrdinalIgnoreCase))
                 .ToArray();
 
             return new TranslationResult(regions);

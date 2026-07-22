@@ -49,6 +49,43 @@ public sealed class TranslationOrchestratorTests
     }
 
     [Test]
+    public async Task TranslateAsync_hides_identical_translations_when_enabled()
+    {
+        var ocr = new StubOcrProvider(
+            new OcrDocument(
+            [
+                new TextRegion("START", new PixelRect(10, 20, 120, 55)),
+                new TextRegion("Options", new PixelRect(20, 90, 140, 125)),
+            ]));
+        var translator = new StubTranslationProvider([" start ", "Opcje"]);
+        var orchestrator = new TranslationOrchestrator(ocr, translator);
+
+        var result = await orchestrator.TranslateAsync(
+            new byte[] { 1 },
+            new TranslationSettings("key", "en", "pl", HideIdenticalTranslations: true),
+            CancellationToken.None);
+
+        result!.Regions.Should().Equal(
+            new TranslatedRegion("Options", "Opcje", new PixelRect(20, 90, 140, 125)));
+    }
+
+    [Test]
+    public async Task TranslateAsync_keeps_identical_translations_when_disabled()
+    {
+        var ocr = new StubOcrProvider(new OcrDocument([new TextRegion("Start", new PixelRect(10, 20, 120, 55))]));
+        var translator = new StubTranslationProvider(["Start"]);
+        var orchestrator = new TranslationOrchestrator(ocr, translator);
+
+        var result = await orchestrator.TranslateAsync(
+            new byte[] { 1 },
+            new TranslationSettings("key", "en", "pl"),
+            CancellationToken.None);
+
+        result!.Regions.Should().ContainSingle()
+            .Which.Should().Be(new TranslatedRegion("Start", "Start", new PixelRect(10, 20, 120, 55)));
+    }
+
+    [Test]
     public async Task TranslateAsync_passes_recognition_confidence_to_ocr_provider()
     {
         var ocr = new StubOcrProvider(new OcrDocument([]));

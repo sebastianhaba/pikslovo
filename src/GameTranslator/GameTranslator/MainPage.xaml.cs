@@ -39,6 +39,7 @@ public sealed partial class MainPage : Page
         SelectLanguage(TargetLanguageBox, settings.Translation.TargetLanguage);
         FontScaleSlider.Value = settings.Translation.FontScale;
         RecognitionConfidenceSlider.Value = settings.Translation.RecognitionConfidence;
+        HideIdenticalTranslationsToggle.IsOn = settings.Translation.HideIdenticalTranslations;
         HotkeyCodeBox.Text = settings.HotkeyCode == 0 ? string.Empty : settings.HotkeyCode.ToString();
         HoldToPreviewToggle.IsOn = settings.HoldToPreview;
         GlobalHotkeyToggle.IsOn = settings.GlobalHotkeyEnabled;
@@ -48,6 +49,7 @@ public sealed partial class MainPage : Page
         SelectLanguage(TargetLanguageBox, "pl");
         FontScaleSlider.Value = TranslationSettings.DefaultFontScale;
         RecognitionConfidenceSlider.Value = TranslationSettings.DefaultRecognitionConfidence;
+        HideIdenticalTranslationsToggle.IsOn = false;
 #endif
         UpdateFontScaleValue();
         UpdateRecognitionConfidenceValue();
@@ -184,7 +186,8 @@ public sealed partial class MainPage : Page
             GetLanguage(SourceLanguageBox),
             GetLanguage(TargetLanguageBox),
             recognitionConfidence,
-            fontScale);
+            fontScale,
+            HideIdenticalTranslationsToggle.IsOn);
         if (!settings.IsValid)
         {
             StatusText.Text = "Wpisz klucz API i wybierz oba języki.";

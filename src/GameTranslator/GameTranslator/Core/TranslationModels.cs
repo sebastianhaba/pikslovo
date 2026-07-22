@@ -5,7 +5,8 @@ public sealed record TranslationSettings(
     string SourceLanguage,
     string TargetLanguage,
     float RecognitionConfidence = 0.6f,
-    float FontScale = 1f)
+    float FontScale = 1f,
+    bool HideIdenticalTranslations = false)
 {
     public const float DefaultRecognitionConfidence = 0.6f;
     public const float DefaultFontScale = 1f;
