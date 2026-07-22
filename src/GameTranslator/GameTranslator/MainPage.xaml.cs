@@ -1,4 +1,5 @@
 using GameTranslator.Core;
+using Microsoft.UI.Xaml.Controls.Primitives;
 using System.Globalization;
 
 #if __ANDROID__
@@ -36,7 +37,7 @@ public sealed partial class MainPage : Page
         ApiKeyBox.Password = settings.Translation.ApiKey;
         SelectLanguage(SourceLanguageBox, settings.Translation.SourceLanguage);
         SelectLanguage(TargetLanguageBox, settings.Translation.TargetLanguage);
-        RecognitionConfidenceBox.Text = settings.Translation.RecognitionConfidence.ToString("0.##", CultureInfo.InvariantCulture);
+        RecognitionConfidenceSlider.Value = settings.Translation.RecognitionConfidence;
         HotkeyCodeBox.Text = settings.HotkeyCode == 0 ? string.Empty : settings.HotkeyCode.ToString();
         HoldToPreviewToggle.IsOn = settings.HoldToPreview;
         GlobalHotkeyToggle.IsOn = settings.GlobalHotkeyEnabled;
@@ -44,8 +45,9 @@ public sealed partial class MainPage : Page
 #else
         SelectLanguage(SourceLanguageBox, "ja");
         SelectLanguage(TargetLanguageBox, "pl");
-        RecognitionConfidenceBox.Text = TranslationSettings.DefaultRecognitionConfidence.ToString("0.##", CultureInfo.InvariantCulture);
+        RecognitionConfidenceSlider.Value = TranslationSettings.DefaultRecognitionConfidence;
 #endif
+        UpdateRecognitionConfidenceValue();
     }
 
     private void SaveSettings_Click(object sender, RoutedEventArgs e)
@@ -171,12 +173,7 @@ public sealed partial class MainPage : Page
             return false;
         }
 
-        var recognitionConfidenceText = RecognitionConfidenceBox.Text?.Trim() ?? string.Empty;
-        if (!TryParseRecognitionConfidence(recognitionConfidenceText, out var recognitionConfidence))
-        {
-            StatusText.Text = "Pewność rozpoznawania tekstu musi być liczbą od 0 do 1.";
-            return false;
-        }
+        var recognitionConfidence = (float)RecognitionConfidenceSlider.Value;
 
         var settings = new TranslationSettings(
             ApiKeyBox.Password.Trim(),
@@ -225,14 +222,13 @@ public sealed partial class MainPage : Page
         box.SelectedIndex = 0;
     }
 
-    private static bool TryParseRecognitionConfidence(string text, out float value)
+    private void RecognitionConfidenceSlider_ValueChanged(object sender, RangeBaseValueChangedEventArgs e)
     {
-        if (!float.TryParse(text, CultureInfo.InvariantCulture, out value) &&
-            !float.TryParse(text, CultureInfo.CurrentCulture, out value))
-        {
-            return false;
-        }
+        UpdateRecognitionConfidenceValue();
+    }
 
-        return float.IsFinite(value) && value is >= 0f and <= 1f;
+    private void UpdateRecognitionConfidenceValue()
+    {
+        RecognitionConfidenceValue.Text = RecognitionConfidenceSlider.Value.ToString("0.0", CultureInfo.CurrentCulture);
     }
 }

@@ -43,9 +43,17 @@
         </Grid>
 
         <StackPanel Spacing="8">
-          <TextBlock Text="Pewność rozpoznawania tekstu" Foreground="Black" />
-          <TextBox x:Name="RecognitionConfidenceBox" Text="0.6" PlaceholderText="0.6" />
-          <TextBlock Text="Tekst o pewności poniżej progu nie zostanie przetłumaczony. Zakres od 0 do 1." Opacity="0.7" TextWrapping="Wrap" />
+          <StackPanel Orientation="Horizontal" HorizontalAlignment="Stretch">
+            <TextBlock Text="Pewność rozpoznawania tekstu" Foreground="Black" />
+            <TextBlock x:Name="RecognitionConfidenceValue" Margin="12,0,0,0" Foreground="Black" />
+          </StackPanel>
+          <Slider x:Name="RecognitionConfidenceSlider"
+                  Minimum="0"
+                  Maximum="1"
+                  StepFrequency="0.1"
+                  Value="0.6"
+                  ValueChanged="RecognitionConfidenceSlider_ValueChanged" />
+          <TextBlock Text="Tekst o pewności poniżej progu nie zostanie przetłumaczony. Zakres od 0 do 1, krok 0,1." Opacity="0.7" TextWrapping="Wrap" />
         </StackPanel>
 
         <StackPanel Spacing="10">
