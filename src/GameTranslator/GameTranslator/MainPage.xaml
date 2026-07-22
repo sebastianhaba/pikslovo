@@ -37,11 +37,11 @@
         <StackPanel Spacing="8">
           <TextBlock Text="Ustawienia" FontSize="15" FontWeight="SemiBold" Opacity="0.65" Margin="16,8,0,8" Foreground="Black" />
 
-          <Button Tag="translation" Click="OpenSection_Click" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch" Padding="16,14">
+          <Button Tag="permissions" Click="OpenSection_Click" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch" Padding="16,14">
             <Grid ColumnSpacing="16">
               <Grid.ColumnDefinitions><ColumnDefinition Width="32" /><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
-              <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE774;" FontSize="20" Foreground="Black" VerticalAlignment="Center" />
-              <StackPanel Grid.Column="1" Spacing="3"><TextBlock Text="Tłumaczenie" FontWeight="SemiBold" Foreground="Black" /><TextBlock Text="Języki źródłowy i docelowy" Opacity="0.65" TextWrapping="Wrap" Foreground="Black" /></StackPanel>
+              <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE72E;" FontSize="20" Foreground="Black" VerticalAlignment="Center" />
+              <StackPanel Grid.Column="1" Spacing="3"><TextBlock Text="Uprawnienia" FontWeight="SemiBold" Foreground="Black" /><TextBlock Text="Nakładka i dostępność systemu Android" Opacity="0.65" TextWrapping="Wrap" Foreground="Black" /></StackPanel>
               <FontIcon Grid.Column="2" FontFamily="Segoe MDL2 Assets" Glyph="&#xE76C;" FontSize="16" Foreground="Black" VerticalAlignment="Center" />
             </Grid>
           </Button>
@@ -53,19 +53,11 @@
               <FontIcon Grid.Column="2" FontFamily="Segoe MDL2 Assets" Glyph="&#xE76C;" FontSize="16" Foreground="Black" VerticalAlignment="Center" />
             </Grid>
           </Button>
-          <Button Tag="appearance" Click="OpenSection_Click" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch" Padding="16,14">
+          <Button Tag="translation" Click="OpenSection_Click" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch" Padding="16,14">
             <Grid ColumnSpacing="16">
               <Grid.ColumnDefinitions><ColumnDefinition Width="32" /><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
-              <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE8D2;" FontSize="20" Foreground="Black" VerticalAlignment="Center" />
-              <StackPanel Grid.Column="1" Spacing="3"><TextBlock Text="Wygląd nakładki" FontWeight="SemiBold" Foreground="Black" /><TextBlock Text="Skala tekstu i widoczność tłumaczeń" Opacity="0.65" TextWrapping="Wrap" Foreground="Black" /></StackPanel>
-              <FontIcon Grid.Column="2" FontFamily="Segoe MDL2 Assets" Glyph="&#xE76C;" FontSize="16" Foreground="Black" VerticalAlignment="Center" />
-            </Grid>
-          </Button>
-          <Button Tag="recognition" Click="OpenSection_Click" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch" Padding="16,14">
-            <Grid ColumnSpacing="16">
-              <Grid.ColumnDefinitions><ColumnDefinition Width="32" /><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
-              <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE8C8;" FontSize="20" Foreground="Black" VerticalAlignment="Center" />
-              <StackPanel Grid.Column="1" Spacing="3"><TextBlock Text="Rozpoznawanie tekstu" FontWeight="SemiBold" Foreground="Black" /><TextBlock Text="Próg pewności wyników OCR" Opacity="0.65" TextWrapping="Wrap" Foreground="Black" /></StackPanel>
+              <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE774;" FontSize="20" Foreground="Black" VerticalAlignment="Center" />
+              <StackPanel Grid.Column="1" Spacing="3"><TextBlock Text="Tłumaczenie" FontWeight="SemiBold" Foreground="Black" /><TextBlock Text="Języki źródłowy i docelowy" Opacity="0.65" TextWrapping="Wrap" Foreground="Black" /></StackPanel>
               <FontIcon Grid.Column="2" FontFamily="Segoe MDL2 Assets" Glyph="&#xE76C;" FontSize="16" Foreground="Black" VerticalAlignment="Center" />
             </Grid>
           </Button>
@@ -77,11 +69,19 @@
               <FontIcon Grid.Column="2" FontFamily="Segoe MDL2 Assets" Glyph="&#xE76C;" FontSize="16" Foreground="Black" VerticalAlignment="Center" />
             </Grid>
           </Button>
-          <Button Tag="permissions" Click="OpenSection_Click" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch" Padding="16,14">
+          <Button Tag="recognition" Click="OpenSection_Click" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch" Padding="16,14">
             <Grid ColumnSpacing="16">
               <Grid.ColumnDefinitions><ColumnDefinition Width="32" /><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
-              <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE72E;" FontSize="20" Foreground="Black" VerticalAlignment="Center" />
-              <StackPanel Grid.Column="1" Spacing="3"><TextBlock Text="Uprawnienia" FontWeight="SemiBold" Foreground="Black" /><TextBlock Text="Nakładka i dostępność systemu Android" Opacity="0.65" TextWrapping="Wrap" Foreground="Black" /></StackPanel>
+              <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE8C8;" FontSize="20" Foreground="Black" VerticalAlignment="Center" />
+              <StackPanel Grid.Column="1" Spacing="3"><TextBlock Text="Rozpoznawanie tekstu" FontWeight="SemiBold" Foreground="Black" /><TextBlock Text="Próg pewności wyników OCR" Opacity="0.65" TextWrapping="Wrap" Foreground="Black" /></StackPanel>
+              <FontIcon Grid.Column="2" FontFamily="Segoe MDL2 Assets" Glyph="&#xE76C;" FontSize="16" Foreground="Black" VerticalAlignment="Center" />
+            </Grid>
+          </Button>
+          <Button Tag="appearance" Click="OpenSection_Click" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch" Padding="16,14">
+            <Grid ColumnSpacing="16">
+              <Grid.ColumnDefinitions><ColumnDefinition Width="32" /><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+              <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE8D2;" FontSize="20" Foreground="Black" VerticalAlignment="Center" />
+              <StackPanel Grid.Column="1" Spacing="3"><TextBlock Text="Wygląd nakładki" FontWeight="SemiBold" Foreground="Black" /><TextBlock Text="Skala tekstu i widoczność tłumaczeń" Opacity="0.65" TextWrapping="Wrap" Foreground="Black" /></StackPanel>
               <FontIcon Grid.Column="2" FontFamily="Segoe MDL2 Assets" Glyph="&#xE76C;" FontSize="16" Foreground="Black" VerticalAlignment="Center" />
             </Grid>
           </Button>
