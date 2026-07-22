@@ -1,8 +1,8 @@
 ﻿<ResourceDictionary xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation">
   <ResourceDictionary.ThemeDictionaries>
     <ResourceDictionary x:Key="Light">
-      <Color x:Key="PrimaryColor">#5946D2</Color>
-      <Color x:Key="OnPrimaryColor">#FFFFFF</Color>
+      <Color x:Key="PrimaryColor">#C7BFFF</Color>
+      <Color x:Key="OnPrimaryColor">#2A009F</Color>
       <Color x:Key="PrimaryContainerColor">#E5DEFF</Color>
       <Color x:Key="OnPrimaryContainerColor">#170065</Color>
       <Color x:Key="SecondaryColor">#6B4EA2</Color>
@@ -27,7 +27,7 @@
       <Color x:Key="OnSurfaceInverseColor">#F4EFF4</Color>
       <Color x:Key="SurfaceInverseColor">#313033</Color>
       <Color x:Key="PrimaryInverseColor">#C8BFFF</Color>
-      <Color x:Key="SurfaceTintColor">#5946D2</Color>
+      <Color x:Key="SurfaceTintColor">#C7BFFF</Color>
       <Color x:Key="OutlineVariantColor">#C9C5D0</Color>
     </ResourceDictionary>
     <ResourceDictionary x:Key="Dark">

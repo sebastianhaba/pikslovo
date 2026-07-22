@@ -1,5 +1,6 @@
 using GameTranslator.Core;
 using Microsoft.UI.Xaml.Controls.Primitives;
+using Microsoft.UI.Xaml.Input;
 using System.Globalization;
 using System.Threading.Tasks;
 
@@ -16,6 +17,7 @@ public sealed partial class MainPage : Page
 {
     private bool _isLoading;
     private bool _updatingSessionToggle;
+    private AppThemeMode _themeMode = AppThemeMode.System;
 
     public MainPage()
     {
@@ -54,12 +56,14 @@ public sealed partial class MainPage : Page
         HotkeyCodeBox.Text = settings.HotkeyCode == 0 ? string.Empty : settings.HotkeyCode.ToString(CultureInfo.InvariantCulture);
         HoldToPreviewToggle.IsOn = settings.HoldToPreview;
         GlobalHotkeyToggle.IsOn = settings.GlobalHotkeyEnabled;
+        SetThemeMode(settings.ThemeMode);
 #else
         SelectLanguage(SourceLanguageBox, "ja");
         SelectLanguage(TargetLanguageBox, "pl");
         FontScaleSlider.Value = TranslationSettings.DefaultFontScale;
         RecognitionConfidenceSlider.Value = TranslationSettings.DefaultRecognitionConfidence;
         HideIdenticalTranslationsToggle.IsOn = false;
+        SetThemeMode(AppThemeMode.System);
 #endif
         UpdateFontScaleValue();
         UpdateRecognitionConfidenceValue();
@@ -79,6 +83,7 @@ public sealed partial class MainPage : Page
             "translation" => "Tłumaczenie",
             "api" => "Google Cloud API",
             "appearance" => "Wygląd nakładki",
+            "appTheme" => "Wygląd aplikacji",
             "recognition" => "Rozpoznawanie tekstu",
             "triggers" => "Globalny hotkey",
             "permissions" => "Uprawnienia",
@@ -91,6 +96,7 @@ public sealed partial class MainPage : Page
         RecognitionSection.Visibility = section == "recognition" ? Visibility.Visible : Visibility.Collapsed;
         TriggersSection.Visibility = section == "triggers" ? Visibility.Visible : Visibility.Collapsed;
         PermissionsSection.Visibility = section == "permissions" ? Visibility.Visible : Visibility.Collapsed;
+        ThemeSection.Visibility = section == "appTheme" ? Visibility.Visible : Visibility.Collapsed;
         HomeHeader.Visibility = Visibility.Collapsed;
         DetailHeader.Visibility = Visibility.Visible;
         HomeView.Visibility = Visibility.Collapsed;
@@ -109,6 +115,19 @@ public sealed partial class MainPage : Page
 
     private void Setting_Changed(object sender, RoutedEventArgs e)
     {
+        SaveSettings(requireValidTranslationSettings: false);
+        UpdateSettingSummaries();
+    }
+
+    private void ThemeModeOption_Tapped(object sender, TappedRoutedEventArgs e)
+    {
+        if (_isLoading || sender is not Border { Tag: string value } ||
+            !Enum.TryParse<AppThemeMode>(value, out var mode))
+        {
+            return;
+        }
+
+        SetThemeMode(mode);
         SaveSettings(requireValidTranslationSettings: false);
         UpdateSettingSummaries();
     }
@@ -359,7 +378,7 @@ public sealed partial class MainPage : Page
 #if __ANDROID__
         AndroidSettingsStore.Save(
             global::Android.App.Application.Context!,
-            new AndroidAppSettings(settings, hotkeyCode, HoldToPreviewToggle.IsOn, GlobalHotkeyToggle.IsOn));
+            new AndroidAppSettings(settings, hotkeyCode, HoldToPreviewToggle.IsOn, GlobalHotkeyToggle.IsOn, _themeMode));
 #endif
         return true;
     }
@@ -420,7 +439,25 @@ public sealed partial class MainPage : Page
         TargetLanguageValue.Text = GetLanguageLabel(TargetLanguageBox);
         ApiKeyValue.Text = string.IsNullOrWhiteSpace(ApiKeyBox.Password) ? "Wymagany do uruchomienia tłumacza" : "Klucz zapisany";
         HotkeyCodeValue.Text = string.IsNullOrWhiteSpace(HotkeyCodeBox.Text) ? "Nie ustawiono" : $"Kod {HotkeyCodeBox.Text}";
+        ThemeModeValue.Text = _themeMode switch
+        {
+            AppThemeMode.Dark => "Ciemny",
+            AppThemeMode.Light => "Jasny",
+            _ => "Systemowy"
+        };
     }
+
+    private void SetThemeMode(AppThemeMode mode)
+    {
+        _themeMode = mode;
+        SetThemeModeOptionStyle(SystemThemeOption, mode == AppThemeMode.System);
+        SetThemeModeOptionStyle(DarkThemeOption, mode == AppThemeMode.Dark);
+        SetThemeModeOptionStyle(LightThemeOption, mode == AppThemeMode.Light);
+        (global::Microsoft.UI.Xaml.Application.Current as App)?.SetThemeMode(mode);
+    }
+
+    private void SetThemeModeOptionStyle(Border option, bool selected) =>
+        option.Style = (Style)Resources[selected ? "SelectedThemeModeOptionBorder" : "ThemeModeOptionBorder"];
 
     private static string FormatFontScale(double value) => $"{value.ToString("0.0", CultureInfo.CurrentCulture)}x";
 

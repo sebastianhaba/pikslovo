@@ -1,11 +1,17 @@
 using System;
+using GameTranslator.Core;
 using Microsoft.Extensions.Logging;
 using Uno.Resizetizer;
+
+#if __ANDROID__
+using GameTranslator.Droid.Services;
+#endif
 
 namespace GameTranslator;
 
 public partial class App : Application
 {
+    private AppThemeMode _themeMode = AppThemeMode.System;
     /// <summary>
     /// Initializes the singleton application object. This is the first line of authored code
     /// executed, and as such is the logical equivalent of main() or WinMain().
@@ -38,6 +44,8 @@ public partial class App : Application
             rootFrame.NavigationFailed += OnNavigationFailed;
         }
 
+        ApplyTheme(rootFrame, LoadThemeMode());
+
         if (rootFrame.Content == null)
         {
             // When the navigation stack isn't restored navigate to the first page,
@@ -49,6 +57,42 @@ public partial class App : Application
         MainWindow.SetWindowIcon();
         // Ensure the current window is active
         MainWindow.Activate();
+    }
+
+    public void SetThemeMode(AppThemeMode mode)
+    {
+        _themeMode = mode;
+        if (MainWindow?.Content is FrameworkElement root)
+        {
+            ApplyTheme(root, mode);
+        }
+    }
+
+    private AppThemeMode LoadThemeMode()
+    {
+#if __ANDROID__
+        try
+        {
+            return AndroidSettingsStore.Load(global::Android.App.Application.Context!).ThemeMode;
+        }
+        catch
+        {
+            return AppThemeMode.System;
+        }
+#else
+        return AppThemeMode.System;
+#endif
+    }
+
+    private void ApplyTheme(FrameworkElement root, AppThemeMode mode)
+    {
+        _themeMode = mode;
+        root.RequestedTheme = mode switch
+        {
+            AppThemeMode.Light => ElementTheme.Light,
+            AppThemeMode.Dark => ElementTheme.Dark,
+            _ => ElementTheme.Default
+        };
     }
 
     /// <summary>

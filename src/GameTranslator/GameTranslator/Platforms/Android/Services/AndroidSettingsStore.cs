@@ -12,7 +12,8 @@ internal sealed record AndroidAppSettings(
     TranslationSettings Translation,
     int HotkeyCode,
     bool HoldToPreview,
-    bool GlobalHotkeyEnabled);
+    bool GlobalHotkeyEnabled,
+    AppThemeMode ThemeMode);
 
 internal static class AndroidSettingsStore
 {
@@ -26,6 +27,7 @@ internal static class AndroidSettingsStore
     private const string HotkeyCodeName = "hotkey_code";
     private const string HoldToPreviewName = "hold_to_preview";
     private const string GlobalHotkeyEnabledName = "global_hotkey_enabled";
+    private const string ThemeModeName = "theme_mode";
     private const string KeyAlias = "game_translator_api_key";
 
     public static AndroidAppSettings Load(Context context)
@@ -41,7 +43,8 @@ internal static class AndroidSettingsStore
                 preferences.GetBoolean(HideIdenticalTranslationsName, false)),
             preferences.GetInt(HotkeyCodeName, 0),
             preferences.GetBoolean(HoldToPreviewName, false),
-            preferences.GetBoolean(GlobalHotkeyEnabledName, false));
+            preferences.GetBoolean(GlobalHotkeyEnabledName, false),
+            ReadThemeMode(preferences.GetString(ThemeModeName, null)));
     }
 
     public static void Save(Context context, AndroidAppSettings settings)
@@ -56,8 +59,12 @@ internal static class AndroidSettingsStore
         editor.PutInt(HotkeyCodeName, settings.HotkeyCode);
         editor.PutBoolean(HoldToPreviewName, settings.HoldToPreview);
         editor.PutBoolean(GlobalHotkeyEnabledName, settings.GlobalHotkeyEnabled);
+        editor.PutString(ThemeModeName, settings.ThemeMode.ToString());
         editor.Apply();
     }
+
+    private static AppThemeMode ReadThemeMode(string? value) =>
+        Enum.TryParse<AppThemeMode>(value, ignoreCase: true, out var mode) ? mode : AppThemeMode.System;
 
     private static ISharedPreferences GetPreferences(Context context) =>
         context.GetSharedPreferences(PreferencesName, FileCreationMode.Private)!;
