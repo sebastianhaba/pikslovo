@@ -19,7 +19,7 @@ public sealed class TranslationOrchestrator
     {
         if (!settings.IsValid)
         {
-            throw new TranslationException("Uzupelnij klucz API oraz oba jezyki przed uruchomieniem tlumaczenia.");
+            throw new TranslationException("Uzupełnij klucz API oraz oba języki przed uruchomieniem tłumaczenia.");
         }
 
         if (!await _operationLock.WaitAsync(0, cancellationToken).ConfigureAwait(false))
@@ -45,7 +45,7 @@ public sealed class TranslationOrchestrator
 
             if (translatedTexts.Count != document.Regions.Count)
             {
-                throw new TranslationException("Google Translation zwrocilo niepelna odpowiedz.");
+                throw new TranslationException("Google Translation zwróciło niepełną odpowiedź.");
             }
 
             var regions = document.Regions

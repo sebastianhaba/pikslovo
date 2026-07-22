@@ -36,7 +36,7 @@ internal sealed class FloatingTranslationTrigger
             Text = "T",
             TextSize = 22,
             Gravity = GravityFlags.Center,
-            ContentDescription = "Tlumacz ekran",
+            ContentDescription = "Tłumacz ekran",
         };
         _button.SetTextColor(Color.White);
         _button.SetTypeface(Android.Graphics.Typeface.DefaultBold, TypefaceStyle.Bold);

@@ -27,7 +27,7 @@ public sealed class GoogleTranslationProvider(HttpClient httpClient) : ITranslat
         if (!response.IsSuccessStatusCode)
         {
             var details = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
-            throw new TranslationException($"Cloud Translation API odrzucilo zadanie ({(int)response.StatusCode} {response.StatusCode}): {details}");
+            throw new TranslationException($"Cloud Translation API odrzuciło zadanie ({(int)response.StatusCode} {response.StatusCode}): {details}");
         }
 
         var payload = await response.Content
@@ -39,7 +39,7 @@ public sealed class GoogleTranslationProvider(HttpClient httpClient) : ITranslat
 
         if (translations is null || translations.Length != sourceTexts.Count)
         {
-            throw new TranslationException("Cloud Translation API zwrocilo niepelna odpowiedz.");
+            throw new TranslationException("Cloud Translation API zwróciło niepełną odpowiedź.");
         }
 
         return translations;

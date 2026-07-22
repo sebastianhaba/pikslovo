@@ -61,13 +61,13 @@ public sealed class TranslationForegroundService : Service
         }
         catch (Java.Lang.SecurityException)
         {
-            ShowMessage("Zgoda na nagrywanie ekranu wygasla. Uruchom tlumacza ponownie i zaakceptuj nowy monit.");
+            ShowMessage("Zgoda na nagrywanie ekranu wygasła. Uruchom tłumacza ponownie i zaakceptuj nowy monit.");
             StopSession();
         }
         catch (Exception exception)
         {
             Android.Util.Log.Error("GameTranslator", exception.ToString());
-            ShowMessage($"Nie udalo sie uruchomic sesji: {exception.Message}");
+            ShowMessage($"Nie udało się uruchomić sesji: {exception.Message}");
             StopSession();
         }
 
@@ -115,7 +115,7 @@ public sealed class TranslationForegroundService : Service
         _mediaProjection = manager?.GetMediaProjection((int)resultCode, resultData);
         if (_mediaProjection is null)
         {
-            ShowMessage("Nie udalo sie uruchomic przechwytywania ekranu.");
+            ShowMessage("Nie udało się uruchomić przechwytywania ekranu.");
             StopSession();
             return;
         }
@@ -130,7 +130,7 @@ public sealed class TranslationForegroundService : Service
         }
         IsSessionActive = true;
         AndroidTranslationHost.NotifySessionStateChanged();
-        ShowMessage("Tlumacz jest aktywny.");
+        ShowMessage("Tłumacz jest aktywny.");
     }
 
     private void CreateCaptureSurface()
@@ -142,7 +142,7 @@ public sealed class TranslationForegroundService : Service
         var density = Resources?.Configuration?.DensityDpi ?? 0;
         if (width <= 0 || height <= 0 || density <= 0 || _mediaProjection is null)
         {
-            throw new InvalidOperationException("Nie mozna odczytac rozmiaru ekranu.");
+            throw new InvalidOperationException("Nie można odczytać rozmiaru ekranu.");
         }
 
         // ImageFormat.RGBA_8888 is represented as value 1 by the Android API.
@@ -180,14 +180,14 @@ public sealed class TranslationForegroundService : Service
         {
             if (!Settings.CanDrawOverlays(this))
             {
-                ShowMessage("Przyznaj uprawnienie do wyswietlania nad innymi aplikacjami.");
+                ShowMessage("Przyznaj uprawnienie do wyświetlania nad innymi aplikacjami.");
                 return;
             }
 
             var bitmap = await CaptureBitmapAsync().ConfigureAwait(false);
             if (bitmap is null)
             {
-                ShowMessage("Nie udalo sie pobrac klatki ekranu.");
+                ShowMessage("Nie udało się pobrać klatki ekranu.");
                 return;
             }
 
@@ -326,7 +326,7 @@ public sealed class TranslationForegroundService : Service
 
         var channel = new NotificationChannel(
             NotificationChannelId,
-            "Aktywna sesja tlumacza",
+            "Aktywna sesja tłumacza",
             NotificationImportance.Low);
         var notificationManager = (NotificationManager?)GetSystemService(NotificationService);
         notificationManager?.CreateNotificationChannel(channel);
@@ -344,7 +344,7 @@ public sealed class TranslationForegroundService : Service
 
         return new Notification.Builder(this, NotificationChannelId)
             .SetContentTitle("GameTranslator jest aktywny")
-            .SetContentText("Hotkey i przycisk plywajacy sa gotowe.")
+            .SetContentText("Hotkey i przycisk pływający są gotowe.")
             .SetSmallIcon(Resource.Mipmap.icon)
             .SetOngoing(true)
             .AddAction(new Notification.Action.Builder(null, "Zatrzymaj", pendingIntent).Build())

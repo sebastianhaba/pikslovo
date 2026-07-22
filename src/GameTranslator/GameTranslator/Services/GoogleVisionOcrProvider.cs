@@ -26,7 +26,7 @@ public sealed class GoogleVisionOcrProvider(HttpClient httpClient) : IOcrProvide
         if (!response.IsSuccessStatusCode)
         {
             var details = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
-            throw new TranslationException($"Cloud Vision API odrzucilo zrzut ({(int)response.StatusCode} {response.StatusCode}): {details}");
+            throw new TranslationException($"Cloud Vision API odrzuciło zrzut ({(int)response.StatusCode} {response.StatusCode}): {details}");
         }
 
         var payload = await response.Content
@@ -173,6 +173,6 @@ public sealed class GoogleVisionOcrProvider(HttpClient httpClient) : IOcrProvide
     private sealed class VisionError
     {
         [JsonPropertyName("message")]
-        public string Message { get; init; } = "Nieznany blad OCR.";
+        public string Message { get; init; } = "Nieznany błąd OCR.";
     }
 }

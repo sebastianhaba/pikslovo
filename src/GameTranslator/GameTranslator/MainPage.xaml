@@ -22,55 +22,55 @@
             <ColumnDefinition Width="*" />
           </Grid.ColumnDefinitions>
           <StackPanel Grid.Column="0" Spacing="8">
-            <TextBlock Text="Jezyk zrodlowy" Foreground="Black" />
+            <TextBlock Text="Język źródłowy" Foreground="Black" />
             <ComboBox x:Name="SourceLanguageBox">
-              <ComboBoxItem Tag="ja" Content="Japonski" />
+              <ComboBoxItem Tag="ja" Content="Japoński" />
               <ComboBoxItem Tag="en" Content="Angielski" />
-              <ComboBoxItem Tag="ko" Content="Koreanski" />
-              <ComboBoxItem Tag="zh" Content="Chinski (uproszczony)" />
+              <ComboBoxItem Tag="ko" Content="Koreański" />
+              <ComboBoxItem Tag="zh" Content="Chiński (uproszczony)" />
               <ComboBoxItem Tag="de" Content="Niemiecki" />
             </ComboBox>
           </StackPanel>
           <StackPanel Grid.Column="1" Spacing="8">
-            <TextBlock Text="Jezyk docelowy" Foreground="Black" />
+            <TextBlock Text="Język docelowy" Foreground="Black" />
             <ComboBox x:Name="TargetLanguageBox">
               <ComboBoxItem Tag="pl" Content="Polski" />
               <ComboBoxItem Tag="en" Content="Angielski" />
               <ComboBoxItem Tag="de" Content="Niemiecki" />
-              <ComboBoxItem Tag="es" Content="Hiszpanski" />
+              <ComboBoxItem Tag="es" Content="Hiszpański" />
             </ComboBox>
           </StackPanel>
         </Grid>
 
         <StackPanel Spacing="8">
-          <TextBlock Text="Pewnosc rozpoznawania tekstu" Foreground="Black" />
+          <TextBlock Text="Pewność rozpoznawania tekstu" Foreground="Black" />
           <TextBox x:Name="RecognitionConfidenceBox" Text="0.6" PlaceholderText="0.6" />
-          <TextBlock Text="Tekst o pewnosci ponizej progu nie zostanie przetlumaczony. Zakres od 0 do 1." Opacity="0.7" TextWrapping="Wrap" />
+          <TextBlock Text="Tekst o pewności poniżej progu nie zostanie przetłumaczony. Zakres od 0 do 1." Opacity="0.7" TextWrapping="Wrap" />
         </StackPanel>
 
         <StackPanel Spacing="10">
           <TextBlock Text="Globalny hotkey" FontSize="18" Foreground="Black" />
           <StackPanel Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
             <ToggleSwitch x:Name="GlobalHotkeyToggle" />
-            <TextBlock Text="Wlacz globalny hotkey" VerticalAlignment="Center" Foreground="Black" />
+            <TextBlock Text="Włącz globalny hotkey" VerticalAlignment="Center" Foreground="Black" />
           </StackPanel>
           <TextBox x:Name="HotkeyCodeBox" Header="Android key code" PlaceholderText="np. 131 dla F1" />
           <StackPanel Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
             <ToggleSwitch x:Name="HoldToPreviewToggle" />
-            <TextBlock Text="Pokazuj tlumaczenie tylko podczas przytrzymania" TextWrapping="Wrap" VerticalAlignment="Center" Foreground="Black" />
+            <TextBlock Text="Pokazuj tłumaczenie tylko podczas przytrzymania" TextWrapping="Wrap" VerticalAlignment="Center" Foreground="Black" />
           </StackPanel>
-          <Button Content="Otworz ustawienia dostepnosci" Click="OpenAccessibilitySettings_Click" HorizontalAlignment="Left" />
+          <Button Content="Otwórz ustawienia dostępności" Click="OpenAccessibilitySettings_Click" HorizontalAlignment="Left" />
         </StackPanel>
 
         <StackPanel Spacing="10">
           <TextBlock Text="Uprawnienia" FontSize="18" Foreground="Black" />
-          <Button Content="Zezwol na nakladke nad gra" Click="RequestOverlayPermission_Click" HorizontalAlignment="Left" />
-          <TextBlock Text="Sesja przechwytywania uruchamia systemowy dialog Androida. Podczas dzialania widoczne jest powiadomienie." Opacity="0.7" TextWrapping="Wrap" />
+          <Button Content="Zezwól na nakładkę nad grą" Click="RequestOverlayPermission_Click" HorizontalAlignment="Left" />
+          <TextBlock Text="Sesja przechwytywania uruchamia systemowy dialog Androida. Podczas działania widoczne jest powiadomienie." Opacity="0.7" TextWrapping="Wrap" />
         </StackPanel>
 
         <StackPanel Orientation="Horizontal" Spacing="12">
           <Button Content="Zapisz ustawienia" Click="SaveSettings_Click" />
-          <Button x:Name="StartSessionButton" Content="Wlacz tlumacza" Click="ToggleSession_Click" />
+          <Button x:Name="StartSessionButton" Content="Włącz tłumacza" Click="ToggleSession_Click" />
         </StackPanel>
         <TextBlock x:Name="StatusText" TextWrapping="Wrap" Foreground="Black" />
       </StackPanel>

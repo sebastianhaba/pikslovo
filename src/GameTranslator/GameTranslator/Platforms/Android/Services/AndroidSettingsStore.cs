@@ -42,7 +42,7 @@ internal static class AndroidSettingsStore
 
     public static void Save(Context context, AndroidAppSettings settings)
     {
-        using var editor = GetPreferences(context).Edit() ?? throw new InvalidOperationException("Nie mozna zapisac ustawien aplikacji.");
+        using var editor = GetPreferences(context).Edit() ?? throw new InvalidOperationException("Nie można zapisać ustawień aplikacji.");
         editor.PutString(ApiKeyName, Encrypt(settings.Translation.ApiKey));
         editor.PutString(SourceLanguageName, settings.Translation.SourceLanguage);
         editor.PutString(TargetLanguageName, settings.Translation.TargetLanguage);
@@ -66,8 +66,8 @@ internal static class AndroidSettingsStore
         var key = GetOrCreateKey();
         using var cipher = Cipher.GetInstance("AES/GCM/NoPadding")!;
         cipher.Init(CipherMode.EncryptMode, key);
-        var iv = cipher.GetIV() ?? throw new InvalidOperationException("Android Keystore nie zwrocil wektora inicjalizacyjnego.");
-        var encrypted = cipher.DoFinal(Encoding.UTF8.GetBytes(plaintext)) ?? throw new InvalidOperationException("Android Keystore nie zaszyfrowal klucza API.");
+        var iv = cipher.GetIV() ?? throw new InvalidOperationException("Android Keystore nie zwrócił wektora inicjalizacyjnego.");
+        var encrypted = cipher.DoFinal(Encoding.UTF8.GetBytes(plaintext)) ?? throw new InvalidOperationException("Android Keystore nie zaszyfrował klucza API.");
         return $"{Convert.ToBase64String(iv)}:{Convert.ToBase64String(encrypted)}";
     }
 
@@ -108,7 +108,7 @@ internal static class AndroidSettingsStore
         if (keyStore.ContainsAlias(KeyAlias))
         {
             var entry = keyStore.GetEntry(KeyAlias, null) as KeyStore.SecretKeyEntry;
-            return entry?.SecretKey ?? throw new InvalidOperationException("Nie mozna odczytac klucza Android Keystore.");
+            return entry?.SecretKey ?? throw new InvalidOperationException("Nie można odczytać klucza Android Keystore.");
         }
 
         using var keyGenerator = KeyGenerator.GetInstance(KeyProperties.KeyAlgorithmAes, "AndroidKeyStore")!;
