@@ -42,6 +42,12 @@
         <Setter Property="BorderThickness" Value="1" />
         <Setter Property="CornerRadius" Value="28" />
       </Style>
+      <Style x:Key="HeaderBackButton" TargetType="Button">
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="BorderBrush" Value="Transparent" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="Foreground" Value="{ThemeResource AppTextBrush}" />
+      </Style>
       <Style x:Key="ThemeModeOptionBorder" TargetType="Border">
         <Setter Property="Background" Value="{ThemeResource AppSurfaceBrush}" />
         <Setter Property="BorderBrush" Value="{ThemeResource AppBorderBrush}" />
@@ -85,7 +91,7 @@
         <ColumnDefinition Width="Auto" />
         <ColumnDefinition Width="*" />
       </Grid.ColumnDefinitions>
-      <Button Click="Back_Click" Width="44" Height="44" Padding="0" ToolTipService.ToolTip="Wróć do ustawień">
+      <Button Style="{StaticResource HeaderBackButton}" Click="Back_Click" Width="44" Height="44" Padding="0" ToolTipService.ToolTip="Wróć do ustawień">
         <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE72B;" FontSize="18" />
       </Button>
       <TextBlock x:Name="DetailTitle" Grid.Column="1" FontSize="20" FontWeight="SemiBold" VerticalAlignment="Center" />
