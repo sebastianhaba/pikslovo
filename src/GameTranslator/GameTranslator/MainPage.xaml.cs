@@ -18,6 +18,7 @@ public sealed partial class MainPage : Page
     private bool _isLoading;
     private bool _updatingSessionToggle;
     private AppThemeMode _themeMode = AppThemeMode.System;
+    private AppAccent _accent = AppAccent.Lavender;
 
     public MainPage()
     {
@@ -57,6 +58,7 @@ public sealed partial class MainPage : Page
         HoldToPreviewToggle.IsOn = settings.HoldToPreview;
         GlobalHotkeyToggle.IsOn = settings.GlobalHotkeyEnabled;
         SetThemeMode(settings.ThemeMode);
+        SetAccent(settings.Accent);
 #else
         SelectLanguage(SourceLanguageBox, "ja");
         SelectLanguage(TargetLanguageBox, "pl");
@@ -64,6 +66,7 @@ public sealed partial class MainPage : Page
         RecognitionConfidenceSlider.Value = TranslationSettings.DefaultRecognitionConfidence;
         HideIdenticalTranslationsToggle.IsOn = false;
         SetThemeMode(AppThemeMode.System);
+        SetAccent(AppAccent.Lavender);
 #endif
         UpdateFontScaleValue();
         UpdateRecognitionConfidenceValue();
@@ -128,6 +131,19 @@ public sealed partial class MainPage : Page
         }
 
         SetThemeMode(mode);
+        SaveSettings(requireValidTranslationSettings: false);
+        UpdateSettingSummaries();
+    }
+
+    private void AccentOption_Tapped(object sender, TappedRoutedEventArgs e)
+    {
+        if (_isLoading || sender is not Border { Tag: string value } ||
+            !Enum.TryParse<AppAccent>(value, out var accent))
+        {
+            return;
+        }
+
+        SetAccent(accent);
         SaveSettings(requireValidTranslationSettings: false);
         UpdateSettingSummaries();
     }
@@ -378,7 +394,7 @@ public sealed partial class MainPage : Page
 #if __ANDROID__
         AndroidSettingsStore.Save(
             global::Android.App.Application.Context!,
-            new AndroidAppSettings(settings, hotkeyCode, HoldToPreviewToggle.IsOn, GlobalHotkeyToggle.IsOn, _themeMode));
+            new AndroidAppSettings(settings, hotkeyCode, HoldToPreviewToggle.IsOn, GlobalHotkeyToggle.IsOn, _themeMode, _accent));
 #endif
         return true;
     }
@@ -439,12 +455,13 @@ public sealed partial class MainPage : Page
         TargetLanguageValue.Text = GetLanguageLabel(TargetLanguageBox);
         ApiKeyValue.Text = string.IsNullOrWhiteSpace(ApiKeyBox.Password) ? "Wymagany do uruchomienia tłumacza" : "Klucz zapisany";
         HotkeyCodeValue.Text = string.IsNullOrWhiteSpace(HotkeyCodeBox.Text) ? "Nie ustawiono" : $"Kod {HotkeyCodeBox.Text}";
-        ThemeModeValue.Text = _themeMode switch
+        var themeMode = _themeMode switch
         {
             AppThemeMode.Dark => "Ciemny",
             AppThemeMode.Light => "Jasny",
             _ => "Systemowy"
         };
+        ThemeModeValue.Text = $"{themeMode} · {GetAccentLabel(_accent)}";
     }
 
     private void SetThemeMode(AppThemeMode mode)
@@ -456,8 +473,69 @@ public sealed partial class MainPage : Page
         (global::Microsoft.UI.Xaml.Application.Current as App)?.SetThemeMode(mode);
     }
 
-    private void SetThemeModeOptionStyle(Border option, bool selected) =>
+    private void SetAccent(AppAccent accent)
+    {
+        _accent = accent;
+        UpdateAccentOptionSelection();
+        SetThemeModeOptionStyle(SystemThemeOption, _themeMode == AppThemeMode.System);
+        SetThemeModeOptionStyle(DarkThemeOption, _themeMode == AppThemeMode.Dark);
+        SetThemeModeOptionStyle(LightThemeOption, _themeMode == AppThemeMode.Light);
+        (global::Microsoft.UI.Xaml.Application.Current as App)?.SetAccent(accent);
+    }
+
+    private void SetThemeModeOptionStyle(Border option, bool selected)
+    {
         option.Style = (Style)Resources[selected ? "SelectedThemeModeOptionBorder" : "ThemeModeOptionBorder"];
+        if (selected)
+        {
+            option.BorderBrush = new SolidColorBrush(App.GetAccentColor(_accent));
+            return;
+        }
+
+        option.BorderBrush = new SolidColorBrush(GetThemeOptionBorderColor());
+    }
+
+    private global::Windows.UI.Color GetThemeOptionBorderColor()
+    {
+        var isDark = _themeMode == AppThemeMode.Dark ||
+            (_themeMode == AppThemeMode.System && ActualTheme == ElementTheme.Dark);
+        return isDark
+            ? global::Windows.UI.Color.FromArgb(255, 73, 69, 79)
+            : global::Windows.UI.Color.FromArgb(255, 228, 225, 230);
+    }
+
+    private void UpdateAccentOptionSelection()
+    {
+        SetAccentOptionSelection(LavenderAccentOption, AppAccent.Lavender);
+        SetAccentOptionSelection(CoralAccentOption, AppAccent.Coral);
+        SetAccentOptionSelection(AmberAccentOption, AppAccent.Amber);
+        SetAccentOptionSelection(LimeAccentOption, AppAccent.Lime);
+        SetAccentOptionSelection(MintAccentOption, AppAccent.Mint);
+        SetAccentOptionSelection(TealAccentOption, AppAccent.Teal);
+        SetAccentOptionSelection(AquaAccentOption, AppAccent.Aqua);
+        SetAccentOptionSelection(SkyAccentOption, AppAccent.Sky);
+        SetAccentOptionSelection(SteelAccentOption, AppAccent.Steel);
+        SetAccentOptionSelection(OrchidAccentOption, AppAccent.Orchid);
+        SetAccentOptionSelection(RoseAccentOption, AppAccent.Rose);
+    }
+
+    private void SetAccentOptionSelection(Border option, AppAccent accent) =>
+        option.BorderThickness = accent == _accent ? new Thickness(2) : new Thickness(0);
+
+    private static string GetAccentLabel(AppAccent accent) => accent switch
+    {
+        AppAccent.Coral => "Koralowy",
+        AppAccent.Amber => "Bursztynowy",
+        AppAccent.Lime => "Limonkowy",
+        AppAccent.Mint => "Miętowy",
+        AppAccent.Teal => "Morski",
+        AppAccent.Aqua => "Aqua",
+        AppAccent.Sky => "Błękitny",
+        AppAccent.Steel => "Stalowy",
+        AppAccent.Orchid => "Orchidea",
+        AppAccent.Rose => "Różowy",
+        _ => "Lawendowy"
+    };
 
     private static string FormatFontScale(double value) => $"{value.ToString("0.0", CultureInfo.CurrentCulture)}x";
 

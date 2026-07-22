@@ -6,3 +6,18 @@ public enum AppThemeMode
     Light,
     Dark
 }
+
+public enum AppAccent
+{
+    Lavender,
+    Coral,
+    Amber,
+    Lime,
+    Mint,
+    Teal,
+    Aqua,
+    Sky,
+    Steel,
+    Orchid,
+    Rose
+}

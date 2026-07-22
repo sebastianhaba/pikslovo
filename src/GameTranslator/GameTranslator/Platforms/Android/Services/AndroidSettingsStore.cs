@@ -13,7 +13,8 @@ internal sealed record AndroidAppSettings(
     int HotkeyCode,
     bool HoldToPreview,
     bool GlobalHotkeyEnabled,
-    AppThemeMode ThemeMode);
+    AppThemeMode ThemeMode,
+    AppAccent Accent);
 
 internal static class AndroidSettingsStore
 {
@@ -28,6 +29,7 @@ internal static class AndroidSettingsStore
     private const string HoldToPreviewName = "hold_to_preview";
     private const string GlobalHotkeyEnabledName = "global_hotkey_enabled";
     private const string ThemeModeName = "theme_mode";
+    private const string AccentName = "accent";
     private const string KeyAlias = "game_translator_api_key";
 
     public static AndroidAppSettings Load(Context context)
@@ -44,7 +46,8 @@ internal static class AndroidSettingsStore
             preferences.GetInt(HotkeyCodeName, 0),
             preferences.GetBoolean(HoldToPreviewName, false),
             preferences.GetBoolean(GlobalHotkeyEnabledName, false),
-            ReadThemeMode(preferences.GetString(ThemeModeName, null)));
+            ReadThemeMode(preferences.GetString(ThemeModeName, null)),
+            ReadAccent(preferences.GetString(AccentName, null)));
     }
 
     public static void Save(Context context, AndroidAppSettings settings)
@@ -60,11 +63,15 @@ internal static class AndroidSettingsStore
         editor.PutBoolean(HoldToPreviewName, settings.HoldToPreview);
         editor.PutBoolean(GlobalHotkeyEnabledName, settings.GlobalHotkeyEnabled);
         editor.PutString(ThemeModeName, settings.ThemeMode.ToString());
+        editor.PutString(AccentName, settings.Accent.ToString());
         editor.Apply();
     }
 
     private static AppThemeMode ReadThemeMode(string? value) =>
         Enum.TryParse<AppThemeMode>(value, ignoreCase: true, out var mode) ? mode : AppThemeMode.System;
+
+    private static AppAccent ReadAccent(string? value) =>
+        Enum.TryParse<AppAccent>(value, ignoreCase: true, out var accent) ? accent : AppAccent.Lavender;
 
     private static ISharedPreferences GetPreferences(Context context) =>
         context.GetSharedPreferences(PreferencesName, FileCreationMode.Private)!;
