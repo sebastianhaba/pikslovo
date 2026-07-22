@@ -83,7 +83,9 @@ internal sealed partial class AndroidOverlayPresenter
 
 internal static class AndroidOverlayRenderer
 {
-    private const int Padding = 10;
+    private const float MaximumTextSize = 48f;
+    private const float PreferredMinimumTextSize = 16f;
+    private const float AbsoluteMinimumTextSize = 8f;
 
     public static Bitmap Render(Bitmap source, TranslationResult result)
     {
@@ -113,43 +115,110 @@ internal static class AndroidOverlayRenderer
 
     private static void DrawWrappedText(Android.Graphics.Canvas canvas, string value, PixelRect bounds, Paint paint)
     {
-        var usableWidth = Math.Max(1, bounds.Width - (Padding * 2));
-        var usableHeight = Math.Max(1, bounds.Height - (Padding * 2));
-        paint.TextSize = Math.Clamp(usableHeight * 0.6f, 14f, 42f);
-
-        var lines = Wrap(value, paint, usableWidth);
-        while (lines.Count * paint.TextSize * 1.25f > usableHeight && paint.TextSize > 10f)
+        if (string.IsNullOrWhiteSpace(value))
         {
-            paint.TextSize -= 2f;
-            lines = Wrap(value, paint, usableWidth);
+            return;
         }
 
-        var baseline = bounds.Top + Padding - paint.Ascent();
+        // A fixed 10 px padding consumed the whole content area in short OCR boxes.
+        var horizontalPadding = Math.Min(10f, Math.Max(2f, bounds.Width * 0.08f));
+        var verticalPadding = Math.Min(10f, Math.Max(1f, bounds.Height * 0.10f));
+        var usableWidth = Math.Max(1f, bounds.Width - (horizontalPadding * 2));
+        var usableHeight = Math.Max(1f, bounds.Height - (verticalPadding * 2));
+
+        var visibleCharacterCount = Math.Max(1, value.Count(character => !char.IsWhiteSpace(character)));
+        var areaBasedTextSize = MathF.Sqrt((usableWidth * usableHeight / visibleCharacterCount) * 0.7f);
+        paint.TextSize = Math.Clamp(areaBasedTextSize, PreferredMinimumTextSize, MaximumTextSize);
+
+        var lines = Wrap(value, paint, (int)usableWidth);
+        while (RequiredHeight(lines, paint) > usableHeight && paint.TextSize > AbsoluteMinimumTextSize)
+        {
+            paint.TextSize = Math.Max(AbsoluteMinimumTextSize, paint.TextSize - 1f);
+            lines = Wrap(value, paint, (int)usableWidth);
+        }
+
+        var baseline = bounds.Top + verticalPadding - paint.Ascent();
+        var lineHeight = LineHeight(paint);
         foreach (var line in lines)
         {
-            if (baseline + paint.Descent() > bounds.Bottom - Padding)
+            if (baseline + paint.Descent() > bounds.Bottom - verticalPadding)
             {
                 break;
             }
 
-            canvas.DrawText(line, bounds.Left + Padding, baseline, paint);
-            baseline += paint.TextSize * 1.25f;
+            canvas.DrawText(line, bounds.Left + horizontalPadding, baseline, paint);
+            baseline += lineHeight;
         }
     }
 
+    private static float RequiredHeight(IReadOnlyCollection<string> lines, Paint paint) =>
+        lines.Count * LineHeight(paint);
+
+    private static float LineHeight(Paint paint) =>
+        (paint.Descent() - paint.Ascent()) * 1.15f;
+
     private static List<string> Wrap(string value, Paint paint, int maxWidth)
     {
-        var words = value.Split(' ', StringSplitOptions.RemoveEmptyEntries);
         var lines = new List<string>();
-        var current = string.Empty;
-
-        foreach (var word in words)
+        foreach (var paragraph in value.Replace("\r\n", "\n").Split('\n'))
         {
-            var candidate = string.IsNullOrEmpty(current) ? word : $"{current} {word}";
-            if (!string.IsNullOrEmpty(current) && paint.MeasureText(candidate) > maxWidth)
+            var words = paragraph.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+            if (words.Length == 0)
+            {
+                lines.Add(string.Empty);
+                continue;
+            }
+
+            var current = string.Empty;
+            foreach (var word in words)
+            {
+                var candidate = string.IsNullOrEmpty(current) ? word : $"{current} {word}";
+                if (paint.MeasureText(candidate) <= maxWidth)
+                {
+                    current = candidate;
+                    continue;
+                }
+
+                if (!string.IsNullOrEmpty(current))
+                {
+                    lines.Add(current);
+                    current = string.Empty;
+                }
+
+                var segments = SplitLongWord(word, paint, maxWidth);
+                for (var index = 0; index < segments.Count - 1; index++)
+                {
+                    lines.Add(segments[index]);
+                }
+
+                current = segments[^1];
+            }
+
+            if (!string.IsNullOrEmpty(current))
             {
                 lines.Add(current);
-                current = word;
+            }
+        }
+
+        return lines.Count == 0 ? [string.Empty] : lines;
+    }
+
+    private static List<string> SplitLongWord(string word, Paint paint, int maxWidth)
+    {
+        if (paint.MeasureText(word) <= maxWidth)
+        {
+            return [word];
+        }
+
+        var segments = new List<string>();
+        var current = string.Empty;
+        foreach (var character in word)
+        {
+            var candidate = current + character;
+            if (!string.IsNullOrEmpty(current) && paint.MeasureText(candidate) > maxWidth)
+            {
+                segments.Add(current);
+                current = character.ToString();
             }
             else
             {
@@ -159,9 +228,9 @@ internal static class AndroidOverlayRenderer
 
         if (!string.IsNullOrEmpty(current))
         {
-            lines.Add(current);
+            segments.Add(current);
         }
 
-        return lines.Count == 0 ? [string.Empty] : lines;
+        return segments;
     }
 }
