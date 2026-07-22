@@ -10,13 +10,22 @@ using Java.Interop;
 
 namespace GameTranslator.Droid.Services;
 
-internal sealed class FloatingTranslationTrigger
+internal enum FloatingTranslationTriggerState
+{
+    Ready,
+    Processing,
+    ResultVisible,
+}
+
+internal sealed partial class FloatingTranslationTrigger
 {
     private readonly Context _context;
     private readonly IWindowManager _windowManager;
-    private TextView? _button;
+    private readonly Handler _mainHandler = new(Looper.MainLooper!);
+    private ImageButton? _button;
     private WindowManagerLayoutParams? _layout;
     private BrightnessObserver? _brightnessObserver;
+    private int _stateRevision;
     private bool _isAttached;
 
     public FloatingTranslationTrigger(Context context)
@@ -31,15 +40,13 @@ internal sealed class FloatingTranslationTrigger
     {
         Dismiss();
         var size = ToPixels(56);
-        _button = new TextView(_context)
+        _button = new ImageButton(_context)
         {
-            Text = "T",
-            TextSize = 22,
-            Gravity = GravityFlags.Center,
             ContentDescription = "Tłumacz ekran",
         };
-        _button.SetTextColor(Color.White);
-        _button.SetTypeface(Android.Graphics.Typeface.DefaultBold, TypefaceStyle.Bold);
+        var iconPadding = ToPixels(12);
+        _button.SetPadding(iconPadding, iconPadding, iconPadding, iconPadding);
+        _button.SetScaleType(ImageView.ScaleType.CenterInside);
         _button.Background = CreateBackground();
         _button.Click += (_, _) => onClick();
 
@@ -57,6 +64,7 @@ internal sealed class FloatingTranslationTrigger
         UpdateBrightness();
         _windowManager.AddView(_button, _layout);
         _isAttached = true;
+        ApplyState(FloatingTranslationTriggerState.Ready, Interlocked.Increment(ref _stateRevision));
 
         _brightnessObserver = new BrightnessObserver(this, new Handler(Looper.MainLooper!));
         var brightnessUri = Settings.System.GetUriFor(Settings.System.ScreenBrightness);
@@ -64,6 +72,50 @@ internal sealed class FloatingTranslationTrigger
         {
             _context.ContentResolver?.RegisterContentObserver(brightnessUri, false, _brightnessObserver);
         }
+    }
+
+    public void SetState(FloatingTranslationTriggerState state)
+    {
+        var revision = Interlocked.Increment(ref _stateRevision);
+        _mainHandler.Post(() => ApplyState(state, revision));
+    }
+
+    public void BringToFront()
+    {
+        if (_button is null || _layout is null || !_isAttached)
+        {
+            return;
+        }
+
+        _windowManager.RemoveViewImmediate(_button);
+        _windowManager.AddView(_button, _layout);
+        _button.Visibility = ViewStates.Visible;
+    }
+
+    public Task HideForCaptureAsync()
+    {
+        var completion = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        _mainHandler.Post(() =>
+        {
+            if (_button is not null)
+            {
+                _button.Visibility = ViewStates.Invisible;
+            }
+
+            completion.SetResult();
+        });
+        return completion.Task;
+    }
+
+    public void ShowAfterCapture()
+    {
+        _mainHandler.Post(() =>
+        {
+            if (_button is not null)
+            {
+                _button.Visibility = ViewStates.Visible;
+            }
+        });
     }
 
     public void Dismiss()
@@ -114,6 +166,28 @@ internal sealed class FloatingTranslationTrigger
         {
             _windowManager.UpdateViewLayout(_button, _layout);
         }
+    }
+
+    private void ApplyState(FloatingTranslationTriggerState state, int revision)
+    {
+        if (_button is null || revision != Volatile.Read(ref _stateRevision))
+        {
+            return;
+        }
+
+        _button.Enabled = state != FloatingTranslationTriggerState.Processing;
+        _button.SetImageResource(state switch
+        {
+            FloatingTranslationTriggerState.Processing => Resource.Drawable.ic_hourglass_empty,
+            FloatingTranslationTriggerState.ResultVisible => Resource.Drawable.ic_arrow_back,
+            _ => Resource.Drawable.ic_translate,
+        });
+        _button.ContentDescription = state switch
+        {
+            FloatingTranslationTriggerState.Processing => "Tłumaczenie w toku",
+            FloatingTranslationTriggerState.ResultVisible => "Wróć do gry",
+            _ => "Tłumacz ekran",
+        };
     }
 
     private sealed class BrightnessObserver(FloatingTranslationTrigger owner, Handler handler) : ContentObserver(handler)

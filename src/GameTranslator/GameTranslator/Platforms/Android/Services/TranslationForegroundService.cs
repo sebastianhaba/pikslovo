@@ -174,8 +174,10 @@ public sealed class TranslationForegroundService : Service
             }
 
             _isProcessing = true;
+            _floatingTrigger?.SetState(FloatingTranslationTriggerState.Processing);
         }
 
+        var resultShown = false;
         try
         {
             if (!Settings.CanDrawOverlays(this))
@@ -185,6 +187,7 @@ public sealed class TranslationForegroundService : Service
             }
 
             var bitmap = await CaptureBitmapAsync().ConfigureAwait(false);
+            _floatingTrigger?.ShowAfterCapture();
             if (bitmap is null)
             {
                 ShowMessage("Nie udało się pobrać klatki ekranu.");
@@ -211,9 +214,12 @@ public sealed class TranslationForegroundService : Service
                 }
 
                 var overlay = AndroidOverlayRenderer.Render(bitmap, result, settings.FontScale);
+                resultShown = true;
                 new Handler(Looper.MainLooper!).Post(() =>
                 {
                     _overlayPresenter?.Show(overlay, DismissOverlay);
+                    _floatingTrigger?.BringToFront();
+                    _floatingTrigger?.SetState(FloatingTranslationTriggerState.ResultVisible);
                 });
             }
         }
@@ -227,12 +233,23 @@ public sealed class TranslationForegroundService : Service
             {
                 _isProcessing = false;
             }
+
+            if (!resultShown)
+            {
+                _floatingTrigger?.SetState(FloatingTranslationTriggerState.Ready);
+            }
         }
     }
 
     private async Task<Bitmap?> CaptureBitmapAsync()
     {
         await Task.Delay(100).ConfigureAwait(false);
+        if (_floatingTrigger is not null)
+        {
+            await _floatingTrigger.HideForCaptureAsync().ConfigureAwait(false);
+            await Task.Delay(32).ConfigureAwait(false);
+        }
+
         var image = _imageReader?.AcquireLatestImage();
         if (image is null)
         {
@@ -276,7 +293,11 @@ public sealed class TranslationForegroundService : Service
 
     private void DismissOverlay()
     {
-        new Handler(Looper.MainLooper!).Post(() => _overlayPresenter?.Dismiss());
+        new Handler(Looper.MainLooper!).Post(() =>
+        {
+            _overlayPresenter?.Dismiss();
+            _floatingTrigger?.SetState(FloatingTranslationTriggerState.Ready);
+        });
     }
 
     private void StopSession()
