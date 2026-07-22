@@ -10,6 +10,8 @@ internal static class AndroidTranslationHost
     public const int ProjectionRequestCode = 4817;
     private const int NotificationRequestCode = 4818;
 
+    public static event Action? SessionStateChanged;
+
     public static void RequestSession(MainActivity activity)
     {
         // A screen-capture consent token cannot be retained or reused. Ensure a
@@ -39,6 +41,11 @@ internal static class AndroidTranslationHost
         var intent = new Intent(context, typeof(TranslationForegroundService));
         intent.SetAction(TranslationForegroundService.StopSessionAction);
         context.StartService(intent);
+    }
+
+    public static void NotifySessionStateChanged()
+    {
+        SessionStateChanged?.Invoke();
     }
 
     public static bool RequestOverlayPermission(Activity activity)

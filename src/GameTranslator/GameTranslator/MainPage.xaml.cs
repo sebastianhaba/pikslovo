@@ -13,6 +13,10 @@ public sealed partial class MainPage : Page
     public MainPage()
     {
         InitializeComponent();
+#if __ANDROID__
+        Loaded += MainPage_Loaded;
+        Unloaded += MainPage_Unloaded;
+#endif
         try
         {
             LoadSettings();
@@ -130,9 +134,26 @@ public sealed partial class MainPage : Page
             }
         }
 
-        UpdateSessionButton();
 #endif
     }
+
+#if __ANDROID__
+    private void MainPage_Loaded(object sender, RoutedEventArgs e)
+    {
+        AndroidTranslationHost.SessionStateChanged += OnSessionStateChanged;
+        UpdateSessionButton();
+    }
+
+    private void MainPage_Unloaded(object sender, RoutedEventArgs e)
+    {
+        AndroidTranslationHost.SessionStateChanged -= OnSessionStateChanged;
+    }
+
+    private void OnSessionStateChanged()
+    {
+        _ = DispatcherQueue.TryEnqueue(UpdateSessionButton);
+    }
+#endif
 
     private bool SaveSettings()
     {

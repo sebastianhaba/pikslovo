@@ -129,6 +129,7 @@ public sealed class TranslationForegroundService : Service
             _floatingTrigger.Show(() => _ = CaptureAndTranslateAsync());
         }
         IsSessionActive = true;
+        AndroidTranslationHost.NotifySessionStateChanged();
         ShowMessage("Tlumacz jest aktywny.");
     }
 
@@ -291,6 +292,7 @@ public sealed class TranslationForegroundService : Service
             IsSessionActive = false;
             _isProcessing = false;
         }
+        AndroidTranslationHost.NotifySessionStateChanged();
 
         DismissOverlay();
         _floatingTrigger?.Dismiss();
