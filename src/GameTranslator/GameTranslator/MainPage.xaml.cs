@@ -11,8 +11,12 @@ namespace GameTranslator;
 
 public sealed partial class MainPage : Page
 {
+    private bool _isLoading;
+    private bool _updatingSessionToggle;
+
     public MainPage()
     {
+        _isLoading = true;
         InitializeComponent();
 #if __ANDROID__
         Loaded += MainPage_Loaded;
@@ -28,6 +32,10 @@ public sealed partial class MainPage : Page
             SelectLanguage(TargetLanguageBox, "pl");
             StatusText.Text = $"Nie można jeszcze odczytać ustawień: {exception.Message}";
         }
+        finally
+        {
+            _isLoading = false;
+        }
     }
 
     private void LoadSettings()
@@ -40,10 +48,9 @@ public sealed partial class MainPage : Page
         FontScaleSlider.Value = settings.Translation.FontScale;
         RecognitionConfidenceSlider.Value = settings.Translation.RecognitionConfidence;
         HideIdenticalTranslationsToggle.IsOn = settings.Translation.HideIdenticalTranslations;
-        HotkeyCodeBox.Text = settings.HotkeyCode == 0 ? string.Empty : settings.HotkeyCode.ToString();
+        HotkeyCodeBox.Text = settings.HotkeyCode == 0 ? string.Empty : settings.HotkeyCode.ToString(CultureInfo.InvariantCulture);
         HoldToPreviewToggle.IsOn = settings.HoldToPreview;
         GlobalHotkeyToggle.IsOn = settings.GlobalHotkeyEnabled;
-        UpdateSessionButton();
 #else
         SelectLanguage(SourceLanguageBox, "ja");
         SelectLanguage(TargetLanguageBox, "pl");
@@ -53,15 +60,50 @@ public sealed partial class MainPage : Page
 #endif
         UpdateFontScaleValue();
         UpdateRecognitionConfidenceValue();
+        UpdateSessionToggle();
     }
 
-    private void SaveSettings_Click(object sender, RoutedEventArgs e)
+    private void OpenSection_Click(object sender, RoutedEventArgs e)
     {
-        if (SaveSettings())
+        if (sender is not Button { Tag: string section })
         {
-            StatusText.Text = "Ustawienia zapisane.";
+            return;
         }
+
+        DetailTitle.Text = section switch
+        {
+            "translation" => "Tłumaczenie",
+            "api" => "Google Cloud API",
+            "appearance" => "Wygląd nakładki",
+            "recognition" => "Rozpoznawanie tekstu",
+            "triggers" => "Globalny hotkey",
+            "permissions" => "Uprawnienia",
+            _ => string.Empty
+        };
+
+        TranslationSection.Visibility = section == "translation" ? Visibility.Visible : Visibility.Collapsed;
+        ApiSection.Visibility = section == "api" ? Visibility.Visible : Visibility.Collapsed;
+        AppearanceSection.Visibility = section == "appearance" ? Visibility.Visible : Visibility.Collapsed;
+        RecognitionSection.Visibility = section == "recognition" ? Visibility.Visible : Visibility.Collapsed;
+        TriggersSection.Visibility = section == "triggers" ? Visibility.Visible : Visibility.Collapsed;
+        PermissionsSection.Visibility = section == "permissions" ? Visibility.Visible : Visibility.Collapsed;
+        HomeHeader.Visibility = Visibility.Collapsed;
+        DetailHeader.Visibility = Visibility.Visible;
+        HomeView.Visibility = Visibility.Collapsed;
+        DetailView.Visibility = Visibility.Visible;
+        DetailView.ChangeView(null, 0, null, true);
     }
+
+    private void Back_Click(object sender, RoutedEventArgs e)
+    {
+        HomeHeader.Visibility = Visibility.Visible;
+        DetailHeader.Visibility = Visibility.Collapsed;
+        HomeView.Visibility = Visibility.Visible;
+        DetailView.Visibility = Visibility.Collapsed;
+        HomeView.ChangeView(null, 0, null, true);
+    }
+
+    private void Setting_Changed(object sender, RoutedEventArgs e) => SaveSettings(requireValidTranslationSettings: false);
 
     private void RequestOverlayPermission_Click(object sender, RoutedEventArgs e)
     {
@@ -109,38 +151,45 @@ public sealed partial class MainPage : Page
 #endif
     }
 
-    private void ToggleSession_Click(object sender, RoutedEventArgs e)
+    private void SessionToggle_Toggled(object sender, RoutedEventArgs e)
     {
-#if __ANDROID__
-        if (!SaveSettings())
+        if (_isLoading || _updatingSessionToggle)
         {
             return;
         }
 
+#if __ANDROID__
         var activity = MainActivity.CurrentActivity;
         if (activity is null)
         {
             StatusText.Text = "Aktywność Androida nie jest jeszcze gotowa.";
+            UpdateSessionToggle();
             return;
         }
-        if (TranslationForegroundService.IsSessionActive)
+
+        if (!SessionToggle.IsOn)
         {
             AndroidTranslationHost.StopSession(activity);
             StatusText.Text = "Zatrzymano sesję tłumacza.";
-        }
-        else
-        {
-            try
-            {
-                StatusText.Text = "Otwieram dialog udostępniania ekranu Androida.";
-                AndroidTranslationHost.RequestSession(activity);
-            }
-            catch (Exception exception)
-            {
-                StatusText.Text = $"Nie można uruchomić przechwytywania ekranu: {exception.Message}";
-            }
+            return;
         }
 
+        if (!SaveSettings(requireValidTranslationSettings: true))
+        {
+            UpdateSessionToggle();
+            return;
+        }
+
+        try
+        {
+            StatusText.Text = "Otwieram dialog udostępniania ekranu Androida.";
+            AndroidTranslationHost.RequestSession(activity);
+        }
+        catch (Exception exception)
+        {
+            StatusText.Text = $"Nie można uruchomić przechwytywania ekranu: {exception.Message}";
+            UpdateSessionToggle();
+        }
 #endif
     }
 
@@ -148,22 +197,21 @@ public sealed partial class MainPage : Page
     private void MainPage_Loaded(object sender, RoutedEventArgs e)
     {
         AndroidTranslationHost.SessionStateChanged += OnSessionStateChanged;
-        UpdateSessionButton();
+        UpdateSessionToggle();
     }
 
-    private void MainPage_Unloaded(object sender, RoutedEventArgs e)
-    {
-        AndroidTranslationHost.SessionStateChanged -= OnSessionStateChanged;
-    }
+    private void MainPage_Unloaded(object sender, RoutedEventArgs e) => AndroidTranslationHost.SessionStateChanged -= OnSessionStateChanged;
 
-    private void OnSessionStateChanged()
-    {
-        _ = DispatcherQueue.TryEnqueue(UpdateSessionButton);
-    }
+    private void OnSessionStateChanged() => _ = DispatcherQueue.TryEnqueue(UpdateSessionToggle);
 #endif
 
-    private bool SaveSettings()
+    private bool SaveSettings(bool requireValidTranslationSettings)
     {
+        if (_isLoading)
+        {
+            return true;
+        }
+
         var hotkeyText = HotkeyCodeBox.Text?.Trim();
         var hotkeyCode = 0;
         if (!string.IsNullOrEmpty(hotkeyText) && (!int.TryParse(hotkeyText, out hotkeyCode) || hotkeyCode < 0))
@@ -172,23 +220,20 @@ public sealed partial class MainPage : Page
             return false;
         }
 
-        if (GlobalHotkeyToggle.IsOn && hotkeyCode == 0)
+        if (requireValidTranslationSettings && GlobalHotkeyToggle.IsOn && hotkeyCode == 0)
         {
             StatusText.Text = "Podaj Android key code albo wyłącz globalny hotkey.";
             return false;
         }
 
-        var fontScale = (float)FontScaleSlider.Value;
-        var recognitionConfidence = (float)RecognitionConfidenceSlider.Value;
-
         var settings = new TranslationSettings(
             ApiKeyBox.Password.Trim(),
             GetLanguage(SourceLanguageBox),
             GetLanguage(TargetLanguageBox),
-            recognitionConfidence,
-            fontScale,
+            (float)RecognitionConfidenceSlider.Value,
+            (float)FontScaleSlider.Value,
             HideIdenticalTranslationsToggle.IsOn);
-        if (!settings.IsValid)
+        if (requireValidTranslationSettings && !settings.IsValid)
         {
             StatusText.Text = "Wpisz klucz API i wybierz oba języki.";
             return false;
@@ -197,24 +242,21 @@ public sealed partial class MainPage : Page
 #if __ANDROID__
         AndroidSettingsStore.Save(
             global::Android.App.Application.Context!,
-            new AndroidAppSettings(
-                settings,
-                hotkeyCode,
-                HoldToPreviewToggle.IsOn,
-                GlobalHotkeyToggle.IsOn));
+            new AndroidAppSettings(settings, hotkeyCode, HoldToPreviewToggle.IsOn, GlobalHotkeyToggle.IsOn));
 #endif
         return true;
     }
 
-    private void UpdateSessionButton()
+    private void UpdateSessionToggle()
     {
 #if __ANDROID__
-        StartSessionButton.Content = TranslationForegroundService.IsSessionActive ? "Zatrzymaj tłumacza" : "Włącz tłumacza";
+        _updatingSessionToggle = true;
+        SessionToggle.IsOn = TranslationForegroundService.IsSessionActive;
+        _updatingSessionToggle = false;
 #endif
     }
 
-    private static string GetLanguage(ComboBox box) =>
-        ((ComboBoxItem)box.SelectedItem).Tag?.ToString() ?? "";
+    private static string GetLanguage(ComboBox box) => (box.SelectedItem as ComboBoxItem)?.Tag?.ToString() ?? string.Empty;
 
     private static void SelectLanguage(ComboBox box, string language)
     {
@@ -233,20 +275,16 @@ public sealed partial class MainPage : Page
     private void RecognitionConfidenceSlider_ValueChanged(object sender, RangeBaseValueChangedEventArgs e)
     {
         UpdateRecognitionConfidenceValue();
+        SaveSettings(requireValidTranslationSettings: false);
     }
 
     private void FontScaleSlider_ValueChanged(object sender, RangeBaseValueChangedEventArgs e)
     {
         UpdateFontScaleValue();
+        SaveSettings(requireValidTranslationSettings: false);
     }
 
-    private void UpdateFontScaleValue()
-    {
-        FontScaleValue.Text = $"{FontScaleSlider.Value.ToString("0.0", CultureInfo.CurrentCulture)}x";
-    }
+    private void UpdateFontScaleValue() => FontScaleValue.Text = $"{FontScaleSlider.Value.ToString("0.0", CultureInfo.CurrentCulture)}x";
 
-    private void UpdateRecognitionConfidenceValue()
-    {
-        RecognitionConfidenceValue.Text = RecognitionConfidenceSlider.Value.ToString("0.0", CultureInfo.CurrentCulture);
-    }
+    private void UpdateRecognitionConfidenceValue() => RecognitionConfidenceValue.Text = RecognitionConfidenceSlider.Value.ToString("0.0", CultureInfo.CurrentCulture);
 }

@@ -2,105 +2,141 @@
       xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
       Background="White">
-  <ScrollViewer>
-    <Grid MaxWidth="720" Padding="24,32,24,32">
-      <StackPanel Spacing="20">
-        <StackPanel Spacing="4">
-          <TextBlock Text="GameTranslator" FontSize="28" FontWeight="SemiBold" Foreground="Black" />
-          <TextBlock Text="Konfiguracja sesji" FontSize="18" Foreground="Black" />
-        </StackPanel>
+  <Grid MaxWidth="720" Padding="20,20,20,16" RowSpacing="12">
+    <Grid.RowDefinitions>
+      <RowDefinition Height="Auto" />
+      <RowDefinition Height="*" />
+      <RowDefinition Height="Auto" />
+    </Grid.RowDefinitions>
 
-        <StackPanel Spacing="10">
-          <TextBlock Text="Google Cloud API key" Foreground="Black" />
-          <PasswordBox x:Name="ApiKeyBox" PlaceholderText="AIza..." />
-          <TextBlock Text="Klucz jest przechowywany lokalnie w Android Keystore." Opacity="0.7" TextWrapping="Wrap" />
-        </StackPanel>
-
-        <Grid ColumnSpacing="16" RowSpacing="10">
-          <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="*" />
-            <ColumnDefinition Width="*" />
-          </Grid.ColumnDefinitions>
-          <StackPanel Grid.Column="0" Spacing="8">
-            <TextBlock Text="Język źródłowy" Foreground="Black" />
-            <ComboBox x:Name="SourceLanguageBox">
-              <ComboBoxItem Tag="ja" Content="Japoński" />
-              <ComboBoxItem Tag="en" Content="Angielski" />
-              <ComboBoxItem Tag="ko" Content="Koreański" />
-              <ComboBoxItem Tag="zh" Content="Chiński (uproszczony)" />
-              <ComboBoxItem Tag="de" Content="Niemiecki" />
-            </ComboBox>
-          </StackPanel>
-          <StackPanel Grid.Column="1" Spacing="8">
-            <TextBlock Text="Język docelowy" Foreground="Black" />
-            <ComboBox x:Name="TargetLanguageBox">
-              <ComboBoxItem Tag="pl" Content="Polski" />
-              <ComboBoxItem Tag="en" Content="Angielski" />
-              <ComboBoxItem Tag="de" Content="Niemiecki" />
-              <ComboBoxItem Tag="es" Content="Hiszpański" />
-            </ComboBox>
-          </StackPanel>
-        </Grid>
-
-        <StackPanel Spacing="8">
-          <StackPanel Orientation="Horizontal" HorizontalAlignment="Stretch">
-            <TextBlock Text="Skalowanie czcionki" Foreground="Black" />
-            <TextBlock x:Name="FontScaleValue" Margin="12,0,0,0" Foreground="Black" />
-          </StackPanel>
-          <Slider x:Name="FontScaleSlider"
-                  Minimum="1"
-                  Maximum="3"
-                  StepFrequency="0.1"
-                  Value="1"
-                  ValueChanged="FontScaleSlider_ValueChanged" />
-          <TextBlock Text="Powiększa tekst tłumaczenia na nakładce. Zakres od 1x do 3x, krok 0,1." Opacity="0.7" TextWrapping="Wrap" />
-        </StackPanel>
-
-        <StackPanel Spacing="8">
-          <StackPanel Orientation="Horizontal" HorizontalAlignment="Stretch">
-            <TextBlock Text="Pewność rozpoznawania tekstu" Foreground="Black" />
-            <TextBlock x:Name="RecognitionConfidenceValue" Margin="12,0,0,0" Foreground="Black" />
-          </StackPanel>
-          <Slider x:Name="RecognitionConfidenceSlider"
-                  Minimum="0"
-                  Maximum="1"
-                  StepFrequency="0.1"
-                  Value="0.6"
-                  ValueChanged="RecognitionConfidenceSlider_ValueChanged" />
-          <TextBlock Text="Tekst o pewności poniżej progu nie zostanie przetłumaczony. Zakres od 0 do 1, krok 0,1." Opacity="0.7" TextWrapping="Wrap" />
-        </StackPanel>
-
-        <StackPanel Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
-          <ToggleSwitch x:Name="HideIdenticalTranslationsToggle" />
-          <TextBlock Text="Ukrywaj identyczne tłumaczenia" TextWrapping="Wrap" VerticalAlignment="Center" Foreground="Black" />
-        </StackPanel>
-
-        <StackPanel Spacing="10">
-          <TextBlock Text="Globalny hotkey" FontSize="18" Foreground="Black" />
-          <StackPanel Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
-            <ToggleSwitch x:Name="GlobalHotkeyToggle" />
-            <TextBlock Text="Włącz globalny hotkey" VerticalAlignment="Center" Foreground="Black" />
-          </StackPanel>
-          <TextBox x:Name="HotkeyCodeBox" Header="Android key code" PlaceholderText="np. 131 dla F1" />
-          <StackPanel Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
-            <ToggleSwitch x:Name="HoldToPreviewToggle" />
-            <TextBlock Text="Pokazuj tłumaczenie tylko podczas przytrzymania" TextWrapping="Wrap" VerticalAlignment="Center" Foreground="Black" />
-          </StackPanel>
-          <Button Content="Otwórz ustawienia dostępności" Click="OpenAccessibilitySettings_Click" HorizontalAlignment="Left" />
-        </StackPanel>
-
-        <StackPanel Spacing="10">
-          <TextBlock Text="Uprawnienia" FontSize="18" Foreground="Black" />
-          <Button Content="Zezwól na nakładkę nad grą" Click="RequestOverlayPermission_Click" HorizontalAlignment="Left" />
-          <TextBlock Text="Sesja przechwytywania uruchamia systemowy dialog Androida. Podczas działania widoczne jest powiadomienie." Opacity="0.7" TextWrapping="Wrap" />
-        </StackPanel>
-
-        <StackPanel Orientation="Horizontal" Spacing="12">
-          <Button Content="Zapisz ustawienia" Click="SaveSettings_Click" />
-          <Button x:Name="StartSessionButton" Content="Włącz tłumacza" Click="ToggleSession_Click" />
-        </StackPanel>
-        <TextBlock x:Name="StatusText" TextWrapping="Wrap" Foreground="Black" />
+    <Grid x:Name="HomeHeader" ColumnSpacing="16">
+      <Grid.ColumnDefinitions>
+        <ColumnDefinition Width="*" />
+        <ColumnDefinition Width="Auto" />
+      </Grid.ColumnDefinitions>
+      <TextBlock Text="GameTranslator" FontSize="24" FontWeight="SemiBold" Foreground="Black" VerticalAlignment="Center" />
+      <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+        <TextBlock Text="Tłumacz" Foreground="Black" VerticalAlignment="Center" />
+        <ToggleSwitch x:Name="SessionToggle" Toggled="SessionToggle_Toggled" />
       </StackPanel>
     </Grid>
-  </ScrollViewer>
+
+    <Grid x:Name="DetailHeader" Visibility="Collapsed" ColumnSpacing="8">
+      <Grid.ColumnDefinitions>
+        <ColumnDefinition Width="Auto" />
+        <ColumnDefinition Width="*" />
+      </Grid.ColumnDefinitions>
+      <Button Click="Back_Click" Width="44" Height="44" Padding="0" ToolTipService.ToolTip="Wróć do ustawień">
+        <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE72B;" FontSize="18" />
+      </Button>
+      <TextBlock x:Name="DetailTitle" Grid.Column="1" FontSize="20" FontWeight="SemiBold" Foreground="Black" VerticalAlignment="Center" />
+    </Grid>
+
+    <Grid Grid.Row="1">
+      <ScrollViewer x:Name="HomeView">
+        <StackPanel Spacing="0">
+          <TextBlock Text="Ustawienia" FontSize="15" FontWeight="SemiBold" Opacity="0.65" Margin="16,8,0,8" Foreground="Black" />
+
+          <Button Tag="translation" Click="OpenSection_Click" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch" Padding="16,14">
+            <Grid ColumnSpacing="16">
+              <Grid.ColumnDefinitions><ColumnDefinition Width="32" /><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+              <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE774;" FontSize="20" Foreground="Black" VerticalAlignment="Center" />
+              <StackPanel Grid.Column="1" Spacing="3"><TextBlock Text="Tłumaczenie" FontWeight="SemiBold" Foreground="Black" /><TextBlock Text="Języki źródłowy i docelowy" Opacity="0.65" TextWrapping="Wrap" Foreground="Black" /></StackPanel>
+              <FontIcon Grid.Column="2" FontFamily="Segoe MDL2 Assets" Glyph="&#xE76C;" FontSize="16" Foreground="Black" VerticalAlignment="Center" />
+            </Grid>
+          </Button>
+          <Border Height="1" Background="#E4E1E6" />
+
+          <Button Tag="api" Click="OpenSection_Click" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch" Padding="16,14">
+            <Grid ColumnSpacing="16">
+              <Grid.ColumnDefinitions><ColumnDefinition Width="32" /><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+              <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE72E;" FontSize="20" Foreground="Black" VerticalAlignment="Center" />
+              <StackPanel Grid.Column="1" Spacing="3"><TextBlock Text="Google Cloud API" FontWeight="SemiBold" Foreground="Black" /><TextBlock Text="Klucz do rozpoznawania i tłumaczenia tekstu" Opacity="0.65" TextWrapping="Wrap" Foreground="Black" /></StackPanel>
+              <FontIcon Grid.Column="2" FontFamily="Segoe MDL2 Assets" Glyph="&#xE76C;" FontSize="16" Foreground="Black" VerticalAlignment="Center" />
+            </Grid>
+          </Button>
+          <Border Height="1" Background="#E4E1E6" />
+
+          <Button Tag="appearance" Click="OpenSection_Click" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch" Padding="16,14">
+            <Grid ColumnSpacing="16">
+              <Grid.ColumnDefinitions><ColumnDefinition Width="32" /><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+              <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE8D2;" FontSize="20" Foreground="Black" VerticalAlignment="Center" />
+              <StackPanel Grid.Column="1" Spacing="3"><TextBlock Text="Wygląd nakładki" FontWeight="SemiBold" Foreground="Black" /><TextBlock Text="Skala tekstu i widoczność tłumaczeń" Opacity="0.65" TextWrapping="Wrap" Foreground="Black" /></StackPanel>
+              <FontIcon Grid.Column="2" FontFamily="Segoe MDL2 Assets" Glyph="&#xE76C;" FontSize="16" Foreground="Black" VerticalAlignment="Center" />
+            </Grid>
+          </Button>
+          <Border Height="1" Background="#E4E1E6" />
+
+          <Button Tag="recognition" Click="OpenSection_Click" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch" Padding="16,14">
+            <Grid ColumnSpacing="16">
+              <Grid.ColumnDefinitions><ColumnDefinition Width="32" /><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+              <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE8C8;" FontSize="20" Foreground="Black" VerticalAlignment="Center" />
+              <StackPanel Grid.Column="1" Spacing="3"><TextBlock Text="Rozpoznawanie tekstu" FontWeight="SemiBold" Foreground="Black" /><TextBlock Text="Próg pewności wyników OCR" Opacity="0.65" TextWrapping="Wrap" Foreground="Black" /></StackPanel>
+              <FontIcon Grid.Column="2" FontFamily="Segoe MDL2 Assets" Glyph="&#xE76C;" FontSize="16" Foreground="Black" VerticalAlignment="Center" />
+            </Grid>
+          </Button>
+          <Border Height="1" Background="#E4E1E6" />
+
+          <Button Tag="triggers" Click="OpenSection_Click" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch" Padding="16,14">
+            <Grid ColumnSpacing="16">
+              <Grid.ColumnDefinitions><ColumnDefinition Width="32" /><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+              <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE765;" FontSize="20" Foreground="Black" VerticalAlignment="Center" />
+              <StackPanel Grid.Column="1" Spacing="3"><TextBlock Text="Globalny hotkey" FontWeight="SemiBold" Foreground="Black" /><TextBlock Text="Skrót do pokazywania tłumaczenia" Opacity="0.65" TextWrapping="Wrap" Foreground="Black" /></StackPanel>
+              <FontIcon Grid.Column="2" FontFamily="Segoe MDL2 Assets" Glyph="&#xE76C;" FontSize="16" Foreground="Black" VerticalAlignment="Center" />
+            </Grid>
+          </Button>
+          <Border Height="1" Background="#E4E1E6" />
+
+          <Button Tag="permissions" Click="OpenSection_Click" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch" Padding="16,14">
+            <Grid ColumnSpacing="16">
+              <Grid.ColumnDefinitions><ColumnDefinition Width="32" /><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+              <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE72E;" FontSize="20" Foreground="Black" VerticalAlignment="Center" />
+              <StackPanel Grid.Column="1" Spacing="3"><TextBlock Text="Uprawnienia" FontWeight="SemiBold" Foreground="Black" /><TextBlock Text="Nakładka i dostępność systemu Android" Opacity="0.65" TextWrapping="Wrap" Foreground="Black" /></StackPanel>
+              <FontIcon Grid.Column="2" FontFamily="Segoe MDL2 Assets" Glyph="&#xE76C;" FontSize="16" Foreground="Black" VerticalAlignment="Center" />
+            </Grid>
+          </Button>
+        </StackPanel>
+      </ScrollViewer>
+
+      <ScrollViewer x:Name="DetailView" Visibility="Collapsed">
+        <Grid>
+          <StackPanel x:Name="TranslationSection" Visibility="Collapsed" Spacing="20">
+            <TextBlock Text="Wybierz język tekstu w grze i język, na który ma zostać przetłumaczony." Opacity="0.65" TextWrapping="Wrap" Foreground="Black" />
+            <StackPanel Spacing="8"><TextBlock Text="Język źródłowy" FontWeight="SemiBold" Foreground="Black" /><ComboBox x:Name="SourceLanguageBox" SelectionChanged="Setting_Changed"><ComboBoxItem Tag="ja" Content="Japoński" /><ComboBoxItem Tag="en" Content="Angielski" /><ComboBoxItem Tag="ko" Content="Koreański" /><ComboBoxItem Tag="zh" Content="Chiński (uproszczony)" /><ComboBoxItem Tag="de" Content="Niemiecki" /></ComboBox></StackPanel>
+            <StackPanel Spacing="8"><TextBlock Text="Język docelowy" FontWeight="SemiBold" Foreground="Black" /><ComboBox x:Name="TargetLanguageBox" SelectionChanged="Setting_Changed"><ComboBoxItem Tag="pl" Content="Polski" /><ComboBoxItem Tag="en" Content="Angielski" /><ComboBoxItem Tag="de" Content="Niemiecki" /><ComboBoxItem Tag="es" Content="Hiszpański" /></ComboBox></StackPanel>
+          </StackPanel>
+
+          <StackPanel x:Name="ApiSection" Visibility="Collapsed" Spacing="16">
+            <TextBlock Text="Klucz jest przechowywany lokalnie w Android Keystore i nie jest wysyłany poza usługami Google Cloud." Opacity="0.65" TextWrapping="Wrap" Foreground="Black" />
+            <StackPanel Spacing="8"><TextBlock Text="Google Cloud API key" FontWeight="SemiBold" Foreground="Black" /><PasswordBox x:Name="ApiKeyBox" PlaceholderText="AIza..." PasswordChanged="Setting_Changed" /></StackPanel>
+          </StackPanel>
+
+          <StackPanel x:Name="AppearanceSection" Visibility="Collapsed" Spacing="20">
+            <StackPanel Spacing="8"><StackPanel Orientation="Horizontal" Spacing="8"><TextBlock Text="Skalowanie czcionki" FontWeight="SemiBold" Foreground="Black" /><TextBlock x:Name="FontScaleValue" Foreground="Black" /></StackPanel><Slider x:Name="FontScaleSlider" Minimum="1" Maximum="3" StepFrequency="0.1" Value="1" ValueChanged="FontScaleSlider_ValueChanged" /><TextBlock Text="Powiększa tekst tłumaczenia na nakładce." Opacity="0.65" TextWrapping="Wrap" Foreground="Black" /></StackPanel>
+            <Grid ColumnSpacing="16"><Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions><StackPanel Spacing="3"><TextBlock Text="Ukrywaj identyczne tłumaczenia" FontWeight="SemiBold" Foreground="Black" /><TextBlock Text="Nie pokazuj tekstu, gdy tłumaczenie jest takie samo." Opacity="0.65" TextWrapping="Wrap" Foreground="Black" /></StackPanel><ToggleSwitch x:Name="HideIdenticalTranslationsToggle" Grid.Column="1" Toggled="Setting_Changed" VerticalAlignment="Center" /></Grid>
+          </StackPanel>
+
+          <StackPanel x:Name="RecognitionSection" Visibility="Collapsed" Spacing="12">
+            <StackPanel Orientation="Horizontal" Spacing="8"><TextBlock Text="Pewność rozpoznawania tekstu" FontWeight="SemiBold" Foreground="Black" /><TextBlock x:Name="RecognitionConfidenceValue" Foreground="Black" /></StackPanel>
+            <Slider x:Name="RecognitionConfidenceSlider" Minimum="0" Maximum="1" StepFrequency="0.1" Value="0.6" ValueChanged="RecognitionConfidenceSlider_ValueChanged" />
+            <TextBlock Text="Tekst o pewności poniżej wybranego progu nie zostanie przetłumaczony." Opacity="0.65" TextWrapping="Wrap" Foreground="Black" />
+          </StackPanel>
+
+          <StackPanel x:Name="TriggersSection" Visibility="Collapsed" Spacing="20">
+            <Grid ColumnSpacing="16"><Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions><StackPanel Spacing="3"><TextBlock Text="Włącz globalny hotkey" FontWeight="SemiBold" Foreground="Black" /><TextBlock Text="Pozwala wywołać tłumaczenie poza aplikacją." Opacity="0.65" TextWrapping="Wrap" Foreground="Black" /></StackPanel><ToggleSwitch x:Name="GlobalHotkeyToggle" Grid.Column="1" Toggled="Setting_Changed" VerticalAlignment="Center" /></Grid>
+            <StackPanel Spacing="8"><TextBlock Text="Android key code" FontWeight="SemiBold" Foreground="Black" /><TextBox x:Name="HotkeyCodeBox" PlaceholderText="np. 131 dla F1" TextChanged="Setting_Changed" /></StackPanel>
+            <Grid ColumnSpacing="16"><Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions><StackPanel Spacing="3"><TextBlock Text="Pokazuj tylko podczas przytrzymania" FontWeight="SemiBold" Foreground="Black" /><TextBlock Text="Po zwolnieniu klawisza nakładka zostanie ukryta." Opacity="0.65" TextWrapping="Wrap" Foreground="Black" /></StackPanel><ToggleSwitch x:Name="HoldToPreviewToggle" Grid.Column="1" Toggled="Setting_Changed" VerticalAlignment="Center" /></Grid>
+            <Button Content="Otwórz ustawienia dostępności" Click="OpenAccessibilitySettings_Click" HorizontalAlignment="Left" />
+          </StackPanel>
+
+          <StackPanel x:Name="PermissionsSection" Visibility="Collapsed" Spacing="16">
+            <TextBlock Text="Nakładka pozwala wyświetlić wynik nad grą. Dostęp do ekranu Android poprosi osobno podczas uruchamiania tłumacza." Opacity="0.65" TextWrapping="Wrap" Foreground="Black" />
+            <Button Content="Zezwól na nakładkę nad grą" Click="RequestOverlayPermission_Click" HorizontalAlignment="Left" />
+          </StackPanel>
+        </Grid>
+      </ScrollViewer>
+    </Grid>
+
+    <TextBlock x:Name="StatusText" Grid.Row="2" TextWrapping="Wrap" Foreground="Black" Opacity="0.75" />
+  </Grid>
 </Page>
