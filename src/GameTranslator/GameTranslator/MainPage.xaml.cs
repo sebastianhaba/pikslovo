@@ -5,6 +5,8 @@ using System.Globalization;
 #if __ANDROID__
 using GameTranslator.Droid;
 using GameTranslator.Droid.Services;
+using AndroidToast = Android.Widget.Toast;
+using AndroidToastLength = Android.Widget.ToastLength;
 #endif
 
 namespace GameTranslator;
@@ -30,7 +32,7 @@ public sealed partial class MainPage : Page
         {
             SelectLanguage(SourceLanguageBox, "ja");
             SelectLanguage(TargetLanguageBox, "pl");
-            StatusText.Text = $"Nie można jeszcze odczytać ustawień: {exception.Message}";
+            ShowStatus($"Nie można jeszcze odczytać ustawień: {exception.Message}");
         }
         finally
         {
@@ -113,18 +115,18 @@ public sealed partial class MainPage : Page
             try
             {
                 var alreadyAllowed = AndroidTranslationHost.RequestOverlayPermission(activity);
-                StatusText.Text = alreadyAllowed
+                ShowStatus(alreadyAllowed
                     ? "Uprawnienie nakładki jest już przyznane."
-                    : "Otwieram ustawienia nakładki Androida.";
+                    : "Otwieram ustawienia nakładki Androida.");
             }
             catch (Exception exception)
             {
-                StatusText.Text = $"Nie można otworzyć ustawień nakładki: {exception.Message}";
+                ShowStatus($"Nie można otworzyć ustawień nakładki: {exception.Message}");
             }
         }
         else
         {
-            StatusText.Text = "Aktywność Androida nie jest gotowa. Zamknij i otwórz aplikację ponownie.";
+            ShowStatus("Aktywność Androida nie jest gotowa. Zamknij i otwórz aplikację ponownie.");
         }
 #endif
     }
@@ -136,17 +138,17 @@ public sealed partial class MainPage : Page
         {
             try
             {
-                StatusText.Text = "Otwieram ustawienia dostępności Androida.";
+                ShowStatus("Otwieram ustawienia dostępności Androida.");
                 AndroidTranslationHost.OpenAccessibilitySettings(activity);
             }
             catch (Exception exception)
             {
-                StatusText.Text = $"Nie można otworzyć ustawień dostępności: {exception.Message}";
+                ShowStatus($"Nie można otworzyć ustawień dostępności: {exception.Message}");
             }
         }
         else
         {
-            StatusText.Text = "Aktywność Androida nie jest gotowa. Zamknij i otwórz aplikację ponownie.";
+            ShowStatus("Aktywność Androida nie jest gotowa. Zamknij i otwórz aplikację ponownie.");
         }
 #endif
     }
@@ -162,7 +164,7 @@ public sealed partial class MainPage : Page
         var activity = MainActivity.CurrentActivity;
         if (activity is null)
         {
-            StatusText.Text = "Aktywność Androida nie jest jeszcze gotowa.";
+            ShowStatus("Aktywność Androida nie jest jeszcze gotowa.");
             UpdateSessionToggle();
             return;
         }
@@ -170,7 +172,7 @@ public sealed partial class MainPage : Page
         if (!SessionToggle.IsOn)
         {
             AndroidTranslationHost.StopSession(activity);
-            StatusText.Text = "Zatrzymano sesję tłumacza.";
+            ShowStatus("Zatrzymano sesję tłumacza.");
             return;
         }
 
@@ -182,12 +184,12 @@ public sealed partial class MainPage : Page
 
         try
         {
-            StatusText.Text = "Otwieram dialog udostępniania ekranu Androida.";
+            ShowStatus("Otwieram dialog udostępniania ekranu Androida.");
             AndroidTranslationHost.RequestSession(activity);
         }
         catch (Exception exception)
         {
-            StatusText.Text = $"Nie można uruchomić przechwytywania ekranu: {exception.Message}";
+            ShowStatus($"Nie można uruchomić przechwytywania ekranu: {exception.Message}");
             UpdateSessionToggle();
         }
 #endif
@@ -216,13 +218,13 @@ public sealed partial class MainPage : Page
         var hotkeyCode = 0;
         if (!string.IsNullOrEmpty(hotkeyText) && (!int.TryParse(hotkeyText, out hotkeyCode) || hotkeyCode < 0))
         {
-            StatusText.Text = "Android key code musi być liczbą całkowitą większą lub równą zero.";
+            ShowStatus("Android key code musi być liczbą całkowitą większą lub równą zero.");
             return false;
         }
 
         if (requireValidTranslationSettings && GlobalHotkeyToggle.IsOn && hotkeyCode == 0)
         {
-            StatusText.Text = "Podaj Android key code albo wyłącz globalny hotkey.";
+            ShowStatus("Podaj Android key code albo wyłącz globalny hotkey.");
             return false;
         }
 
@@ -235,7 +237,7 @@ public sealed partial class MainPage : Page
             HideIdenticalTranslationsToggle.IsOn);
         if (requireValidTranslationSettings && !settings.IsValid)
         {
-            StatusText.Text = "Wpisz klucz API i wybierz oba języki.";
+            ShowStatus("Wpisz klucz API i wybierz oba języki.");
             return false;
         }
 
@@ -253,6 +255,13 @@ public sealed partial class MainPage : Page
         _updatingSessionToggle = true;
         SessionToggle.IsOn = TranslationForegroundService.IsSessionActive;
         _updatingSessionToggle = false;
+#endif
+    }
+
+    private void ShowStatus(string message)
+    {
+#if __ANDROID__
+        AndroidToast.MakeText(global::Android.App.Application.Context!, message, AndroidToastLength.Short)?.Show();
 #endif
     }
 

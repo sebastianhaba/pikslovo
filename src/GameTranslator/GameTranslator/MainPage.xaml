@@ -127,6 +127,5 @@
       </ScrollViewer>
     </Grid>
 
-    <TextBlock x:Name="StatusText" Grid.Row="2" TextWrapping="Wrap" Foreground="Black" Opacity="0.75" />
   </Grid>
 </Page>
