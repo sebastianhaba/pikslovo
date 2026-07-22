@@ -191,9 +191,9 @@
           </StackPanel>
 
           <StackPanel x:Name="ThemeSection" Visibility="Collapsed" Spacing="12">
-            <TextBlock Text="Motyw" FontSize="16" FontWeight="SemiBold" />
             <Border Background="{ThemeResource AppSurfaceBrush}" BorderBrush="{ThemeResource AppBorderBrush}" BorderThickness="1" CornerRadius="28" Padding="16">
               <StackPanel Spacing="12">
+                <TextBlock Text="Motyw" FontSize="16" FontWeight="SemiBold" />
                 <Grid ColumnSpacing="10">
                 <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="*" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
                 <Border x:Name="SystemThemeOption" Tag="System" Style="{StaticResource ThemeModeOptionBorder}" Tapped="ThemeModeOption_Tapped">
