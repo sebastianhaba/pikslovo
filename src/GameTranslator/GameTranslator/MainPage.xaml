@@ -33,7 +33,7 @@
     </Grid>
 
     <Grid Grid.Row="1">
-      <ScrollViewer x:Name="HomeView">
+      <ScrollViewer x:Name="HomeView" VerticalScrollBarVisibility="Hidden">
         <StackPanel Spacing="8">
           <TextBlock Text="Ustawienia" FontSize="15" FontWeight="SemiBold" Opacity="0.65" Margin="16,8,0,8" Foreground="Black" />
 
@@ -88,7 +88,7 @@
         </StackPanel>
       </ScrollViewer>
 
-      <ScrollViewer x:Name="DetailView" Visibility="Collapsed">
+      <ScrollViewer x:Name="DetailView" Visibility="Collapsed" VerticalScrollBarVisibility="Hidden">
         <Grid>
           <StackPanel x:Name="TranslationSection" Visibility="Collapsed" Spacing="20">
             <TextBlock Text="Wybierz język tekstu w grze i język, na który ma zostać przetłumaczony." Opacity="0.65" TextWrapping="Wrap" Foreground="Black" />
