@@ -207,17 +207,17 @@ public sealed class TranslationForegroundService : Service
                 return;
             }
 
-            var processingAccent = global::GameTranslator.App.GetAccentColor(AndroidSettingsStore.Load(this).Accent);
-            new Handler(Looper.MainLooper!).Post(() =>
-                _overlayPresenter?.ShowProcessingFrame(Color.Rgb(processingAccent.R, processingAccent.G, processingAccent.B)));
-
             var bitmap = await CaptureBitmapAsync().ConfigureAwait(false);
-            _floatingTrigger?.ShowAfterCapture();
             if (bitmap is null)
             {
                 ShowMessage("Nie udało się pobrać klatki ekranu.");
                 return;
             }
+
+            var processingAccent = global::GameTranslator.App.GetAccentColor(AndroidSettingsStore.Load(this).Accent);
+            new Handler(Looper.MainLooper!).Post(() =>
+                _overlayPresenter?.ShowProcessingFrame(Color.Rgb(processingAccent.R, processingAccent.G, processingAccent.B)));
+            _floatingTrigger?.ShowAfterCapture();
 
             using (bitmap)
             using (var stream = new MemoryStream())
