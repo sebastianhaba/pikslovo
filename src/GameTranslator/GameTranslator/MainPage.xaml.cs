@@ -19,6 +19,7 @@ public sealed partial class MainPage : Page
 {
     private bool _isLoading;
     private bool _updatingSessionToggle;
+    private bool _isApiKeyVisible;
     private int[] _hotkeyCodes = [];
     private AppThemeMode _themeMode = AppThemeMode.System;
     private AppAccent _accent = AppAccent.Lavender;
@@ -222,6 +223,13 @@ public sealed partial class MainPage : Page
             ShowStatus($"Nie można otworzyć strony Google Cloud: {exception.Message}");
         }
 #endif
+    }
+
+    private void ToggleApiKeyVisibility_Click(object sender, RoutedEventArgs e)
+    {
+        _isApiKeyVisible = !_isApiKeyVisible;
+        ApiKeyBox.PasswordRevealMode = _isApiKeyVisible ? PasswordRevealMode.Visible : PasswordRevealMode.Hidden;
+        ApiKeyHideSlash.Visibility = _isApiKeyVisible ? Visibility.Visible : Visibility.Collapsed;
     }
 
     private async void TestApiKey_Click(object sender, RoutedEventArgs e)

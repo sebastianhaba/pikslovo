@@ -169,7 +169,17 @@
                   <StackPanel Grid.Column="1" Spacing="8">
                     <TextBlock Text="Google Cloud API key" FontWeight="SemiBold" />
                     <TextBlock Text="Klucz jest szyfrowany lokalnie w Android Keystore." Opacity="0.65" TextWrapping="Wrap" />
-                    <PasswordBox x:Name="ApiKeyBox" PasswordChanged="Setting_Changed" PasswordRevealMode="Peek" PlaceholderText="AIza..." />
+                    <Grid>
+                      <PasswordBox x:Name="ApiKeyBox" Height="48" Padding="12,0,48,0" PasswordChanged="Setting_Changed" PasswordRevealMode="Hidden" PlaceholderText="AIza..." />
+                      <Button x:Name="ApiKeyRevealButton" Style="{StaticResource HeaderBackButton}" Click="ToggleApiKeyVisibility_Click" HorizontalAlignment="Right" VerticalAlignment="Center" Width="44" Height="44" Padding="0" ToolTipService.ToolTip="Pokaż lub ukryj klucz API">
+                        <Grid Width="20" Height="20">
+                          <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE890;" FontSize="18" />
+                          <Border x:Name="ApiKeyHideSlash" Width="22" Height="2" Background="{ThemeResource AppTextBrush}" HorizontalAlignment="Center" VerticalAlignment="Center" Visibility="Collapsed" RenderTransformOrigin="0.5,0.5">
+                            <Border.RenderTransform><RotateTransform Angle="-45" /></Border.RenderTransform>
+                          </Border>
+                        </Grid>
+                      </Button>
+                    </Grid>
                   </StackPanel>
                 </Grid>
                 <Border Height="1" Margin="16,0" Background="{ThemeResource AppBorderBrush}" />
