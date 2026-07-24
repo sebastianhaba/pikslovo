@@ -1,7 +1,9 @@
 using GameTranslator.Core;
+using GameTranslator.Services;
 using Microsoft.UI.Xaml.Controls.Primitives;
 using Microsoft.UI.Xaml.Input;
 using System.Globalization;
+using System.Net;
 using System.Threading.Tasks;
 
 #if __ANDROID__
@@ -202,22 +204,67 @@ public sealed partial class MainPage : Page
         }
     }
 
-    private async void EditApiKey_Click(object sender, RoutedEventArgs e)
+    private void OpenGoogleCloudCredentials_Click(object sender, RoutedEventArgs e)
     {
-        var editor = new PasswordBox { Password = ApiKeyBox.Password, PlaceholderText = "AIza..." };
-        var content = new StackPanel { Spacing = 12 };
-        content.Children.Add(new TextBlock
+#if __ANDROID__
+        if (MainActivity.CurrentActivity is not { } activity)
         {
-            Text = "Klucz jest przechowywany lokalnie w Android Keystore.",
-            TextWrapping = TextWrapping.Wrap
-        });
-        content.Children.Add(editor);
+            ShowStatus("Aktywność Androida nie jest gotowa. Zamknij i otwórz aplikację ponownie.");
+            return;
+        }
 
-        if (await ShowEditorAsync("Google Cloud API key", content))
+        try
         {
-            ApiKeyBox.Password = editor.Password;
-            SaveSettings(requireValidTranslationSettings: false);
-            UpdateSettingSummaries();
+            AndroidTranslationHost.OpenWebPage(activity, "https://console.cloud.google.com/apis/credentials");
+        }
+        catch (Exception exception)
+        {
+            ShowStatus($"Nie można otworzyć strony Google Cloud: {exception.Message}");
+        }
+#endif
+    }
+
+    private async void TestApiKey_Click(object sender, RoutedEventArgs e)
+    {
+        var apiKey = ApiKeyBox.Password.Trim();
+        if (string.IsNullOrWhiteSpace(apiKey))
+        {
+            await ShowMessageAsync(
+                "Brak klucza API",
+                "Wpisz klucz Google Cloud API, aby go sprawdzić.");
+            return;
+        }
+
+        ApiKeyTestButton.IsEnabled = false;
+        try
+        {
+            await AppServices.GoogleCloudApiKeyValidator.ValidateAsync(apiKey, CancellationToken.None);
+            await ShowMessageAsync(
+                "Klucz działa",
+                "Klucz ma dostęp do Cloud Translation API i Cloud Vision API.");
+        }
+        catch (GoogleCloudApiKeyValidationException exception)
+        {
+            var message = exception.StatusCode is HttpStatusCode.Unauthorized or HttpStatusCode.Forbidden
+                ? $"Klucz nie ma dostępu do {exception.ServiceName}. Sprawdź poprawność klucza oraz czy to API jest włączone w projekcie Google Cloud."
+                : $"Nie udało się sprawdzić dostępu do {exception.ServiceName}. Usługa Google zwróciła błąd {(int)exception.StatusCode}.";
+            await ShowMessageAsync("Klucz nie działa", message);
+        }
+        catch (HttpRequestException)
+        {
+            await ShowMessageAsync(
+                "Brak połączenia",
+                "Nie udało się połączyć z Google Cloud. Sprawdź połączenie z Internetem i spróbuj ponownie.");
+        }
+        catch (TaskCanceledException)
+        {
+            await ShowMessageAsync(
+                "Limit czasu",
+                "Sprawdzenie klucza trwało zbyt długo. Spróbuj ponownie przy stabilnym połączeniu.");
+        }
+        finally
+        {
+            ApiKeyTestButton.IsEnabled = true;
         }
     }
 
@@ -252,6 +299,18 @@ public sealed partial class MainPage : Page
             DefaultButton = ContentDialogButton.Primary
         };
         return await dialog.ShowAsync() == ContentDialogResult.Primary;
+    }
+
+    private async Task ShowMessageAsync(string title, string message)
+    {
+        var dialog = new ContentDialog
+        {
+            XamlRoot = XamlRoot,
+            Title = title,
+            Content = new TextBlock { Text = message, TextWrapping = TextWrapping.Wrap },
+            CloseButtonText = "Zamknij"
+        };
+        await dialog.ShowAsync();
     }
 
     private void RequestOverlayPermission_Click(object sender, RoutedEventArgs e)
@@ -546,7 +605,6 @@ public sealed partial class MainPage : Page
     {
         SourceLanguageValue.Text = GetLanguageLabel(SourceLanguageBox);
         TargetLanguageValue.Text = GetLanguageLabel(TargetLanguageBox);
-        ApiKeyValue.Text = string.IsNullOrWhiteSpace(ApiKeyBox.Password) ? "Wymagany do uruchomienia tłumacza" : "Klucz zapisany";
 #if __ANDROID__
         HotkeyCodeValue.Text = HotkeyCaptureDialog.Format(_hotkeyCodes);
 #else

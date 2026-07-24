@@ -9,4 +9,6 @@ public static class AppServices
     public static TranslationOrchestrator TranslationOrchestrator { get; } = new(
         new GoogleVisionOcrProvider(HttpClient),
         new GoogleTranslationProvider(HttpClient));
+
+    public static GoogleCloudApiKeyValidator GoogleCloudApiKeyValidator { get; } = new(HttpClient);
 }

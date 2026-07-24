@@ -82,6 +82,12 @@ internal static class AndroidTranslationHost
         activity.StartActivity(new Intent(Settings.ActionAccessibilitySettings));
     }
 
+    public static void OpenWebPage(Activity activity, string address)
+    {
+        var intent = new Intent(Intent.ActionView, Android.Net.Uri.Parse(address));
+        activity.StartActivity(intent);
+    }
+
     private static void RequestNotificationPermission(Activity activity)
     {
         if (OperatingSystem.IsAndroidVersionAtLeast(33) &&

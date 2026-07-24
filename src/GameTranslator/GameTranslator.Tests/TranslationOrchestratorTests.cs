@@ -155,6 +155,35 @@ public sealed class TranslationOrchestratorTests
         handler.RequestBody.Should().Contain("DOCUMENT_TEXT_DETECTION");
     }
 
+    [Test]
+    public async Task GoogleCloudApiKeyValidator_checks_translation_and_vision_access()
+    {
+        var handler = new SequenceHttpMessageHandler(HttpStatusCode.OK, HttpStatusCode.OK);
+        using var httpClient = new HttpClient(handler);
+        var validator = new GoogleCloudApiKeyValidator(httpClient);
+
+        await validator.ValidateAsync("test key", CancellationToken.None);
+
+        handler.RequestUris.Should().Equal(
+            "https://translation.googleapis.com/language/translate/v2?key=test key",
+            "https://vision.googleapis.com/v1/images:annotate?key=test key");
+        handler.RequestBodies[1].Should().Contain("DOCUMENT_TEXT_DETECTION");
+    }
+
+    [Test]
+    public async Task GoogleCloudApiKeyValidator_identifies_the_service_that_rejected_the_key()
+    {
+        var handler = new SequenceHttpMessageHandler(HttpStatusCode.OK, HttpStatusCode.Forbidden);
+        using var httpClient = new HttpClient(handler);
+        var validator = new GoogleCloudApiKeyValidator(httpClient);
+
+        var action = () => validator.ValidateAsync("key", CancellationToken.None);
+
+        var exception = await action.Should().ThrowAsync<GoogleCloudApiKeyValidationException>();
+        exception.Which.ServiceName.Should().Be("Cloud Vision API");
+        exception.Which.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+    }
+
     private sealed class StubOcrProvider(OcrDocument document) : IOcrProvider
     {
         public TranslationSettings? RequestedSettings { get; private set; }
@@ -193,6 +222,25 @@ public sealed class TranslationOrchestratorTests
             return new HttpResponseMessage(HttpStatusCode.OK)
             {
                 Content = new StringContent(responseJson, Encoding.UTF8, "application/json"),
+            };
+        }
+    }
+
+    private sealed class SequenceHttpMessageHandler(params HttpStatusCode[] statusCodes) : HttpMessageHandler
+    {
+        private readonly Queue<HttpStatusCode> _statusCodes = new(statusCodes);
+
+        public List<string> RequestUris { get; } = [];
+
+        public List<string> RequestBodies { get; } = [];
+
+        protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+        {
+            RequestUris.Add(request.RequestUri!.ToString());
+            RequestBodies.Add(await request.Content!.ReadAsStringAsync(cancellationToken));
+            return new HttpResponseMessage(_statusCodes.Dequeue())
+            {
+                Content = new StringContent("{}", Encoding.UTF8, "application/json"),
             };
         }
     }
