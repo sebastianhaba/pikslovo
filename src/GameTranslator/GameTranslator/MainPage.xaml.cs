@@ -636,7 +636,7 @@ public sealed partial class MainPage : Page
 
     private static string FormatFontScale(double value) => $"{value.ToString("0.0", CultureInfo.CurrentCulture)}x";
 
-    private static string FormatPosition(double value) => value.ToString("0.0", CultureInfo.CurrentCulture);
+    private static string FormatPosition(double value) => value.ToString("0.00", CultureInfo.CurrentCulture);
 
     private static string FormatRecognitionConfidence(double value) => value.ToString("0.0", CultureInfo.CurrentCulture);
 }
