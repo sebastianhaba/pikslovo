@@ -80,6 +80,17 @@ internal sealed partial class FloatingTranslationTrigger
         _mainHandler.Post(() => ApplyState(state, revision));
     }
 
+    public void RefreshAppearance()
+    {
+        _mainHandler.Post(() =>
+        {
+            if (_button is not null)
+            {
+                _button.Background = CreateBackground();
+            }
+        });
+    }
+
     public void BringToFront()
     {
         if (_button is null || _layout is null || !_isAttached)

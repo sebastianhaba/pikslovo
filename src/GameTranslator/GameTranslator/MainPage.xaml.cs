@@ -144,7 +144,12 @@ public sealed partial class MainPage : Page
         }
 
         SetAccent(accent);
-        SaveSettings(requireValidTranslationSettings: false);
+        if (SaveSettings(requireValidTranslationSettings: false))
+        {
+#if __ANDROID__
+            AndroidTranslationHost.RefreshFloatingTriggerAppearance(global::Android.App.Application.Context!);
+#endif
+        }
         UpdateSettingSummaries();
     }
 

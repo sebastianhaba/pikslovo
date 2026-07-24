@@ -47,6 +47,18 @@ internal static class AndroidTranslationHost
         context.StartService(intent);
     }
 
+    public static void RefreshFloatingTriggerAppearance(Context context)
+    {
+        if (!TranslationForegroundService.IsSessionActive)
+        {
+            return;
+        }
+
+        var intent = new Intent(context, typeof(TranslationForegroundService));
+        intent.SetAction(TranslationForegroundService.RefreshAppearanceAction);
+        context.StartService(intent);
+    }
+
     public static void NotifySessionStateChanged()
     {
         SessionStateChanged?.Invoke();

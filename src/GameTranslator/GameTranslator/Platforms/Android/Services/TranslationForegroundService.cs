@@ -21,6 +21,7 @@ public sealed class TranslationForegroundService : Service
     public const string CaptureAndTranslateAction = "com.gametranslator.action.CAPTURE_AND_TRANSLATE";
     public const string DismissOverlayAction = "com.gametranslator.action.DISMISS_OVERLAY";
     public const string StopSessionAction = "com.gametranslator.action.STOP_SESSION";
+    public const string RefreshAppearanceAction = "com.gametranslator.action.REFRESH_APPEARANCE";
     public const string ProjectionResultCodeExtra = "projection_result_code";
     public const string ProjectionResultDataExtra = "projection_result_data";
 
@@ -56,6 +57,9 @@ public sealed class TranslationForegroundService : Service
                     break;
                 case StopSessionAction:
                     StopSession();
+                    break;
+                case RefreshAppearanceAction:
+                    _floatingTrigger?.RefreshAppearance();
                     break;
             }
         }
