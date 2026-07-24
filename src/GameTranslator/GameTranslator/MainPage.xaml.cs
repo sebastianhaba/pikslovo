@@ -137,7 +137,14 @@ public sealed partial class MainPage : Page
         SaveSettings(requireValidTranslationSettings: false);
         UpdateFloatingButtonValues();
         UpdateSettingSummaries();
-        UpdateFloatingButtonPreview();
+        if (ReferenceEquals(sender, GlobalHotkeyToggle))
+        {
+            RefreshFloatingButtonConfiguration();
+        }
+        else
+        {
+            UpdateFloatingButtonPreview();
+        }
     }
 
     private void ThemeModeOption_Tapped(object sender, TappedRoutedEventArgs e)
@@ -525,10 +532,10 @@ public sealed partial class MainPage : Page
         FloatingButtonHorizontalPositionValue.Text = FormatPosition(FloatingButtonHorizontalPositionSlider.Value);
         FloatingButtonVerticalPositionValue.Text = FormatPosition(FloatingButtonVerticalPositionSlider.Value);
         FloatingButtonVisibilityDescription.Text = FloatingButtonAlwaysVisibleToggle.IsOn
-            ? "Widoczny także, gdy usługa tłumacza jest wyłączona."
+            ? "W aktywnej sesji jest widoczny niezależnie od globalnego hotkeya."
             : GlobalHotkeyToggle.IsOn
-                ? "Poza aktywną sesją jest ukryty; użyj globalnego hotkeya."
-                : "Widoczny, ponieważ globalny hotkey jest wyłączony.";
+                ? "W aktywnej sesji jest ukryty, gdy globalny hotkey jest włączony."
+                : "W aktywnej sesji jest widoczny, ponieważ globalny hotkey jest wyłączony.";
     }
 
     private void RefreshFloatingButtonConfiguration()
@@ -548,9 +555,8 @@ public sealed partial class MainPage : Page
             return;
         }
 
-        var shouldShowPreview = FloatingButtonAlwaysVisibleToggle.IsOn || !GlobalHotkeyToggle.IsOn;
         var context = global::Android.App.Application.Context!;
-        if (!shouldShowPreview || !global::Android.Provider.Settings.CanDrawOverlays(context))
+        if (!global::Android.Provider.Settings.CanDrawOverlays(context))
         {
             DismissFloatingButtonPreview();
             return;

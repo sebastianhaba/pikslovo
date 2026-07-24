@@ -59,7 +59,7 @@ public sealed class TranslationForegroundService : Service
                     StopSession();
                     break;
                 case RefreshAppearanceAction:
-                    _floatingTrigger?.RefreshConfiguration();
+                    UpdateFloatingTriggerVisibility();
                     break;
             }
         }
@@ -127,12 +127,8 @@ public sealed class TranslationForegroundService : Service
         _mediaProjection.RegisterCallback(new ProjectionCallback(this), new Handler(Looper.MainLooper!));
         CreateCaptureSurface();
         _overlayPresenter = new AndroidOverlayPresenter(this);
-        _floatingTrigger = new FloatingTranslationTrigger(this);
-        if (Settings.CanDrawOverlays(this))
-        {
-            _floatingTrigger.Show(() => _ = CaptureAndTranslateAsync());
-        }
         IsSessionActive = true;
+        UpdateFloatingTriggerVisibility();
         AndroidTranslationHost.NotifySessionStateChanged();
         ShowMessage("Tłumacz jest aktywny.");
     }
@@ -160,6 +156,26 @@ public sealed class TranslationForegroundService : Service
             _imageReader.Surface,
             null,
             null);
+    }
+
+    private void UpdateFloatingTriggerVisibility()
+    {
+        var settings = AndroidSettingsStore.Load(this);
+        var shouldShow = settings.FloatingButton.AlwaysVisible || !settings.GlobalHotkeyEnabled;
+        if (!shouldShow || !Settings.CanDrawOverlays(this))
+        {
+            _floatingTrigger?.Dismiss();
+            return;
+        }
+
+        _floatingTrigger ??= new FloatingTranslationTrigger(this);
+        if (_floatingTrigger.IsAttached)
+        {
+            _floatingTrigger.RefreshConfiguration();
+            return;
+        }
+
+        _floatingTrigger.Show(() => _ = CaptureAndTranslateAsync());
     }
 
     private async Task CaptureAndTranslateAsync()

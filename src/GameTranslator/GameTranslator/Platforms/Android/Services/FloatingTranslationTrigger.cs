@@ -36,6 +36,8 @@ internal sealed partial class FloatingTranslationTrigger
             .JavaCast<IWindowManager>();
     }
 
+    public bool IsAttached => _isAttached;
+
     public void Show(Action onClick)
     {
         ShowCore(onClick);
