@@ -67,7 +67,7 @@ internal sealed partial class FloatingTranslationTrigger
         };
         var iconPadding = ToPixels(12f * settings.Scale);
         _button.SetPadding(iconPadding, iconPadding, iconPadding, iconPadding);
-        _button.SetScaleType(ImageView.ScaleType.CenterInside);
+        _button.SetScaleType(ImageView.ScaleType.FitCenter);
         _button.Background = CreateBackground();
         _button.Click += (_, _) => onClick();
 
