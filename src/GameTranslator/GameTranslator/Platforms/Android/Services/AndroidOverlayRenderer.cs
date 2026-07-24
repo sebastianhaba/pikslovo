@@ -87,13 +87,13 @@ internal static class AndroidOverlayRenderer
     private const float PreferredMinimumTextSize = 16f;
     private const float AbsoluteMinimumTextSize = 8f;
 
-    public static Bitmap Render(Bitmap source, TranslationResult result, float fontScale)
+    public static Bitmap Render(Bitmap source, TranslationResult result, float fontScale, Color borderColor)
     {
         var output = source.Copy(Bitmap.Config.Argb8888!, true)!;
         using var canvas = new Android.Graphics.Canvas(output);
         using var background = new Paint { Color = Color.Black, AntiAlias = true };
         using var text = new Paint { Color = Color.White, AntiAlias = true };
-        using var border = new Paint { Color = Color.Rgb(220, 38, 38), StrokeWidth = 6, AntiAlias = true };
+        using var border = new Paint { Color = borderColor, StrokeWidth = 6, AntiAlias = true };
         border.SetStyle(Paint.Style.Stroke);
 
         foreach (var region in result.Regions)

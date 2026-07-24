@@ -141,9 +141,10 @@ internal sealed partial class FloatingTranslationTrigger
 
     private Drawable CreateBackground()
     {
+        var accent = global::GameTranslator.App.GetAccentColor(AndroidSettingsStore.Load(_context).Accent);
         var background = new GradientDrawable();
         background.SetShape(ShapeType.Oval);
-        background.SetColor(Color.Rgb(191, 43, 43));
+        background.SetColor(Color.Rgb(accent.R, accent.G, accent.B));
         return background;
     }
 

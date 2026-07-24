@@ -198,7 +198,8 @@ public sealed class TranslationForegroundService : Service
             using (var stream = new MemoryStream())
             {
                 bitmap.Compress(Bitmap.CompressFormat.Png!, 100, stream);
-                var settings = AndroidSettingsStore.Load(this).Translation;
+                var appSettings = AndroidSettingsStore.Load(this);
+                var settings = appSettings.Translation;
                 var result = await AppServices.TranslationOrchestrator
                     .TranslateAsync(stream.ToArray(), settings, CancellationToken.None)
                     .ConfigureAwait(false);
@@ -213,7 +214,12 @@ public sealed class TranslationForegroundService : Service
                     return;
                 }
 
-                var overlay = AndroidOverlayRenderer.Render(bitmap, result, settings.FontScale);
+                var accent = global::GameTranslator.App.GetAccentColor(appSettings.Accent);
+                var overlay = AndroidOverlayRenderer.Render(
+                    bitmap,
+                    result,
+                    settings.FontScale,
+                    Color.Rgb(accent.R, accent.G, accent.B));
                 resultShown = true;
                 new Handler(Looper.MainLooper!).Post(() =>
                 {
