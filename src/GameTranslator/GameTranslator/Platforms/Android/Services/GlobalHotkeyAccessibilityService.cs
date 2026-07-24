@@ -68,11 +68,6 @@ public sealed class GlobalHotkeyAccessibilityService : AccessibilityService
             _heldHotkeyCodes.Remove(keyCode);
             if (!hotkeyCodes.All(_heldHotkeyCodes.Contains))
             {
-                if (settings.HoldToPreview && _hotkeyTriggered)
-                {
-                    SendServiceAction(TranslationForegroundService.DismissOverlayAction);
-                }
-
                 _hotkeyTriggered = false;
             }
 

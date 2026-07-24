@@ -56,7 +56,6 @@ public sealed partial class MainPage : Page
         RecognitionConfidenceSlider.Value = settings.Translation.RecognitionConfidence;
         HideIdenticalTranslationsToggle.IsOn = settings.Translation.HideIdenticalTranslations;
         _hotkeyCodes = settings.HotkeyCodes;
-        HoldToPreviewToggle.IsOn = settings.HoldToPreview;
         GlobalHotkeyToggle.IsOn = settings.GlobalHotkeyEnabled;
         SetThemeMode(settings.ThemeMode);
         SetAccent(settings.Accent);
@@ -395,7 +394,7 @@ public sealed partial class MainPage : Page
 #if __ANDROID__
         AndroidSettingsStore.Save(
             global::Android.App.Application.Context!,
-            new AndroidAppSettings(settings, _hotkeyCodes, HoldToPreviewToggle.IsOn, GlobalHotkeyToggle.IsOn, _themeMode, _accent));
+            new AndroidAppSettings(settings, _hotkeyCodes, GlobalHotkeyToggle.IsOn, _themeMode, _accent));
 #endif
         return true;
     }

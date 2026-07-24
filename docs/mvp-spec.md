@@ -69,10 +69,8 @@ uruchamia lub ukrywa wynik, zalezne od aktualnego stanu.
 ### Globalny hotkey
 
 Uzytkownik wybiera klawisz lub kombinacje wysylana przez jego urzadzenie.
-AccessibilityService obsluguje dwa tryby:
-
-- przelaczanie: nacisniecie pokazuje wynik, kolejne go ukrywa;
-- podglad: wynik pozostaje widoczny tylko podczas przytrzymania klawisza.
+AccessibilityService dziala w trybie przelaczania: nacisniecie pokazuje wynik,
+a kolejne go ukrywa.
 
 Nie kazdy fizyczny przycisk urzadzenia jest dostepny dla uslug dostepnosci;
 MVP obsluguje tylko zdarzenia przekazywane przez Android jako key events.

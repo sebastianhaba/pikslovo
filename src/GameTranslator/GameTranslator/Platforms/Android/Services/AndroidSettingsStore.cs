@@ -11,7 +11,6 @@ namespace GameTranslator.Droid.Services;
 internal sealed record AndroidAppSettings(
     TranslationSettings Translation,
     int[] HotkeyCodes,
-    bool HoldToPreview,
     bool GlobalHotkeyEnabled,
     AppThemeMode ThemeMode,
     AppAccent Accent);
@@ -45,7 +44,6 @@ internal static class AndroidSettingsStore
                 preferences.GetFloat(FontScaleName, TranslationSettings.DefaultFontScale),
                 preferences.GetBoolean(HideIdenticalTranslationsName, false)),
             ReadHotkeyCodes(preferences),
-            preferences.GetBoolean(HoldToPreviewName, false),
             preferences.GetBoolean(GlobalHotkeyEnabledName, false),
             ReadThemeMode(preferences.GetString(ThemeModeName, null)),
             ReadAccent(preferences.GetString(AccentName, null)));
@@ -62,7 +60,7 @@ internal static class AndroidSettingsStore
         editor.PutBoolean(HideIdenticalTranslationsName, settings.Translation.HideIdenticalTranslations);
         editor.PutString(HotkeyCodesName, string.Join(',', settings.HotkeyCodes));
         editor.Remove(HotkeyCodeName);
-        editor.PutBoolean(HoldToPreviewName, settings.HoldToPreview);
+        editor.Remove(HoldToPreviewName);
         editor.PutBoolean(GlobalHotkeyEnabledName, settings.GlobalHotkeyEnabled);
         editor.PutString(ThemeModeName, settings.ThemeMode.ToString());
         editor.PutString(AccentName, settings.Accent.ToString());

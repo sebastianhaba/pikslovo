@@ -17,9 +17,9 @@ Renderujemy wynik jako nieruchoma bitmapowa nakladke systemowa. W obszarach
 `TranslatedRegion`; dookola calego obrazu rysujemy czerwona ramke. MVP nie
 probkuje tla gry ani nie rekonstruuje grafiki pod tekstem.
 
-Udostepniamy trzy triggery: przycisk plywajacy, AccessibilityService z trybem
-przelaczania albo przytrzymania oraz wyeksportowany publiczny BroadcastReceiver
-o akcji `com.gametranslator.action.CAPTURE_AND_TRANSLATE`.
+Udostepniamy trzy triggery: przycisk plywajacy, AccessibilityService w trybie
+przelaczania oraz wyeksportowany publiczny BroadcastReceiver o akcji
+`com.gametranslator.action.CAPTURE_AND_TRANSLATE`.
 
 ## Konsekwencje
 
