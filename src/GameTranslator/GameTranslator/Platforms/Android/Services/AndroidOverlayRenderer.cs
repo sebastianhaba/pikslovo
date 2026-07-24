@@ -176,12 +176,29 @@ internal sealed partial class AndroidOverlayPresenter
 
     private sealed partial class ProcessingFrameView : View
     {
+        private const long HighlightCycleMilliseconds = 1800;
+        private const int HighlightSegments = 32;
         private readonly Paint _border;
+        private readonly Paint _highlight;
+        private readonly float _highlightLength;
+        private readonly int _highlightRed;
+        private readonly int _highlightGreen;
+        private readonly int _highlightBlue;
+        private readonly long _animationStartedAt;
 
         public ProcessingFrameView(Context context, Color borderColor) : base(context)
         {
             _border = new Paint { Color = borderColor, StrokeWidth = 6, AntiAlias = true };
             _border.SetStyle(Paint.Style.Stroke);
+
+            var density = context.Resources?.DisplayMetrics?.Density ?? 1f;
+            _highlight = new Paint { StrokeWidth = Math.Max(12f, 5f * density), AntiAlias = true };
+            _highlight.SetStyle(Paint.Style.Stroke);
+            _highlightLength = 120f * density;
+            _highlightRed = Lighten(borderColor.R);
+            _highlightGreen = Lighten(borderColor.G);
+            _highlightBlue = Lighten(borderColor.B);
+            _animationStartedAt = SystemClock.ElapsedRealtime();
         }
 
         protected override void OnDraw(Android.Graphics.Canvas? canvas)
@@ -193,6 +210,17 @@ internal sealed partial class AndroidOverlayPresenter
 
             base.OnDraw(canvas);
             canvas.DrawRect(3, 3, Width - 3, Height - 3, _border);
+
+            var frameWidth = Width - 6f;
+            var frameHeight = Height - 6f;
+            var perimeter = 2f * (frameWidth + frameHeight);
+            if (perimeter > 0)
+            {
+                var elapsed = SystemClock.ElapsedRealtime() - _animationStartedAt;
+                var head = perimeter * (elapsed % HighlightCycleMilliseconds) / HighlightCycleMilliseconds;
+                DrawHighlight(canvas, frameWidth, frameHeight, perimeter, head);
+                PostInvalidateOnAnimation();
+            }
         }
 
         protected override void Dispose(bool disposing)
@@ -200,10 +228,61 @@ internal sealed partial class AndroidOverlayPresenter
             if (disposing)
             {
                 _border.Dispose();
+                _highlight.Dispose();
             }
 
             base.Dispose(disposing);
         }
+
+        private void DrawHighlight(Android.Graphics.Canvas canvas, float frameWidth, float frameHeight, float perimeter, float head)
+        {
+            var length = Math.Min(_highlightLength, perimeter / 2f);
+            for (var segment = HighlightSegments; segment > 0; segment--)
+            {
+                var start = head - (length * segment / HighlightSegments);
+                var end = head - (length * (segment - 1) / HighlightSegments);
+                var brightness = (HighlightSegments - segment + 1f) / HighlightSegments;
+                var alpha = (int)(20 + (235 * brightness * brightness));
+                _highlight.Color = Color.Argb(alpha, _highlightRed, _highlightGreen, _highlightBlue);
+
+                var startPoint = PointOnFrame(start, frameWidth, frameHeight, perimeter);
+                var endPoint = PointOnFrame(end, frameWidth, frameHeight, perimeter);
+                canvas.DrawLine(startPoint.X, startPoint.Y, endPoint.X, endPoint.Y, _highlight);
+            }
+        }
+
+        private static PointF PointOnFrame(float distance, float frameWidth, float frameHeight, float perimeter)
+        {
+            var position = distance % perimeter;
+            var right = 3 + frameWidth;
+            var bottom = 3 + frameHeight;
+            if (position < 0)
+            {
+                position += perimeter;
+            }
+
+            if (position <= frameWidth)
+            {
+                return new PointF(3 + position, 3);
+            }
+
+            position -= frameWidth;
+            if (position <= frameHeight)
+            {
+                return new PointF(right, 3 + position);
+            }
+
+            position -= frameHeight;
+            if (position <= frameWidth)
+            {
+                return new PointF(right - position, bottom);
+            }
+
+            position -= frameWidth;
+            return new PointF(3, bottom - position);
+        }
+
+        private static int Lighten(int component) => component + ((255 - component) * 3 / 4);
     }
 }
 
