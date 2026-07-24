@@ -10,13 +10,24 @@ namespace GameTranslator.Droid.Services;
     Permission = "android.permission.BIND_ACCESSIBILITY_SERVICE",
     Exported = true,
     Label = "GameTranslator hotkey")]
+[IntentFilter(["android.accessibilityservice.AccessibilityService"])]
 [MetaData("android.accessibilityservice", Resource = "@xml/global_hotkey_accessibility_service")]
 public sealed class GlobalHotkeyAccessibilityService : AccessibilityService
 {
+    private readonly HashSet<int> _heldHotkeyCodes = [];
+    private bool _hotkeyTriggered;
+
     protected override void OnServiceConnected()
     {
         base.OnServiceConnected();
-        ServiceInfo!.Flags |= AccessibilityServiceFlags.RequestFilterKeyEvents;
+
+        // The manifest makes the service discoverable; applying this at runtime
+        // ensures Android forwards hardware key events after the user enables it.
+        if (ServiceInfo is { } serviceInfo)
+        {
+            serviceInfo.Flags |= AccessibilityServiceFlags.RequestFilterKeyEvents;
+            SetServiceInfo(serviceInfo);
+        }
     }
 
     public override void OnAccessibilityEvent(AccessibilityEvent? e)
@@ -27,24 +38,44 @@ public sealed class GlobalHotkeyAccessibilityService : AccessibilityService
     {
         if (e is null || !TranslationForegroundService.IsSessionActive)
         {
+            _heldHotkeyCodes.Clear();
+            _hotkeyTriggered = false;
             return base.OnKeyEvent(e);
         }
 
         var settings = AndroidSettingsStore.Load(this);
-        if (!settings.GlobalHotkeyEnabled || settings.HotkeyCode == 0 || e.KeyCode != (Keycode)settings.HotkeyCode)
+        var hotkeyCodes = settings.HotkeyCodes;
+        var keyCode = (int)e.KeyCode;
+        if (!settings.GlobalHotkeyEnabled || hotkeyCodes.Length == 0 || !hotkeyCodes.Contains(keyCode))
         {
             return base.OnKeyEvent(e);
         }
 
         if (e.Action == KeyEventActions.Down && e.RepeatCount == 0)
         {
-            SendServiceAction(TranslationForegroundService.CaptureAndTranslateAction);
+            _heldHotkeyCodes.Add(keyCode);
+            if (!_hotkeyTriggered && hotkeyCodes.All(_heldHotkeyCodes.Contains))
+            {
+                _hotkeyTriggered = true;
+                SendServiceAction(TranslationForegroundService.CaptureAndTranslateAction);
+            }
+
             return true;
         }
 
-        if (e.Action == KeyEventActions.Up && settings.HoldToPreview)
+        if (e.Action == KeyEventActions.Up)
         {
-            SendServiceAction(TranslationForegroundService.DismissOverlayAction);
+            _heldHotkeyCodes.Remove(keyCode);
+            if (!hotkeyCodes.All(_heldHotkeyCodes.Contains))
+            {
+                if (settings.HoldToPreview && _hotkeyTriggered)
+                {
+                    SendServiceAction(TranslationForegroundService.DismissOverlayAction);
+                }
+
+                _hotkeyTriggered = false;
+            }
+
             return true;
         }
 

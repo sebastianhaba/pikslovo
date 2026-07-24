@@ -17,6 +17,7 @@ public sealed partial class MainPage : Page
 {
     private bool _isLoading;
     private bool _updatingSessionToggle;
+    private int[] _hotkeyCodes = [];
     private AppThemeMode _themeMode = AppThemeMode.System;
     private AppAccent _accent = AppAccent.Lavender;
 
@@ -54,7 +55,7 @@ public sealed partial class MainPage : Page
         FontScaleSlider.Value = settings.Translation.FontScale;
         RecognitionConfidenceSlider.Value = settings.Translation.RecognitionConfidence;
         HideIdenticalTranslationsToggle.IsOn = settings.Translation.HideIdenticalTranslations;
-        HotkeyCodeBox.Text = settings.HotkeyCode == 0 ? string.Empty : settings.HotkeyCode.ToString(CultureInfo.InvariantCulture);
+        _hotkeyCodes = settings.HotkeyCodes;
         HoldToPreviewToggle.IsOn = settings.HoldToPreview;
         GlobalHotkeyToggle.IsOn = settings.GlobalHotkeyEnabled;
         SetThemeMode(settings.ThemeMode);
@@ -234,13 +235,21 @@ public sealed partial class MainPage : Page
 
     private async void EditHotkeyCode_Click(object sender, RoutedEventArgs e)
     {
-        var editor = new TextBox { Text = HotkeyCodeBox.Text, PlaceholderText = "np. 131 dla F1" };
-        if (await ShowEditorAsync("Klawisz skrótu", editor))
+#if __ANDROID__
+        if (MainActivity.CurrentActivity is not { } activity)
         {
-            HotkeyCodeBox.Text = editor.Text;
+            ShowStatus("Aktywność Androida nie jest gotowa. Zamknij i otwórz aplikację ponownie.");
+            return;
+        }
+
+        var hotkeyCodes = await HotkeyCaptureDialog.ShowAsync(activity);
+        if (hotkeyCodes is { Length: > 0 })
+        {
+            _hotkeyCodes = hotkeyCodes;
             SaveSettings(requireValidTranslationSettings: false);
             UpdateSettingSummaries();
         }
+#endif
     }
 
     private async Task<bool> ShowEditorAsync(string title, object content)
@@ -364,17 +373,9 @@ public sealed partial class MainPage : Page
             return true;
         }
 
-        var hotkeyText = HotkeyCodeBox.Text?.Trim();
-        var hotkeyCode = 0;
-        if (!string.IsNullOrEmpty(hotkeyText) && (!int.TryParse(hotkeyText, out hotkeyCode) || hotkeyCode < 0))
+        if (requireValidTranslationSettings && GlobalHotkeyToggle.IsOn && _hotkeyCodes.Length == 0)
         {
-            ShowStatus("Android key code musi być liczbą całkowitą większą lub równą zero.");
-            return false;
-        }
-
-        if (requireValidTranslationSettings && GlobalHotkeyToggle.IsOn && hotkeyCode == 0)
-        {
-            ShowStatus("Podaj Android key code albo wyłącz globalny hotkey.");
+            ShowStatus("Ustaw skrót albo wyłącz globalny hotkey.");
             return false;
         }
 
@@ -394,7 +395,7 @@ public sealed partial class MainPage : Page
 #if __ANDROID__
         AndroidSettingsStore.Save(
             global::Android.App.Application.Context!,
-            new AndroidAppSettings(settings, hotkeyCode, HoldToPreviewToggle.IsOn, GlobalHotkeyToggle.IsOn, _themeMode, _accent));
+            new AndroidAppSettings(settings, _hotkeyCodes, HoldToPreviewToggle.IsOn, GlobalHotkeyToggle.IsOn, _themeMode, _accent));
 #endif
         return true;
     }
@@ -454,7 +455,11 @@ public sealed partial class MainPage : Page
         SourceLanguageValue.Text = GetLanguageLabel(SourceLanguageBox);
         TargetLanguageValue.Text = GetLanguageLabel(TargetLanguageBox);
         ApiKeyValue.Text = string.IsNullOrWhiteSpace(ApiKeyBox.Password) ? "Wymagany do uruchomienia tłumacza" : "Klucz zapisany";
-        HotkeyCodeValue.Text = string.IsNullOrWhiteSpace(HotkeyCodeBox.Text) ? "Nie ustawiono" : $"Kod {HotkeyCodeBox.Text}";
+#if __ANDROID__
+        HotkeyCodeValue.Text = HotkeyCaptureDialog.Format(_hotkeyCodes);
+#else
+        HotkeyCodeValue.Text = "Nie ustawiono";
+#endif
         var themeMode = _themeMode switch
         {
             AppThemeMode.Dark => "Ciemny",

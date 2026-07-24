@@ -10,7 +10,7 @@ namespace GameTranslator.Droid.Services;
 
 internal sealed record AndroidAppSettings(
     TranslationSettings Translation,
-    int HotkeyCode,
+    int[] HotkeyCodes,
     bool HoldToPreview,
     bool GlobalHotkeyEnabled,
     AppThemeMode ThemeMode,
@@ -26,6 +26,7 @@ internal static class AndroidSettingsStore
     private const string FontScaleName = "font_scale";
     private const string HideIdenticalTranslationsName = "hide_identical_translations";
     private const string HotkeyCodeName = "hotkey_code";
+    private const string HotkeyCodesName = "hotkey_codes";
     private const string HoldToPreviewName = "hold_to_preview";
     private const string GlobalHotkeyEnabledName = "global_hotkey_enabled";
     private const string ThemeModeName = "theme_mode";
@@ -43,7 +44,7 @@ internal static class AndroidSettingsStore
                 preferences.GetFloat(RecognitionConfidenceName, TranslationSettings.DefaultRecognitionConfidence),
                 preferences.GetFloat(FontScaleName, TranslationSettings.DefaultFontScale),
                 preferences.GetBoolean(HideIdenticalTranslationsName, false)),
-            preferences.GetInt(HotkeyCodeName, 0),
+            ReadHotkeyCodes(preferences),
             preferences.GetBoolean(HoldToPreviewName, false),
             preferences.GetBoolean(GlobalHotkeyEnabledName, false),
             ReadThemeMode(preferences.GetString(ThemeModeName, null)),
@@ -59,7 +60,8 @@ internal static class AndroidSettingsStore
         editor.PutFloat(RecognitionConfidenceName, settings.Translation.RecognitionConfidence);
         editor.PutFloat(FontScaleName, settings.Translation.FontScale);
         editor.PutBoolean(HideIdenticalTranslationsName, settings.Translation.HideIdenticalTranslations);
-        editor.PutInt(HotkeyCodeName, settings.HotkeyCode);
+        editor.PutString(HotkeyCodesName, string.Join(',', settings.HotkeyCodes));
+        editor.Remove(HotkeyCodeName);
         editor.PutBoolean(HoldToPreviewName, settings.HoldToPreview);
         editor.PutBoolean(GlobalHotkeyEnabledName, settings.GlobalHotkeyEnabled);
         editor.PutString(ThemeModeName, settings.ThemeMode.ToString());
@@ -72,6 +74,23 @@ internal static class AndroidSettingsStore
 
     private static AppAccent ReadAccent(string? value) =>
         Enum.TryParse<AppAccent>(value, ignoreCase: true, out var accent) ? accent : AppAccent.Lavender;
+
+    private static int[] ReadHotkeyCodes(ISharedPreferences preferences)
+    {
+        var savedCodes = preferences.GetString(HotkeyCodesName, null);
+        if (!string.IsNullOrWhiteSpace(savedCodes))
+        {
+            return savedCodes
+                .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                .Select(value => int.TryParse(value, out var code) ? code : 0)
+                .Where(code => code > 0)
+                .Distinct()
+                .ToArray();
+        }
+
+        var legacyCode = preferences.GetInt(HotkeyCodeName, 0);
+        return legacyCode > 0 ? [legacyCode] : [];
+    }
 
     private static ISharedPreferences GetPreferences(Context context) =>
         context.GetSharedPreferences(PreferencesName, FileCreationMode.Private)!;
