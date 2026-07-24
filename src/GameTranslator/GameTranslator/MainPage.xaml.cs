@@ -234,6 +234,23 @@ public sealed partial class MainPage : Page
         ApiKeyHideSlash.Visibility = _isApiKeyVisible ? Visibility.Visible : Visibility.Collapsed;
     }
 
+    private void ApiKeyBox_KeyDown(object sender, KeyRoutedEventArgs e)
+    {
+        if (e.Key != global::Windows.System.VirtualKey.Enter)
+        {
+            return;
+        }
+
+        e.Handled = true;
+        ApiKeyTestButton.Focus(FocusState.Programmatic);
+#if __ANDROID__
+        if (MainActivity.CurrentActivity is { } activity)
+        {
+            AndroidTranslationHost.HideKeyboard(activity);
+        }
+#endif
+    }
+
     private async void TestApiKey_Click(object sender, RoutedEventArgs e)
     {
         var apiKey = ApiKeyBox.Password.Trim();

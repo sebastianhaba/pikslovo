@@ -2,6 +2,7 @@ using Android.App;
 using Android.Content;
 using Android.OS;
 using Android.Provider;
+using Android.Views.InputMethods;
 
 namespace GameTranslator.Droid.Services;
 
@@ -86,6 +87,12 @@ internal static class AndroidTranslationHost
     {
         var intent = new Intent(Intent.ActionView, Android.Net.Uri.Parse(address));
         activity.StartActivity(intent);
+    }
+
+    public static void HideKeyboard(Activity activity)
+    {
+        var inputManager = activity.GetSystemService(Context.InputMethodService) as InputMethodManager;
+        inputManager?.HideSoftInputFromWindow(activity.Window?.DecorView?.WindowToken, HideSoftInputFlags.None);
     }
 
     private static void RequestNotificationPermission(Activity activity)
