@@ -60,6 +60,7 @@ public sealed partial class MainPage : Page
         SelectLanguage(TargetLanguageBox, settings.Translation.TargetLanguage);
         FontScaleSlider.Value = settings.Translation.FontScale;
         RecognitionConfidenceSlider.Value = settings.Translation.RecognitionConfidence;
+        OcrImageScaleSlider.Value = settings.Translation.OcrImageScale;
         GroupingPowerSlider.Value = settings.Translation.GroupingPower;
         HideIdenticalTranslationsToggle.IsOn = settings.Translation.HideIdenticalTranslations;
         _hotkeyCodes = settings.HotkeyCodes;
@@ -75,6 +76,7 @@ public sealed partial class MainPage : Page
         SelectLanguage(TargetLanguageBox, "pl");
         FontScaleSlider.Value = TranslationSettings.DefaultFontScale;
         RecognitionConfidenceSlider.Value = TranslationSettings.DefaultRecognitionConfidence;
+        OcrImageScaleSlider.Value = TranslationSettings.DefaultOcrImageScale;
         GroupingPowerSlider.Value = TranslationSettings.DefaultGroupingPower;
         HideIdenticalTranslationsToggle.IsOn = false;
         SetThemeMode(AppThemeMode.System);
@@ -86,6 +88,7 @@ public sealed partial class MainPage : Page
 #endif
         UpdateFontScaleValue();
         UpdateRecognitionConfidenceValue();
+        UpdateOcrImageScaleValue();
         UpdateGroupingPowerValue();
         UpdateFloatingButtonValues();
         UpdateSettingSummaries();
@@ -472,7 +475,8 @@ public sealed partial class MainPage : Page
             (float)RecognitionConfidenceSlider.Value,
             (float)GroupingPowerSlider.Value,
             (float)FontScaleSlider.Value,
-            HideIdenticalTranslationsToggle.IsOn);
+            HideIdenticalTranslationsToggle.IsOn,
+            (float)OcrImageScaleSlider.Value);
         if (requireValidTranslationSettings && !settings.IsValid)
         {
             ShowStatus("Wpisz klucz API i wybierz oba języki.");
@@ -551,6 +555,12 @@ public sealed partial class MainPage : Page
         SaveSettings(requireValidTranslationSettings: false);
     }
 
+    private void OcrImageScaleSlider_ValueChanged(object sender, RangeBaseValueChangedEventArgs e)
+    {
+        UpdateOcrImageScaleValue();
+        SaveSettings(requireValidTranslationSettings: false);
+    }
+
     private void FloatingButtonSetting_Changed(object sender, RoutedEventArgs e)
     {
         SaveSettings(requireValidTranslationSettings: false);
@@ -582,6 +592,8 @@ public sealed partial class MainPage : Page
     private void UpdateFontScaleValue() => FontScaleValue.Text = FormatFontScale(FontScaleSlider.Value);
 
     private void UpdateRecognitionConfidenceValue() => RecognitionConfidenceValue.Text = FormatRecognitionConfidence(RecognitionConfidenceSlider.Value);
+
+    private void UpdateOcrImageScaleValue() => OcrImageScaleValue.Text = FormatOcrImageScale(OcrImageScaleSlider.Value);
 
     private void UpdateGroupingPowerValue() => GroupingPowerValue.Text = GroupingPowerSlider.Value.ToString("0.00", CultureInfo.CurrentCulture);
 
@@ -732,6 +744,8 @@ public sealed partial class MainPage : Page
     };
 
     private static string FormatFontScale(double value) => $"{value.ToString("0.0", CultureInfo.CurrentCulture)}x";
+
+    private static string FormatOcrImageScale(double value) => $"{value.ToString("0.##", CultureInfo.CurrentCulture)}x";
 
     private static string FormatPosition(double value) => value.ToString("0.00", CultureInfo.CurrentCulture);
 

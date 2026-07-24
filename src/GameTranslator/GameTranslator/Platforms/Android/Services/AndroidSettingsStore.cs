@@ -76,6 +76,7 @@ internal static class AndroidSettingsStore
     private const string GroupingPowerName = "grouping_power";
     private const string FontScaleName = "font_scale";
     private const string HideIdenticalTranslationsName = "hide_identical_translations";
+    private const string OcrImageScaleName = "ocr_image_scale";
     private const string HotkeyCodeName = "hotkey_code";
     private const string HotkeyCodesName = "hotkey_codes";
     private const string HoldToPreviewName = "hold_to_preview";
@@ -104,7 +105,8 @@ internal static class AndroidSettingsStore
                 preferences.GetFloat(RecognitionConfidenceName, TranslationSettings.DefaultRecognitionConfidence),
                 Clamp(preferences.GetFloat(GroupingPowerName, TranslationSettings.DefaultGroupingPower), TranslationSettings.DefaultGroupingPower, 1f),
                 preferences.GetFloat(FontScaleName, TranslationSettings.DefaultFontScale),
-                preferences.GetBoolean(HideIdenticalTranslationsName, false)),
+                preferences.GetBoolean(HideIdenticalTranslationsName, false),
+                NormalizeOcrImageScale(preferences.GetFloat(OcrImageScaleName, TranslationSettings.DefaultOcrImageScale))),
             ReadHotkeyCodes(preferences),
             preferences.GetBoolean(GlobalHotkeyEnabledName, false),
             ReadThemeMode(preferences.GetString(ThemeModeName, null)),
@@ -132,6 +134,7 @@ internal static class AndroidSettingsStore
         editor.PutFloat(GroupingPowerName, Math.Clamp(settings.Translation.GroupingPower, TranslationSettings.DefaultGroupingPower, 1f));
         editor.PutFloat(FontScaleName, settings.Translation.FontScale);
         editor.PutBoolean(HideIdenticalTranslationsName, settings.Translation.HideIdenticalTranslations);
+        editor.PutFloat(OcrImageScaleName, NormalizeOcrImageScale(settings.Translation.OcrImageScale));
         editor.PutString(HotkeyCodesName, string.Join(',', settings.HotkeyCodes));
         editor.Remove(HotkeyCodeName);
         editor.Remove(HoldToPreviewName);
@@ -152,6 +155,15 @@ internal static class AndroidSettingsStore
     }
 
     private static float Clamp(float value, float minimum, float maximum) => Math.Clamp(value, minimum, maximum);
+
+    private static float NormalizeOcrImageScale(float value) =>
+        value switch
+        {
+            <= 0.375f => 0.25f,
+            <= 0.625f => 0.5f,
+            <= 0.875f => 0.75f,
+            _ => 1f
+        };
 
     private static AppThemeMode ReadThemeMode(string? value) =>
         Enum.TryParse<AppThemeMode>(value, ignoreCase: true, out var mode) ? mode : AppThemeMode.System;

@@ -165,6 +165,17 @@ public sealed class TranslationOrchestratorTests
         settings.IsValid.Should().Be(isValid);
     }
 
+    [TestCase(0.25f, true)]
+    [TestCase(1f, true)]
+    [TestCase(0.24f, false)]
+    [TestCase(1.01f, false)]
+    public void TranslationSettings_validates_ocr_image_scale_range(float ocrImageScale, bool isValid)
+    {
+        var settings = new TranslationSettings("key", "en", "pl", OcrImageScale: ocrImageScale);
+
+        settings.IsValid.Should().Be(isValid);
+    }
+
     [Test]
     public async Task GoogleVisionOcrProvider_filters_paragraphs_below_recognition_confidence()
     {

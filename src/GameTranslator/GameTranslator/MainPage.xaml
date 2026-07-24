@@ -137,7 +137,7 @@
           </Button>
           <Border Height="1" Margin="16,0" Background="{ThemeResource AppBorderBrush}" />
           <Button Style="{StaticResource SettingsListItemButton}" Tag="recognition" Click="OpenSection_Click" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch" Padding="16,14">
-            <Grid ColumnSpacing="16"><Grid.ColumnDefinitions><ColumnDefinition Width="32" /><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions><FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE8C8;" FontSize="20" VerticalAlignment="Center" /><StackPanel Grid.Column="1" Spacing="3"><TextBlock Text="Przetwarzanie tekstu" FontWeight="SemiBold" /><TextBlock Text="Pewność OCR, łączenie dialogów i nakładka" Opacity="0.65" TextWrapping="Wrap" /></StackPanel><FontIcon Grid.Column="2" FontFamily="Segoe MDL2 Assets" Glyph="&#xE76C;" FontSize="16" VerticalAlignment="Center" /></Grid>
+            <Grid ColumnSpacing="16"><Grid.ColumnDefinitions><ColumnDefinition Width="32" /><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions><FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE8C8;" FontSize="20" VerticalAlignment="Center" /><StackPanel Grid.Column="1" Spacing="3"><TextBlock Text="Przetwarzanie tekstu" FontWeight="SemiBold" /><TextBlock Text="Pewność OCR, skala obrazu, łączenie dialogów i nakładka" Opacity="0.65" TextWrapping="Wrap" /></StackPanel><FontIcon Grid.Column="2" FontFamily="Segoe MDL2 Assets" Glyph="&#xE76C;" FontSize="16" VerticalAlignment="Center" /></Grid>
           </Button>
           <Border Height="1" Margin="16,0" Background="{ThemeResource AppBorderBrush}" />
           <Button Style="{StaticResource SettingsListItemButton}" Tag="appTheme" Click="OpenSection_Click" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch" Padding="16,14">
@@ -204,6 +204,15 @@
                   <StackPanel Grid.Column="1" Spacing="8">
                     <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions><TextBlock Text="Pewność rozpoznawania" FontWeight="SemiBold" /><TextBlock x:Name="RecognitionConfidenceValue" Grid.Column="1" Opacity="0.65" /></Grid>
                     <Slider x:Name="RecognitionConfidenceSlider" Minimum="0" Maximum="1" StepFrequency="0.1" Value="0.6" ValueChanged="RecognitionConfidenceSlider_ValueChanged" />
+                  </StackPanel>
+                </Grid>
+                <Border Height="1" Margin="16,0" Background="{ThemeResource AppBorderBrush}" />
+                <Grid Margin="16,14" ColumnSpacing="16">
+                  <Grid.ColumnDefinitions><ColumnDefinition Width="32" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+                  <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE71E;" FontSize="20" VerticalAlignment="Center" />
+                  <StackPanel Grid.Column="1" Spacing="8">
+                    <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions><TextBlock Text="Skala obrazu OCR" FontWeight="SemiBold" /><TextBlock x:Name="OcrImageScaleValue" Grid.Column="1" Opacity="0.65" /></Grid>
+                    <Slider x:Name="OcrImageScaleSlider" Minimum="0.25" Maximum="1" StepFrequency="0.25" Value="1" ValueChanged="OcrImageScaleSlider_ValueChanged" />
                   </StackPanel>
                 </Grid>
                 <Border Height="1" Margin="16,0" Background="{ThemeResource AppBorderBrush}" />

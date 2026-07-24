@@ -272,7 +272,9 @@ public sealed class TranslationForegroundService : Service
                     ? Bitmap.CreateBitmap(bitmap, cropBounds.Left, cropBounds.Top, cropBounds.Width, cropBounds.Height)
                     : null;
                 var bitmapForOcr = croppedBitmap ?? bitmap;
-                bitmapForOcr.Compress(Bitmap.CompressFormat.Png!, 100, stream);
+                using var scaledBitmap = CreateScaledOcrBitmap(bitmapForOcr, settings.OcrImageScale);
+                var bitmapForVision = scaledBitmap ?? bitmapForOcr;
+                bitmapForVision.Compress(Bitmap.CompressFormat.Png!, 100, stream);
                 var result = await AppServices.TranslationOrchestrator
                     .TranslateAsync(stream.ToArray(), settings, CancellationToken.None)
                     .ConfigureAwait(false);
@@ -285,6 +287,14 @@ public sealed class TranslationForegroundService : Service
                 {
                     ShowMessage("Nie znaleziono tekstu na ekranie.");
                     return;
+                }
+
+                if (scaledBitmap is not null)
+                {
+                    result = ScaleRegions(
+                        result,
+                        bitmapForOcr.Width / (float)bitmapForVision.Width,
+                        bitmapForOcr.Height / (float)bitmapForVision.Height);
                 }
 
                 if (appSettings.CaptureRegion.IsEnabled)
@@ -334,6 +344,28 @@ public sealed class TranslationForegroundService : Service
                 region.Bounds.Top + offsetY,
                 region.Bounds.Right + offsetX,
                 region.Bounds.Bottom + offsetY))).ToArray());
+
+    private static Bitmap? CreateScaledOcrBitmap(Bitmap bitmap, float scale)
+    {
+        if (scale >= 1f)
+        {
+            return null;
+        }
+
+        var width = Math.Max(1, (int)Math.Round(bitmap.Width * scale));
+        var height = Math.Max(1, (int)Math.Round(bitmap.Height * scale));
+        return Bitmap.CreateScaledBitmap(bitmap, width, height, filter: false);
+    }
+
+    private static TranslationResult ScaleRegions(TranslationResult result, float scaleX, float scaleY) =>
+        new(result.Regions.Select(region => new TranslatedRegion(
+            region.SourceText,
+            region.TranslatedText,
+            new PixelRect(
+                (int)Math.Round(region.Bounds.Left * scaleX),
+                (int)Math.Round(region.Bounds.Top * scaleY),
+                Math.Max((int)Math.Round(region.Bounds.Left * scaleX) + 1, (int)Math.Round(region.Bounds.Right * scaleX)),
+                Math.Max((int)Math.Round(region.Bounds.Top * scaleY) + 1, (int)Math.Round(region.Bounds.Bottom * scaleY))))).ToArray());
 
     private async Task<Bitmap?> CaptureBitmapAsync()
     {
