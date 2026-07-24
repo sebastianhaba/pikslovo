@@ -39,14 +39,14 @@ internal sealed partial class FloatingTranslationTrigger
 
     public bool IsAttached => _isAttached;
 
-    public void Show(Action onClick, bool buttonVisible = true)
+    public void Show(Action onClick, Action onLongClick, bool buttonVisible = true)
     {
-        ShowCore(onClick, buttonVisible);
+        ShowCore(onClick, onLongClick, buttonVisible);
     }
 
     public void ShowPreview()
     {
-        ShowCore(static () => { }, buttonVisible: true);
+        ShowCore(static () => { }, static () => { }, buttonVisible: true);
     }
 
     public void SetButtonVisibility(bool visible)
@@ -55,7 +55,7 @@ internal sealed partial class FloatingTranslationTrigger
         _mainHandler.Post(ApplyButtonVisibility);
     }
 
-    private void ShowCore(Action onClick, bool buttonVisible)
+    private void ShowCore(Action onClick, Action onLongClick, bool buttonVisible)
     {
         Dismiss();
         _buttonShouldBeVisible = buttonVisible;
@@ -70,6 +70,7 @@ internal sealed partial class FloatingTranslationTrigger
         _button.SetScaleType(ImageView.ScaleType.FitCenter);
         _button.Background = CreateBackground();
         _button.Click += (_, _) => onClick();
+        _button.LongClick += (_, _) => onLongClick();
 
         _layout = new WindowManagerLayoutParams(
             size,

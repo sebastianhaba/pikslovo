@@ -480,6 +480,7 @@ public sealed partial class MainPage : Page
         }
 
 #if __ANDROID__
+        var existingSettings = AndroidSettingsStore.Load(global::Android.App.Application.Context!);
         AndroidSettingsStore.Save(
             global::Android.App.Application.Context!,
             new AndroidAppSettings(
@@ -492,7 +493,8 @@ public sealed partial class MainPage : Page
                     FloatingButtonAlwaysVisibleToggle.IsOn,
                     (float)FloatingButtonScaleSlider.Value,
                     (float)FloatingButtonHorizontalPositionSlider.Value,
-                    (float)FloatingButtonVerticalPositionSlider.Value)));
+                    (float)FloatingButtonVerticalPositionSlider.Value),
+                existingSettings.CaptureRegion));
 #endif
         return true;
     }

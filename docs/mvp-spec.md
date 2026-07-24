@@ -21,6 +21,7 @@ W zakresie:
 - Wlasny klucz Google Cloud API podawany przez uzytkownika.
 - Wybor jezyka zrodlowego i docelowego.
 - Aktywna sesja MediaProjection z widocznym powiadomieniem.
+- Opcjonalny, zdefiniowany przez użytkownika obszar przechwycenia dialogu.
 - Wywolanie tlumaczenia: przycisk plywajacy, globalny hotkey oraz publiczny
   broadcast.
 - OCR przez Vision `DOCUMENT_TEXT_DETECTION`, aby uzyskac strukture tekstu i
@@ -35,7 +36,6 @@ W zakresie:
 Poza zakresem:
 
 - Automatyczne, ciagle tlumaczenie zmian dialogu.
-- Wybor lub edycja obszaru przechwycenia.
 - Historia, eksport i zapis zrzutow.
 - OCR i tlumaczenie offline.
 - Konta aplikacji, backend posredniczacy i wspoldzielone pozycje API.

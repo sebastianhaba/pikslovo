@@ -9,6 +9,7 @@ using Android.OS;
 using Android.Provider;
 using Android.Views;
 using Android.Widget;
+using GameTranslator.Core;
 using GameTranslator.Services;
 using Java.Interop;
 
@@ -33,6 +34,7 @@ public sealed class TranslationForegroundService : Service
     private ImageReader? _imageReader;
     private AndroidOverlayPresenter? _overlayPresenter;
     private FloatingTranslationTrigger? _floatingTrigger;
+    private CaptureRegionSelectorOverlay? _captureRegionSelector;
     private bool _isProcessing;
     private bool _isStopping;
 
@@ -176,7 +178,48 @@ public sealed class TranslationForegroundService : Service
             return;
         }
 
-        _floatingTrigger.Show(() => _ = CaptureAndTranslateAsync(), shouldShowButton);
+        _floatingTrigger.Show(
+            () => _ = CaptureAndTranslateAsync(),
+            ShowCaptureRegionSelector,
+            shouldShowButton);
+    }
+
+    private void ShowCaptureRegionSelector()
+    {
+        lock (_stateLock)
+        {
+            if (!IsSessionActive || _isProcessing || _captureRegionSelector?.IsShowing == true)
+            {
+                return;
+            }
+        }
+
+        new Handler(Looper.MainLooper!).Post(() =>
+        {
+            _overlayPresenter?.Dismiss();
+            _ = _floatingTrigger?.HideForCaptureAsync();
+
+            _captureRegionSelector ??= new CaptureRegionSelectorOverlay(this);
+            var initialRegion = AndroidSettingsStore.Load(this).CaptureRegion;
+            _captureRegionSelector.Show(
+                initialRegion,
+                region => SaveCaptureRegion(region),
+                RestoreFloatingTrigger);
+        });
+    }
+
+    private void SaveCaptureRegion(CaptureRegionSettings region)
+    {
+        var settings = AndroidSettingsStore.Load(this);
+        AndroidSettingsStore.Save(this, settings with { CaptureRegion = region.Normalize() });
+        ShowMessage("Obszar dialogu zapisany.");
+        RestoreFloatingTrigger();
+    }
+
+    private void RestoreFloatingTrigger()
+    {
+        _captureRegionSelector?.Dismiss();
+        UpdateFloatingTriggerVisibility();
     }
 
     private async Task CaptureAndTranslateAsync()
@@ -222,9 +265,14 @@ public sealed class TranslationForegroundService : Service
             using (bitmap)
             using (var stream = new MemoryStream())
             {
-                bitmap.Compress(Bitmap.CompressFormat.Png!, 100, stream);
                 var appSettings = AndroidSettingsStore.Load(this);
                 var settings = appSettings.Translation;
+                var cropBounds = appSettings.CaptureRegion.ToPixelRect(bitmap.Width, bitmap.Height);
+                using var croppedBitmap = appSettings.CaptureRegion.IsEnabled
+                    ? Bitmap.CreateBitmap(bitmap, cropBounds.Left, cropBounds.Top, cropBounds.Width, cropBounds.Height)
+                    : null;
+                var bitmapForOcr = croppedBitmap ?? bitmap;
+                bitmapForOcr.Compress(Bitmap.CompressFormat.Png!, 100, stream);
                 var result = await AppServices.TranslationOrchestrator
                     .TranslateAsync(stream.ToArray(), settings, CancellationToken.None)
                     .ConfigureAwait(false);
@@ -237,6 +285,11 @@ public sealed class TranslationForegroundService : Service
                 {
                     ShowMessage("Nie znaleziono tekstu na ekranie.");
                     return;
+                }
+
+                if (appSettings.CaptureRegion.IsEnabled)
+                {
+                    result = OffsetRegions(result, cropBounds.Left, cropBounds.Top);
                 }
 
                 var accent = global::GameTranslator.App.GetAccentColor(appSettings.Accent);
@@ -271,6 +324,16 @@ public sealed class TranslationForegroundService : Service
             }
         }
     }
+
+    private static TranslationResult OffsetRegions(TranslationResult result, int offsetX, int offsetY) =>
+        new(result.Regions.Select(region => new TranslatedRegion(
+            region.SourceText,
+            region.TranslatedText,
+            new PixelRect(
+                region.Bounds.Left + offsetX,
+                region.Bounds.Top + offsetY,
+                region.Bounds.Right + offsetX,
+                region.Bounds.Bottom + offsetY))).ToArray());
 
     private async Task<Bitmap?> CaptureBitmapAsync()
     {
@@ -349,6 +412,8 @@ public sealed class TranslationForegroundService : Service
         DismissOverlay();
         _floatingTrigger?.Dismiss();
         _floatingTrigger = null;
+        _captureRegionSelector?.Dismiss();
+        _captureRegionSelector = null;
         _virtualDisplay?.Release();
         _virtualDisplay?.Dispose();
         _virtualDisplay = null;

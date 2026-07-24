@@ -14,7 +14,8 @@ internal sealed record AndroidAppSettings(
     bool GlobalHotkeyEnabled,
     AppThemeMode ThemeMode,
     AppAccent Accent,
-    FloatingButtonSettings FloatingButton);
+    FloatingButtonSettings FloatingButton,
+    CaptureRegionSettings CaptureRegion);
 
 internal sealed record FloatingButtonSettings(
     bool AlwaysVisible,
@@ -25,6 +26,44 @@ internal sealed record FloatingButtonSettings(
     public const float DefaultScale = 1f;
     public const float DefaultHorizontalPosition = 1f;
     public const float DefaultVerticalPosition = 0.1f;
+}
+
+internal sealed record CaptureRegionSettings(
+    bool IsEnabled,
+    float Left,
+    float Top,
+    float Right,
+    float Bottom)
+{
+    public static CaptureRegionSettings FullScreen { get; } = new(false, 0f, 0f, 1f, 1f);
+
+    public CaptureRegionSettings Normalize()
+    {
+        if (!IsEnabled)
+        {
+            return FullScreen;
+        }
+
+        var left = Math.Clamp(Math.Min(Left, Right), 0f, 0.95f);
+        var top = Math.Clamp(Math.Min(Top, Bottom), 0f, 0.95f);
+        var right = Math.Clamp(Math.Max(Left, Right), left + 0.05f, 1f);
+        var bottom = Math.Clamp(Math.Max(Top, Bottom), top + 0.05f, 1f);
+        return new CaptureRegionSettings(true, left, top, right, bottom);
+    }
+
+    public PixelRect ToPixelRect(int width, int height)
+    {
+        var region = Normalize();
+        var left = (int)Math.Floor(width * region.Left);
+        var top = (int)Math.Floor(height * region.Top);
+        var right = (int)Math.Ceiling(width * region.Right);
+        var bottom = (int)Math.Ceiling(height * region.Bottom);
+        return new PixelRect(
+            Math.Clamp(left, 0, Math.Max(0, width - 1)),
+            Math.Clamp(top, 0, Math.Max(0, height - 1)),
+            Math.Clamp(Math.Max(right, left + 1), 1, width),
+            Math.Clamp(Math.Max(bottom, top + 1), 1, height));
+    }
 }
 
 internal static class AndroidSettingsStore
@@ -47,6 +86,11 @@ internal static class AndroidSettingsStore
     private const string FloatingButtonScaleName = "floating_button_scale";
     private const string FloatingButtonHorizontalPositionName = "floating_button_horizontal_position";
     private const string FloatingButtonVerticalPositionName = "floating_button_vertical_position";
+    private const string CaptureRegionEnabledName = "capture_region_enabled";
+    private const string CaptureRegionLeftName = "capture_region_left";
+    private const string CaptureRegionTopName = "capture_region_top";
+    private const string CaptureRegionRightName = "capture_region_right";
+    private const string CaptureRegionBottomName = "capture_region_bottom";
     private const string KeyAlias = "game_translator_api_key";
 
     public static AndroidAppSettings Load(Context context)
@@ -69,7 +113,13 @@ internal static class AndroidSettingsStore
                 preferences.GetBoolean(FloatingButtonAlwaysVisibleName, true),
                 Clamp(preferences.GetFloat(FloatingButtonScaleName, FloatingButtonSettings.DefaultScale), 0.5f, 2f),
                 Clamp(preferences.GetFloat(FloatingButtonHorizontalPositionName, FloatingButtonSettings.DefaultHorizontalPosition), 0f, 1f),
-                Clamp(preferences.GetFloat(FloatingButtonVerticalPositionName, FloatingButtonSettings.DefaultVerticalPosition), 0f, 1f)));
+                Clamp(preferences.GetFloat(FloatingButtonVerticalPositionName, FloatingButtonSettings.DefaultVerticalPosition), 0f, 1f)),
+            new CaptureRegionSettings(
+                preferences.GetBoolean(CaptureRegionEnabledName, false),
+                preferences.GetFloat(CaptureRegionLeftName, 0f),
+                preferences.GetFloat(CaptureRegionTopName, 0f),
+                preferences.GetFloat(CaptureRegionRightName, 1f),
+                preferences.GetFloat(CaptureRegionBottomName, 1f)).Normalize());
     }
 
     public static void Save(Context context, AndroidAppSettings settings)
@@ -92,6 +142,12 @@ internal static class AndroidSettingsStore
         editor.PutFloat(FloatingButtonScaleName, Clamp(settings.FloatingButton.Scale, 0.5f, 2f));
         editor.PutFloat(FloatingButtonHorizontalPositionName, Clamp(settings.FloatingButton.HorizontalPosition, 0f, 1f));
         editor.PutFloat(FloatingButtonVerticalPositionName, Clamp(settings.FloatingButton.VerticalPosition, 0f, 1f));
+        var captureRegion = settings.CaptureRegion.Normalize();
+        editor.PutBoolean(CaptureRegionEnabledName, captureRegion.IsEnabled);
+        editor.PutFloat(CaptureRegionLeftName, captureRegion.Left);
+        editor.PutFloat(CaptureRegionTopName, captureRegion.Top);
+        editor.PutFloat(CaptureRegionRightName, captureRegion.Right);
+        editor.PutFloat(CaptureRegionBottomName, captureRegion.Bottom);
         editor.Apply();
     }
 
