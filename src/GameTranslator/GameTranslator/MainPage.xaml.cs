@@ -400,7 +400,10 @@ public sealed partial class MainPage : Page
     private void OnSessionStateChanged() => _ = DispatcherQueue.TryEnqueue(() =>
     {
         UpdateSessionToggle();
-        UpdateFloatingButtonPreview();
+        if (TranslationForegroundService.IsSessionActive)
+        {
+            DismissFloatingButtonPreview();
+        }
     });
 #endif
 
