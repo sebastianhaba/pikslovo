@@ -111,6 +111,7 @@ public sealed partial class MainPage : Page
 
         TranslationSection.Visibility = section == "translation" ? Visibility.Visible : Visibility.Collapsed;
         ApiSection.Visibility = section == "api" ? Visibility.Visible : Visibility.Collapsed;
+        ApiKeyTestFooter.Visibility = section == "api" ? Visibility.Visible : Visibility.Collapsed;
         AppearanceSection.Visibility = section == "appearance" ? Visibility.Visible : Visibility.Collapsed;
         RecognitionSection.Visibility = section == "recognition" ? Visibility.Visible : Visibility.Collapsed;
         TriggersSection.Visibility = section == "triggers" ? Visibility.Visible : Visibility.Collapsed;
@@ -120,7 +121,7 @@ public sealed partial class MainPage : Page
         HomeHeader.Visibility = Visibility.Collapsed;
         DetailHeader.Visibility = Visibility.Visible;
         HomeView.Visibility = Visibility.Collapsed;
-        DetailView.Visibility = Visibility.Visible;
+        DetailLayout.Visibility = Visibility.Visible;
         DetailView.ChangeView(null, 0, null, true);
         UpdateFloatingButtonPreview();
     }
@@ -130,7 +131,8 @@ public sealed partial class MainPage : Page
         HomeHeader.Visibility = Visibility.Visible;
         DetailHeader.Visibility = Visibility.Collapsed;
         HomeView.Visibility = Visibility.Visible;
-        DetailView.Visibility = Visibility.Collapsed;
+        DetailLayout.Visibility = Visibility.Collapsed;
+        ApiKeyTestFooter.Visibility = Visibility.Collapsed;
         HomeView.ChangeView(null, 0, null, true);
         DismissFloatingButtonPreview();
     }

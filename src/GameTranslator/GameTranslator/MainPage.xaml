@@ -152,7 +152,12 @@
         </StackPanel>
       </ScrollViewer>
 
-      <ScrollViewer x:Name="DetailView" Visibility="Collapsed" VerticalScrollBarVisibility="Hidden">
+      <Grid x:Name="DetailLayout" Visibility="Collapsed">
+        <Grid.RowDefinitions>
+          <RowDefinition Height="*" />
+          <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+        <ScrollViewer x:Name="DetailView" Grid.Row="0" VerticalScrollBarVisibility="Hidden">
         <Grid>
           <StackPanel x:Name="TranslationSection" Visibility="Collapsed" Spacing="8">
             <Border Style="{StaticResource SettingsGroupBorder}">
@@ -192,8 +197,6 @@
                 </Button>
               </StackPanel>
             </Border>
-            <Border Height="1" Background="{ThemeResource AppBorderBrush}" />
-            <Button x:Name="ApiKeyTestButton" Style="{StaticResource ApiKeyTestButton}" Click="TestApiKey_Click">Sprawdź klucz</Button>
           </StackPanel>
 
           <StackPanel x:Name="AppearanceSection" Visibility="Collapsed" Spacing="8">
@@ -286,7 +289,11 @@
             <ComboBox x:Name="TargetLanguageBox" SelectionChanged="Setting_Changed"><ComboBoxItem Tag="pl" Content="Polski" /><ComboBoxItem Tag="en" Content="Angielski" /><ComboBoxItem Tag="de" Content="Niemiecki" /><ComboBoxItem Tag="es" Content="Hiszpański" /></ComboBox>
           </StackPanel>
         </Grid>
-      </ScrollViewer>
+        </ScrollViewer>
+        <Border x:Name="ApiKeyTestFooter" Grid.Row="1" Visibility="Collapsed" Background="{ThemeResource AppBackgroundBrush}" BorderBrush="{ThemeResource AppBorderBrush}" BorderThickness="0,1,0,0" Padding="0,12,0,0">
+          <Button x:Name="ApiKeyTestButton" Style="{StaticResource ApiKeyTestButton}" Click="TestApiKey_Click">Sprawdź klucz</Button>
+        </Border>
+      </Grid>
     </Grid>
   </Grid>
 </Page>
