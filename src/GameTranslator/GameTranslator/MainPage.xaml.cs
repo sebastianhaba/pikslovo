@@ -221,48 +221,6 @@ public sealed partial class MainPage : Page
         }
     }
 
-    private async void EditFontScale_Click(object sender, RoutedEventArgs e)
-    {
-        var value = new TextBlock { Text = FormatFontScale(FontScaleSlider.Value) };
-        var editor = new Slider
-        {
-            Minimum = FontScaleSlider.Minimum,
-            Maximum = FontScaleSlider.Maximum,
-            StepFrequency = FontScaleSlider.StepFrequency,
-            Value = FontScaleSlider.Value
-        };
-        editor.ValueChanged += (_, args) => value.Text = FormatFontScale(args.NewValue);
-        var content = new StackPanel { Spacing = 12 };
-        content.Children.Add(value);
-        content.Children.Add(editor);
-
-        if (await ShowEditorAsync("Skalowanie czcionki", content))
-        {
-            FontScaleSlider.Value = editor.Value;
-        }
-    }
-
-    private async void EditRecognitionConfidence_Click(object sender, RoutedEventArgs e)
-    {
-        var value = new TextBlock { Text = FormatRecognitionConfidence(RecognitionConfidenceSlider.Value) };
-        var editor = new Slider
-        {
-            Minimum = RecognitionConfidenceSlider.Minimum,
-            Maximum = RecognitionConfidenceSlider.Maximum,
-            StepFrequency = RecognitionConfidenceSlider.StepFrequency,
-            Value = RecognitionConfidenceSlider.Value
-        };
-        editor.ValueChanged += (_, args) => value.Text = FormatRecognitionConfidence(args.NewValue);
-        var content = new StackPanel { Spacing = 12 };
-        content.Children.Add(value);
-        content.Children.Add(editor);
-
-        if (await ShowEditorAsync("Pewność rozpoznawania", content))
-        {
-            RecognitionConfidenceSlider.Value = editor.Value;
-        }
-    }
-
     private async void EditHotkeyCode_Click(object sender, RoutedEventArgs e)
     {
 #if __ANDROID__
