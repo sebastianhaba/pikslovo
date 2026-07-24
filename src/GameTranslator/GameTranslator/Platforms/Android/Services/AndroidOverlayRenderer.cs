@@ -1,5 +1,8 @@
 using Android.Graphics;
 using Android.Content;
+using Android.Database;
+using Android.OS;
+using Android.Provider;
 using Android.Views;
 using Android.Widget;
 using GameTranslator.Core;
@@ -13,6 +16,9 @@ internal sealed partial class AndroidOverlayPresenter
     private readonly IWindowManager _windowManager;
     private DismissableOverlayImageView? _imageView;
     private Bitmap? _bitmap;
+    private WindowManagerLayoutParams? _layout;
+    private BrightnessObserver? _brightnessObserver;
+    private bool _isAttached;
 
     public AndroidOverlayPresenter(Context context)
     {
@@ -32,7 +38,7 @@ internal sealed partial class AndroidOverlayPresenter
         _imageView.SetImageBitmap(_bitmap);
         _imageView.SetScaleType(ImageView.ScaleType.Center);
 
-        var layout = new WindowManagerLayoutParams(
+        _layout = new WindowManagerLayoutParams(
             _bitmap.Width,
             _bitmap.Height,
             WindowManagerTypes.ApplicationOverlay,
@@ -41,7 +47,16 @@ internal sealed partial class AndroidOverlayPresenter
         {
             Gravity = GravityFlags.Top | GravityFlags.Start,
         };
-        _windowManager.AddView(_imageView, layout);
+        UpdateBrightness();
+        _windowManager.AddView(_imageView, _layout);
+        _isAttached = true;
+
+        _brightnessObserver = new BrightnessObserver(this, new Handler(Looper.MainLooper!));
+        var brightnessUri = Settings.System.GetUriFor(Settings.System.ScreenBrightness);
+        if (brightnessUri is not null)
+        {
+            _context.ContentResolver?.RegisterContentObserver(brightnessUri, false, _brightnessObserver);
+        }
     }
 
     public void Dismiss()
@@ -51,13 +66,50 @@ internal sealed partial class AndroidOverlayPresenter
             return;
         }
 
+        if (_brightnessObserver is not null)
+        {
+            _context.ContentResolver?.UnregisterContentObserver(_brightnessObserver);
+            _brightnessObserver.Dispose();
+            _brightnessObserver = null;
+        }
+
         _windowManager.RemoveViewImmediate(_imageView);
+        _isAttached = false;
         _imageView.SetImageBitmap(null);
         _imageView.Dispose();
         _imageView = null;
+        _layout = null;
         _bitmap?.Recycle();
         _bitmap?.Dispose();
         _bitmap = null;
+    }
+
+    private void UpdateBrightness()
+    {
+        if (_layout is null)
+        {
+            return;
+        }
+
+        var brightness = Settings.System.GetInt(
+            _context.ContentResolver,
+            Settings.System.ScreenBrightness,
+            128);
+        _layout.ScreenBrightness = Math.Clamp(brightness / 255f, 0f, 1f);
+
+        if (_imageView is not null && _isAttached)
+        {
+            _windowManager.UpdateViewLayout(_imageView, _layout);
+        }
+    }
+
+    private sealed class BrightnessObserver(AndroidOverlayPresenter owner, Handler handler) : ContentObserver(handler)
+    {
+        public override void OnChange(bool selfChange)
+        {
+            base.OnChange(selfChange);
+            owner.UpdateBrightness();
+        }
     }
 
     private sealed partial class DismissableOverlayImageView : ImageView

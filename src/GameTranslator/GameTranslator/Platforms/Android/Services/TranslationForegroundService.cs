@@ -161,8 +161,8 @@ public sealed class TranslationForegroundService : Service
     private void UpdateFloatingTriggerVisibility()
     {
         var settings = AndroidSettingsStore.Load(this);
-        var shouldShow = settings.FloatingButton.AlwaysVisible || !settings.GlobalHotkeyEnabled;
-        if (!shouldShow || !Settings.CanDrawOverlays(this))
+        var shouldShowButton = settings.FloatingButton.AlwaysVisible || !settings.GlobalHotkeyEnabled;
+        if (!Settings.CanDrawOverlays(this))
         {
             _floatingTrigger?.Dismiss();
             return;
@@ -172,10 +172,11 @@ public sealed class TranslationForegroundService : Service
         if (_floatingTrigger.IsAttached)
         {
             _floatingTrigger.RefreshConfiguration();
+            _floatingTrigger.SetButtonVisibility(shouldShowButton);
             return;
         }
 
-        _floatingTrigger.Show(() => _ = CaptureAndTranslateAsync());
+        _floatingTrigger.Show(() => _ = CaptureAndTranslateAsync(), shouldShowButton);
     }
 
     private async Task CaptureAndTranslateAsync()

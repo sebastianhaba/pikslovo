@@ -27,6 +27,7 @@ internal sealed partial class FloatingTranslationTrigger
     private BrightnessObserver? _brightnessObserver;
     private int _stateRevision;
     private bool _isAttached;
+    private bool _buttonShouldBeVisible = true;
 
     public FloatingTranslationTrigger(Context context)
     {
@@ -38,19 +39,26 @@ internal sealed partial class FloatingTranslationTrigger
 
     public bool IsAttached => _isAttached;
 
-    public void Show(Action onClick)
+    public void Show(Action onClick, bool buttonVisible = true)
     {
-        ShowCore(onClick);
+        ShowCore(onClick, buttonVisible);
     }
 
     public void ShowPreview()
     {
-        ShowCore(static () => { });
+        ShowCore(static () => { }, buttonVisible: true);
     }
 
-    private void ShowCore(Action onClick)
+    public void SetButtonVisibility(bool visible)
+    {
+        _buttonShouldBeVisible = visible;
+        _mainHandler.Post(ApplyButtonVisibility);
+    }
+
+    private void ShowCore(Action onClick, bool buttonVisible)
     {
         Dismiss();
+        _buttonShouldBeVisible = buttonVisible;
         var settings = AndroidSettingsStore.Load(_context).FloatingButton;
         var size = GetButtonSize(settings.Scale);
         _button = new ImageButton(_context)
@@ -76,6 +84,7 @@ internal sealed partial class FloatingTranslationTrigger
         UpdateBrightness();
         _windowManager.AddView(_button, _layout);
         _isAttached = true;
+        ApplyButtonVisibility();
         ApplyState(FloatingTranslationTriggerState.Ready, Interlocked.Increment(ref _stateRevision));
 
         _brightnessObserver = new BrightnessObserver(this, new Handler(Looper.MainLooper!));
@@ -123,7 +132,7 @@ internal sealed partial class FloatingTranslationTrigger
 
         _windowManager.RemoveViewImmediate(_button);
         _windowManager.AddView(_button, _layout);
-        _button.Visibility = ViewStates.Visible;
+        ApplyButtonVisibility();
     }
 
     public Task HideForCaptureAsync()
@@ -147,7 +156,7 @@ internal sealed partial class FloatingTranslationTrigger
         {
             if (_button is not null)
             {
-                _button.Visibility = ViewStates.Visible;
+                ApplyButtonVisibility();
             }
         });
     }
@@ -180,6 +189,25 @@ internal sealed partial class FloatingTranslationTrigger
         background.SetShape(ShapeType.Oval);
         background.SetColor(Color.Rgb(accent.R, accent.G, accent.B));
         return background;
+    }
+
+    private void ApplyButtonVisibility()
+    {
+        if (_button is null || _layout is null)
+        {
+            return;
+        }
+
+        _button.Visibility = ViewStates.Visible;
+        _button.Alpha = _buttonShouldBeVisible ? 1f : 0f;
+        _button.Clickable = _buttonShouldBeVisible;
+        _layout.Flags = _buttonShouldBeVisible
+            ? WindowManagerFlags.NotFocusable
+            : WindowManagerFlags.NotFocusable | WindowManagerFlags.NotTouchable;
+        if (_isAttached)
+        {
+            _windowManager.UpdateViewLayout(_button, _layout);
+        }
     }
 
     private void ApplyPosition(FloatingButtonSettings settings, int size)
