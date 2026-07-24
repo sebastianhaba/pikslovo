@@ -177,7 +177,7 @@ internal sealed partial class AndroidOverlayPresenter
     private sealed partial class ProcessingFrameView : View
     {
         private const long HighlightCycleMilliseconds = 1800;
-        private const int HighlightSegments = 32;
+        private const int HighlightSegments = 36;
         private readonly Paint _border;
         private readonly Paint _highlight;
         private readonly float _highlightLength;
@@ -192,9 +192,9 @@ internal sealed partial class AndroidOverlayPresenter
             _border.SetStyle(Paint.Style.Stroke);
 
             var density = context.Resources?.DisplayMetrics?.Density ?? 1f;
-            _highlight = new Paint { StrokeWidth = Math.Max(12f, 5f * density), AntiAlias = true };
+            _highlight = new Paint { StrokeWidth = Math.Max(18f, 7f * density), AntiAlias = true };
             _highlight.SetStyle(Paint.Style.Stroke);
-            _highlightLength = 120f * density;
+            _highlightLength = 180f * density;
             _highlightRed = Lighten(borderColor.R);
             _highlightGreen = Lighten(borderColor.G);
             _highlightBlue = Lighten(borderColor.B);
@@ -242,7 +242,7 @@ internal sealed partial class AndroidOverlayPresenter
                 var start = head - (length * segment / HighlightSegments);
                 var end = head - (length * (segment - 1) / HighlightSegments);
                 var brightness = (HighlightSegments - segment + 1f) / HighlightSegments;
-                var alpha = (int)(20 + (235 * brightness * brightness));
+                var alpha = (int)(65 + (190 * brightness * brightness));
                 _highlight.Color = Color.Argb(alpha, _highlightRed, _highlightGreen, _highlightBlue);
 
                 var startPoint = PointOnFrame(start, frameWidth, frameHeight, perimeter);
@@ -282,7 +282,7 @@ internal sealed partial class AndroidOverlayPresenter
             return new PointF(3, bottom - position);
         }
 
-        private static int Lighten(int component) => component + ((255 - component) * 3 / 4);
+        private static int Lighten(int component) => component + ((255 - component) * 7 / 8);
     }
 }
 
