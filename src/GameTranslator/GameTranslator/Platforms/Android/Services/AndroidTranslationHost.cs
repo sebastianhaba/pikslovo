@@ -47,7 +47,7 @@ internal static class AndroidTranslationHost
         context.StartService(intent);
     }
 
-    public static void RefreshFloatingTriggerAppearance(Context context)
+    public static void RefreshFloatingTriggerConfiguration(Context context)
     {
         if (!TranslationForegroundService.IsSessionActive)
         {

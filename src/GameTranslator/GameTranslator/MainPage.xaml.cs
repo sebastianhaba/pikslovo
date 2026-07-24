@@ -20,6 +20,9 @@ public sealed partial class MainPage : Page
     private int[] _hotkeyCodes = [];
     private AppThemeMode _themeMode = AppThemeMode.System;
     private AppAccent _accent = AppAccent.Lavender;
+#if __ANDROID__
+    private FloatingTranslationTrigger? _floatingButtonPreview;
+#endif
 
     public MainPage()
     {
@@ -59,6 +62,10 @@ public sealed partial class MainPage : Page
         GlobalHotkeyToggle.IsOn = settings.GlobalHotkeyEnabled;
         SetThemeMode(settings.ThemeMode);
         SetAccent(settings.Accent);
+        FloatingButtonAlwaysVisibleToggle.IsOn = settings.FloatingButton.AlwaysVisible;
+        FloatingButtonScaleSlider.Value = settings.FloatingButton.Scale;
+        FloatingButtonHorizontalPositionSlider.Value = settings.FloatingButton.HorizontalPosition;
+        FloatingButtonVerticalPositionSlider.Value = settings.FloatingButton.VerticalPosition;
 #else
         SelectLanguage(SourceLanguageBox, "ja");
         SelectLanguage(TargetLanguageBox, "pl");
@@ -67,9 +74,14 @@ public sealed partial class MainPage : Page
         HideIdenticalTranslationsToggle.IsOn = false;
         SetThemeMode(AppThemeMode.System);
         SetAccent(AppAccent.Lavender);
+        FloatingButtonAlwaysVisibleToggle.IsOn = true;
+        FloatingButtonScaleSlider.Value = 1;
+        FloatingButtonHorizontalPositionSlider.Value = 1;
+        FloatingButtonVerticalPositionSlider.Value = 0.1;
 #endif
         UpdateFontScaleValue();
         UpdateRecognitionConfidenceValue();
+        UpdateFloatingButtonValues();
         UpdateSettingSummaries();
         UpdateSessionToggle();
     }
@@ -89,6 +101,7 @@ public sealed partial class MainPage : Page
             "appTheme" => "Wygląd aplikacji",
             "recognition" => "Rozpoznawanie tekstu",
             "triggers" => "Globalny hotkey",
+            "floatingButton" => "Przycisk pływający",
             "permissions" => "Uprawnienia",
             _ => string.Empty
         };
@@ -98,6 +111,7 @@ public sealed partial class MainPage : Page
         AppearanceSection.Visibility = section == "appearance" ? Visibility.Visible : Visibility.Collapsed;
         RecognitionSection.Visibility = section == "recognition" ? Visibility.Visible : Visibility.Collapsed;
         TriggersSection.Visibility = section == "triggers" ? Visibility.Visible : Visibility.Collapsed;
+        FloatingButtonSection.Visibility = section == "floatingButton" ? Visibility.Visible : Visibility.Collapsed;
         PermissionsSection.Visibility = section == "permissions" ? Visibility.Visible : Visibility.Collapsed;
         ThemeSection.Visibility = section == "appTheme" ? Visibility.Visible : Visibility.Collapsed;
         HomeHeader.Visibility = Visibility.Collapsed;
@@ -105,6 +119,7 @@ public sealed partial class MainPage : Page
         HomeView.Visibility = Visibility.Collapsed;
         DetailView.Visibility = Visibility.Visible;
         DetailView.ChangeView(null, 0, null, true);
+        UpdateFloatingButtonPreview();
     }
 
     private void Back_Click(object sender, RoutedEventArgs e)
@@ -114,12 +129,15 @@ public sealed partial class MainPage : Page
         HomeView.Visibility = Visibility.Visible;
         DetailView.Visibility = Visibility.Collapsed;
         HomeView.ChangeView(null, 0, null, true);
+        DismissFloatingButtonPreview();
     }
 
     private void Setting_Changed(object sender, RoutedEventArgs e)
     {
         SaveSettings(requireValidTranslationSettings: false);
+        UpdateFloatingButtonValues();
         UpdateSettingSummaries();
+        UpdateFloatingButtonPreview();
     }
 
     private void ThemeModeOption_Tapped(object sender, TappedRoutedEventArgs e)
@@ -147,7 +165,8 @@ public sealed partial class MainPage : Page
         if (SaveSettings(requireValidTranslationSettings: false))
         {
 #if __ANDROID__
-            AndroidTranslationHost.RefreshFloatingTriggerAppearance(global::Android.App.Application.Context!);
+            AndroidTranslationHost.RefreshFloatingTriggerConfiguration(global::Android.App.Application.Context!);
+            UpdateFloatingButtonPreview();
 #endif
         }
         UpdateSettingSummaries();
@@ -365,9 +384,17 @@ public sealed partial class MainPage : Page
         UpdateSessionToggle();
     }
 
-    private void MainPage_Unloaded(object sender, RoutedEventArgs e) => AndroidTranslationHost.SessionStateChanged -= OnSessionStateChanged;
+    private void MainPage_Unloaded(object sender, RoutedEventArgs e)
+    {
+        AndroidTranslationHost.SessionStateChanged -= OnSessionStateChanged;
+        DismissFloatingButtonPreview();
+    }
 
-    private void OnSessionStateChanged() => _ = DispatcherQueue.TryEnqueue(UpdateSessionToggle);
+    private void OnSessionStateChanged() => _ = DispatcherQueue.TryEnqueue(() =>
+    {
+        UpdateSessionToggle();
+        UpdateFloatingButtonPreview();
+    });
 #endif
 
     private bool SaveSettings(bool requireValidTranslationSettings)
@@ -399,7 +426,17 @@ public sealed partial class MainPage : Page
 #if __ANDROID__
         AndroidSettingsStore.Save(
             global::Android.App.Application.Context!,
-            new AndroidAppSettings(settings, _hotkeyCodes, GlobalHotkeyToggle.IsOn, _themeMode, _accent));
+            new AndroidAppSettings(
+                settings,
+                _hotkeyCodes,
+                GlobalHotkeyToggle.IsOn,
+                _themeMode,
+                _accent,
+                new FloatingButtonSettings(
+                    FloatingButtonAlwaysVisibleToggle.IsOn,
+                    (float)FloatingButtonScaleSlider.Value,
+                    (float)FloatingButtonHorizontalPositionSlider.Value,
+                    (float)FloatingButtonVerticalPositionSlider.Value)));
 #endif
         return true;
     }
@@ -450,9 +487,93 @@ public sealed partial class MainPage : Page
         SaveSettings(requireValidTranslationSettings: false);
     }
 
+    private void FloatingButtonSetting_Changed(object sender, RoutedEventArgs e)
+    {
+        SaveSettings(requireValidTranslationSettings: false);
+        UpdateFloatingButtonValues();
+        RefreshFloatingButtonConfiguration();
+    }
+
+    private void FloatingButtonScaleSlider_ValueChanged(object sender, RangeBaseValueChangedEventArgs e)
+    {
+        UpdateFloatingButtonValues();
+        SaveSettings(requireValidTranslationSettings: false);
+        RefreshFloatingButtonConfiguration();
+    }
+
+    private void FloatingButtonHorizontalPositionSlider_ValueChanged(object sender, RangeBaseValueChangedEventArgs e)
+    {
+        UpdateFloatingButtonValues();
+        SaveSettings(requireValidTranslationSettings: false);
+        RefreshFloatingButtonConfiguration();
+    }
+
+    private void FloatingButtonVerticalPositionSlider_ValueChanged(object sender, RangeBaseValueChangedEventArgs e)
+    {
+        UpdateFloatingButtonValues();
+        SaveSettings(requireValidTranslationSettings: false);
+        RefreshFloatingButtonConfiguration();
+    }
+
     private void UpdateFontScaleValue() => FontScaleValue.Text = FormatFontScale(FontScaleSlider.Value);
 
     private void UpdateRecognitionConfidenceValue() => RecognitionConfidenceValue.Text = FormatRecognitionConfidence(RecognitionConfidenceSlider.Value);
+
+    private void UpdateFloatingButtonValues()
+    {
+        FloatingButtonScaleValue.Text = FormatFontScale(FloatingButtonScaleSlider.Value);
+        FloatingButtonHorizontalPositionValue.Text = FormatPosition(FloatingButtonHorizontalPositionSlider.Value);
+        FloatingButtonVerticalPositionValue.Text = FormatPosition(FloatingButtonVerticalPositionSlider.Value);
+        FloatingButtonVisibilityDescription.Text = FloatingButtonAlwaysVisibleToggle.IsOn
+            ? "Widoczny także, gdy usługa tłumacza jest wyłączona."
+            : GlobalHotkeyToggle.IsOn
+                ? "Poza aktywną sesją jest ukryty; użyj globalnego hotkeya."
+                : "Widoczny, ponieważ globalny hotkey jest wyłączony.";
+    }
+
+    private void RefreshFloatingButtonConfiguration()
+    {
+#if __ANDROID__
+        AndroidTranslationHost.RefreshFloatingTriggerConfiguration(global::Android.App.Application.Context!);
+#endif
+        UpdateFloatingButtonPreview();
+    }
+
+    private void UpdateFloatingButtonPreview()
+    {
+#if __ANDROID__
+        if (FloatingButtonSection.Visibility != Visibility.Visible || TranslationForegroundService.IsSessionActive)
+        {
+            DismissFloatingButtonPreview();
+            return;
+        }
+
+        var shouldShowPreview = FloatingButtonAlwaysVisibleToggle.IsOn || !GlobalHotkeyToggle.IsOn;
+        var context = global::Android.App.Application.Context!;
+        if (!shouldShowPreview || !global::Android.Provider.Settings.CanDrawOverlays(context))
+        {
+            DismissFloatingButtonPreview();
+            return;
+        }
+
+        if (_floatingButtonPreview is null)
+        {
+            _floatingButtonPreview = new FloatingTranslationTrigger(context);
+            _floatingButtonPreview.ShowPreview();
+            return;
+        }
+
+        _floatingButtonPreview.RefreshConfiguration();
+#endif
+    }
+
+    private void DismissFloatingButtonPreview()
+    {
+#if __ANDROID__
+        _floatingButtonPreview?.Dismiss();
+        _floatingButtonPreview = null;
+#endif
+    }
 
     private void UpdateSettingSummaries()
     {
@@ -547,6 +668,8 @@ public sealed partial class MainPage : Page
     };
 
     private static string FormatFontScale(double value) => $"{value.ToString("0.0", CultureInfo.CurrentCulture)}x";
+
+    private static string FormatPosition(double value) => value.ToString("0.0", CultureInfo.CurrentCulture);
 
     private static string FormatRecognitionConfidence(double value) => value.ToString("0.0", CultureInfo.CurrentCulture);
 }

@@ -59,7 +59,7 @@ public sealed class TranslationForegroundService : Service
                     StopSession();
                     break;
                 case RefreshAppearanceAction:
-                    _floatingTrigger?.RefreshAppearance();
+                    _floatingTrigger?.RefreshConfiguration();
                     break;
             }
         }

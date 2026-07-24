@@ -38,13 +38,24 @@ internal sealed partial class FloatingTranslationTrigger
 
     public void Show(Action onClick)
     {
+        ShowCore(onClick);
+    }
+
+    public void ShowPreview()
+    {
+        ShowCore(static () => { });
+    }
+
+    private void ShowCore(Action onClick)
+    {
         Dismiss();
-        var size = ToPixels(56);
+        var settings = AndroidSettingsStore.Load(_context).FloatingButton;
+        var size = GetButtonSize(settings.Scale);
         _button = new ImageButton(_context)
         {
             ContentDescription = "Tłumacz ekran",
         };
-        var iconPadding = ToPixels(12);
+        var iconPadding = ToPixels(12f * settings.Scale);
         _button.SetPadding(iconPadding, iconPadding, iconPadding, iconPadding);
         _button.SetScaleType(ImageView.ScaleType.CenterInside);
         _button.Background = CreateBackground();
@@ -57,10 +68,9 @@ internal sealed partial class FloatingTranslationTrigger
             WindowManagerFlags.NotFocusable,
             Format.Rgba8888)
         {
-            Gravity = GravityFlags.Top | GravityFlags.End,
-            X = ToPixels(16),
-            Y = ToPixels(120),
+            Gravity = GravityFlags.Top | GravityFlags.Start,
         };
+        ApplyPosition(settings, size);
         UpdateBrightness();
         _windowManager.AddView(_button, _layout);
         _isAttached = true;
@@ -80,13 +90,24 @@ internal sealed partial class FloatingTranslationTrigger
         _mainHandler.Post(() => ApplyState(state, revision));
     }
 
-    public void RefreshAppearance()
+    public void RefreshConfiguration()
     {
         _mainHandler.Post(() =>
         {
-            if (_button is not null)
+            if (_button is not null && _layout is not null)
             {
+                var settings = AndroidSettingsStore.Load(_context).FloatingButton;
+                var size = GetButtonSize(settings.Scale);
                 _button.Background = CreateBackground();
+                var iconPadding = ToPixels(12f * settings.Scale);
+                _button.SetPadding(iconPadding, iconPadding, iconPadding, iconPadding);
+                _layout.Width = size;
+                _layout.Height = size;
+                ApplyPosition(settings, size);
+                if (_isAttached)
+                {
+                    _windowManager.UpdateViewLayout(_button, _layout);
+                }
             }
         });
     }
@@ -159,7 +180,23 @@ internal sealed partial class FloatingTranslationTrigger
         return background;
     }
 
-    private int ToPixels(int dp) => (int)(dp * _context.Resources!.DisplayMetrics!.Density + 0.5f);
+    private void ApplyPosition(FloatingButtonSettings settings, int size)
+    {
+        if (_layout is null)
+        {
+            return;
+        }
+
+        var bounds = _windowManager.CurrentWindowMetrics?.Bounds;
+        var availableWidth = Math.Max(0, (bounds?.Width() ?? size) - size);
+        var availableHeight = Math.Max(0, (bounds?.Height() ?? size) - size);
+        _layout.X = (int)(availableWidth * settings.HorizontalPosition + 0.5f);
+        _layout.Y = (int)(availableHeight * settings.VerticalPosition + 0.5f);
+    }
+
+    private int GetButtonSize(float scale) => ToPixels(56f * scale);
+
+    private int ToPixels(float dp) => (int)(dp * _context.Resources!.DisplayMetrics!.Density + 0.5f);
 
     private void UpdateBrightness()
     {

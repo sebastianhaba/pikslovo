@@ -13,7 +13,19 @@ internal sealed record AndroidAppSettings(
     int[] HotkeyCodes,
     bool GlobalHotkeyEnabled,
     AppThemeMode ThemeMode,
-    AppAccent Accent);
+    AppAccent Accent,
+    FloatingButtonSettings FloatingButton);
+
+internal sealed record FloatingButtonSettings(
+    bool AlwaysVisible,
+    float Scale,
+    float HorizontalPosition,
+    float VerticalPosition)
+{
+    public const float DefaultScale = 1f;
+    public const float DefaultHorizontalPosition = 1f;
+    public const float DefaultVerticalPosition = 0.1f;
+}
 
 internal static class AndroidSettingsStore
 {
@@ -30,6 +42,10 @@ internal static class AndroidSettingsStore
     private const string GlobalHotkeyEnabledName = "global_hotkey_enabled";
     private const string ThemeModeName = "theme_mode";
     private const string AccentName = "accent";
+    private const string FloatingButtonAlwaysVisibleName = "floating_button_always_visible";
+    private const string FloatingButtonScaleName = "floating_button_scale";
+    private const string FloatingButtonHorizontalPositionName = "floating_button_horizontal_position";
+    private const string FloatingButtonVerticalPositionName = "floating_button_vertical_position";
     private const string KeyAlias = "game_translator_api_key";
 
     public static AndroidAppSettings Load(Context context)
@@ -46,7 +62,12 @@ internal static class AndroidSettingsStore
             ReadHotkeyCodes(preferences),
             preferences.GetBoolean(GlobalHotkeyEnabledName, false),
             ReadThemeMode(preferences.GetString(ThemeModeName, null)),
-            ReadAccent(preferences.GetString(AccentName, null)));
+            ReadAccent(preferences.GetString(AccentName, null)),
+            new FloatingButtonSettings(
+                preferences.GetBoolean(FloatingButtonAlwaysVisibleName, true),
+                Clamp(preferences.GetFloat(FloatingButtonScaleName, FloatingButtonSettings.DefaultScale), 0.5f, 2f),
+                Clamp(preferences.GetFloat(FloatingButtonHorizontalPositionName, FloatingButtonSettings.DefaultHorizontalPosition), 0f, 1f),
+                Clamp(preferences.GetFloat(FloatingButtonVerticalPositionName, FloatingButtonSettings.DefaultVerticalPosition), 0f, 1f)));
     }
 
     public static void Save(Context context, AndroidAppSettings settings)
@@ -64,8 +85,14 @@ internal static class AndroidSettingsStore
         editor.PutBoolean(GlobalHotkeyEnabledName, settings.GlobalHotkeyEnabled);
         editor.PutString(ThemeModeName, settings.ThemeMode.ToString());
         editor.PutString(AccentName, settings.Accent.ToString());
+        editor.PutBoolean(FloatingButtonAlwaysVisibleName, settings.FloatingButton.AlwaysVisible);
+        editor.PutFloat(FloatingButtonScaleName, Clamp(settings.FloatingButton.Scale, 0.5f, 2f));
+        editor.PutFloat(FloatingButtonHorizontalPositionName, Clamp(settings.FloatingButton.HorizontalPosition, 0f, 1f));
+        editor.PutFloat(FloatingButtonVerticalPositionName, Clamp(settings.FloatingButton.VerticalPosition, 0f, 1f));
         editor.Apply();
     }
+
+    private static float Clamp(float value, float minimum, float maximum) => Math.Clamp(value, minimum, maximum);
 
     private static AppThemeMode ReadThemeMode(string? value) =>
         Enum.TryParse<AppThemeMode>(value, ignoreCase: true, out var mode) ? mode : AppThemeMode.System;
