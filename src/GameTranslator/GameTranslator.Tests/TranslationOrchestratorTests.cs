@@ -34,6 +34,52 @@ public sealed class TranslationOrchestratorTests
     }
 
     [Test]
+    public async Task TranslateAsync_groups_nearby_lines_before_translation()
+    {
+        var ocr = new StubOcrProvider(
+            new OcrDocument(
+            [
+                new TextRegion("The door is", new PixelRect(100, 300, 280, 330)),
+                new TextRegion("locked.", new PixelRect(102, 334, 230, 364)),
+                new TextRegion("Options", new PixelRect(20, 80, 140, 110)),
+            ]));
+        var translator = new StubTranslationProvider(["Opcje", "Drzwi są\nzamknięte."]);
+        var orchestrator = new TranslationOrchestrator(ocr, translator);
+
+        var result = await orchestrator.TranslateAsync(
+            new byte[] { 1 },
+            new TranslationSettings("key", "en", "pl"),
+            CancellationToken.None);
+
+        translator.RequestedSourceTexts.Should().Equal("Options", "The door is\nlocked.");
+        result!.Regions.Should().Equal(
+            new TranslatedRegion("Options", "Opcje", new PixelRect(20, 80, 140, 110)),
+            new TranslatedRegion("The door is\nlocked.", "Drzwi są\nzamknięte.", new PixelRect(100, 300, 280, 364)));
+    }
+
+    [Test]
+    public async Task TranslateAsync_uses_configured_grouping_power()
+    {
+        var ocr = new StubOcrProvider(
+            new OcrDocument(
+            [
+                new TextRegion("First line", new PixelRect(100, 100, 280, 120)),
+                new TextRegion("Second line", new PixelRect(100, 145, 280, 165)),
+            ]));
+        var translator = new StubTranslationProvider(["Połączony dialog"]);
+        var orchestrator = new TranslationOrchestrator(ocr, translator);
+
+        var result = await orchestrator.TranslateAsync(
+            new byte[] { 1 },
+            new TranslationSettings("key", "en", "pl", GroupingPower: 1f),
+            CancellationToken.None);
+
+        translator.RequestedSourceTexts.Should().Equal("First line\nSecond line");
+        result!.Regions.Should().ContainSingle()
+            .Which.Bounds.Should().Be(new PixelRect(100, 100, 280, 165));
+    }
+
+    [Test]
     public async Task TranslateAsync_rejects_missing_configuration_before_calling_providers()
     {
         var ocr = new StubOcrProvider(new OcrDocument([]));
@@ -108,6 +154,17 @@ public sealed class TranslationOrchestratorTests
         settings.IsValid.Should().Be(isValid);
     }
 
+    [TestCase(0.25f, true)]
+    [TestCase(1f, true)]
+    [TestCase(0.24f, false)]
+    [TestCase(1.01f, false)]
+    public void TranslationSettings_validates_grouping_power_range(float groupingPower, bool isValid)
+    {
+        var settings = new TranslationSettings("key", "en", "pl", GroupingPower: groupingPower);
+
+        settings.IsValid.Should().Be(isValid);
+    }
+
     [Test]
     public async Task GoogleVisionOcrProvider_filters_paragraphs_below_recognition_confidence()
     {
@@ -153,6 +210,52 @@ public sealed class TranslationOrchestratorTests
         document.Regions.Should().ContainSingle()
             .Which.Should().Be(new TextRegion("Keep", new PixelRect(1, 2, 30, 20)));
         handler.RequestBody.Should().Contain("DOCUMENT_TEXT_DETECTION");
+    }
+
+    [Test]
+    public async Task GoogleVisionOcrProvider_preserves_symbol_breaks_and_default_word_spacing()
+    {
+        const string responseJson = """
+            {
+              "responses": [
+                {
+                  "fullTextAnnotation": {
+                    "pages": [
+                      {
+                        "blocks": [
+                          {
+                            "paragraphs": [
+                              {
+                                "confidence": 1,
+                                "boundingBox": { "vertices": [{ "x": 1, "y": 2 }, { "x": 100, "y": 40 }] },
+                                "words": [
+                                  { "symbols": [{ "text": "H" }, { "text": "i", "property": { "detectedBreak": { "type": "SPACE" } } }] },
+                                  { "symbols": [{ "text": "t" }, { "text": "h" }, { "text": "e" }, { "text": "r" }, { "text": "e", "property": { "detectedBreak": { "type": "LINE_BREAK" } } }] },
+                                  { "symbols": [{ "text": "G" }, { "text": "o" }] },
+                                  { "symbols": [{ "text": "!" }] }
+                                ]
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+            """;
+        var handler = new StubHttpMessageHandler(responseJson);
+        using var httpClient = new HttpClient(handler);
+        var provider = new GoogleVisionOcrProvider(httpClient);
+
+        var document = await provider.RecognizeAsync(
+            new byte[] { 1 },
+            new TranslationSettings("key", "en", "pl"),
+            CancellationToken.None);
+
+        document.Regions.Should().ContainSingle()
+            .Which.Text.Should().Be("Hi there\nGo!");
     }
 
     [Test]

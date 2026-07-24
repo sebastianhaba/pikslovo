@@ -34,6 +34,7 @@ internal static class AndroidSettingsStore
     private const string SourceLanguageName = "source_language";
     private const string TargetLanguageName = "target_language";
     private const string RecognitionConfidenceName = "recognition_confidence";
+    private const string GroupingPowerName = "grouping_power";
     private const string FontScaleName = "font_scale";
     private const string HideIdenticalTranslationsName = "hide_identical_translations";
     private const string HotkeyCodeName = "hotkey_code";
@@ -57,6 +58,7 @@ internal static class AndroidSettingsStore
                 preferences.GetString(SourceLanguageName, "ja") ?? "ja",
                 preferences.GetString(TargetLanguageName, "pl") ?? "pl",
                 preferences.GetFloat(RecognitionConfidenceName, TranslationSettings.DefaultRecognitionConfidence),
+                Clamp(preferences.GetFloat(GroupingPowerName, TranslationSettings.DefaultGroupingPower), TranslationSettings.DefaultGroupingPower, 1f),
                 preferences.GetFloat(FontScaleName, TranslationSettings.DefaultFontScale),
                 preferences.GetBoolean(HideIdenticalTranslationsName, false)),
             ReadHotkeyCodes(preferences),
@@ -77,6 +79,7 @@ internal static class AndroidSettingsStore
         editor.PutString(SourceLanguageName, settings.Translation.SourceLanguage);
         editor.PutString(TargetLanguageName, settings.Translation.TargetLanguage);
         editor.PutFloat(RecognitionConfidenceName, settings.Translation.RecognitionConfidence);
+        editor.PutFloat(GroupingPowerName, Math.Clamp(settings.Translation.GroupingPower, TranslationSettings.DefaultGroupingPower, 1f));
         editor.PutFloat(FontScaleName, settings.Translation.FontScale);
         editor.PutBoolean(HideIdenticalTranslationsName, settings.Translation.HideIdenticalTranslations);
         editor.PutString(HotkeyCodesName, string.Join(',', settings.HotkeyCodes));

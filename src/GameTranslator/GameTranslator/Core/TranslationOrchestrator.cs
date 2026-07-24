@@ -33,22 +33,23 @@ public sealed class TranslationOrchestrator
                 .RecognizeAsync(imageBytes, settings, cancellationToken)
                 .ConfigureAwait(false);
 
-            if (document.Regions.Count == 0)
+            var groupedRegions = new TextRegionGrouper(settings.GroupingPower).Group(document.Regions);
+            if (groupedRegions.Count == 0)
             {
                 return new TranslationResult([]);
             }
 
-            var sourceTexts = document.Regions.Select(region => region.Text).ToArray();
+            var sourceTexts = groupedRegions.Select(region => region.Text).ToArray();
             var translatedTexts = await _translationProvider
                 .TranslateAsync(sourceTexts, settings, cancellationToken)
                 .ConfigureAwait(false);
 
-            if (translatedTexts.Count != document.Regions.Count)
+            if (translatedTexts.Count != groupedRegions.Count)
             {
                 throw new TranslationException("Google Translation zwróciło niepełną odpowiedź.");
             }
 
-            var regions = document.Regions
+            var regions = groupedRegions
                 .Select((region, index) => new TranslatedRegion(region.Text, translatedTexts[index], region.Bounds))
                 .Where(region => !settings.HideIdenticalTranslations ||
                     !string.Equals(

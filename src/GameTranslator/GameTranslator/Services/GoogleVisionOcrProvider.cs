@@ -54,10 +54,7 @@ public sealed class GoogleVisionOcrProvider(HttpClient httpClient) : IOcrProvide
     private static TextRegion? ToRegion(VisionParagraph paragraph)
     {
         var words = paragraph.Words ?? [];
-        var text = string.Concat(words.Select(word =>
-            string.Concat(word.Symbols?.Select(symbol => symbol.Text) ?? []) +
-            (word.Property?.DetectedBreak?.Type is "SPACE" or "EOL_SURE_SPACE" or "LINE_BREAK" ? " " : string.Empty)))
-            .Trim();
+        var text = BuildParagraphText(words);
 
         var vertices = paragraph.BoundingBox?.Vertices ?? [];
         if (string.IsNullOrWhiteSpace(text) || vertices.Length == 0)
@@ -72,6 +69,59 @@ public sealed class GoogleVisionOcrProvider(HttpClient httpClient) : IOcrProvide
 
         return new TextRegion(text, new PixelRect(left, top, right, bottom));
     }
+
+    private static string BuildParagraphText(IReadOnlyList<VisionWord> words)
+    {
+        var text = new System.Text.StringBuilder();
+        for (var index = 0; index < words.Count; index++)
+        {
+            var word = words[index];
+            var symbols = word.Symbols ?? [];
+            var wordText = string.Concat(symbols.Select(symbol => symbol.Text));
+            text.Append(wordText);
+
+            var breakType = symbols.LastOrDefault()?.Property?.DetectedBreak?.Type ??
+                word.Property?.DetectedBreak?.Type;
+            if (breakType is not null)
+            {
+                text.Append(BreakText(breakType));
+            }
+            else if (index < words.Count - 1 && NeedsSpace(wordText, words[index + 1].Symbols))
+            {
+                text.Append(' ');
+            }
+        }
+
+        return text.ToString().Trim();
+    }
+
+    private static string BreakText(string breakType) => breakType switch
+    {
+        "SPACE" or "SURE_SPACE" or "EOL_SURE_SPACE" => " ",
+        "LINE_BREAK" => "\n",
+        "HYPHEN" => "-",
+        _ => string.Empty,
+    };
+
+    private static bool NeedsSpace(string currentWord, VisionSymbol[]? nextSymbols)
+    {
+        var nextWord = string.Concat(nextSymbols?.Select(symbol => symbol.Text) ?? []);
+        return nextWord.Length > 0 &&
+            !IsClosingPunctuation(nextWord[0]) &&
+            !EndsWithOpeningPunctuation(currentWord) &&
+            !ContainsCjk(currentWord) &&
+            !ContainsCjk(nextWord);
+    }
+
+    private static bool IsClosingPunctuation(char character) => character is '.' or ',' or '!' or '?' or ':' or ';' or ')' or ']' or '}' or '"' or '\'';
+
+    private static bool EndsWithOpeningPunctuation(string text) => text.Length > 0 && text[^1] is '(' or '[' or '{' or '"' or '\'';
+
+    private static bool ContainsCjk(string text) => text.Any(character =>
+        (character >= '\u3000' && character <= '\u9fff') ||
+        (character >= '\uac00' && character <= '\ud7af') ||
+        (character >= '\uf900' && character <= '\ufaff') ||
+        (character >= '\uff00' && character <= '\uffef'));
 
     private sealed record VisionRequest([property: JsonPropertyName("requests")] VisionImageRequest[] Requests);
 
@@ -156,6 +206,9 @@ public sealed class GoogleVisionOcrProvider(HttpClient httpClient) : IOcrProvide
     {
         [JsonPropertyName("text")]
         public string Text { get; init; } = string.Empty;
+
+        [JsonPropertyName("property")]
+        public VisionTextProperty? Property { get; init; }
     }
 
     private sealed class VisionTextProperty

@@ -60,6 +60,7 @@ public sealed partial class MainPage : Page
         SelectLanguage(TargetLanguageBox, settings.Translation.TargetLanguage);
         FontScaleSlider.Value = settings.Translation.FontScale;
         RecognitionConfidenceSlider.Value = settings.Translation.RecognitionConfidence;
+        GroupingPowerSlider.Value = settings.Translation.GroupingPower;
         HideIdenticalTranslationsToggle.IsOn = settings.Translation.HideIdenticalTranslations;
         _hotkeyCodes = settings.HotkeyCodes;
         GlobalHotkeyToggle.IsOn = settings.GlobalHotkeyEnabled;
@@ -74,6 +75,7 @@ public sealed partial class MainPage : Page
         SelectLanguage(TargetLanguageBox, "pl");
         FontScaleSlider.Value = TranslationSettings.DefaultFontScale;
         RecognitionConfidenceSlider.Value = TranslationSettings.DefaultRecognitionConfidence;
+        GroupingPowerSlider.Value = TranslationSettings.DefaultGroupingPower;
         HideIdenticalTranslationsToggle.IsOn = false;
         SetThemeMode(AppThemeMode.System);
         SetAccent(AppAccent.Lavender);
@@ -84,6 +86,7 @@ public sealed partial class MainPage : Page
 #endif
         UpdateFontScaleValue();
         UpdateRecognitionConfidenceValue();
+        UpdateGroupingPowerValue();
         UpdateFloatingButtonValues();
         UpdateSettingSummaries();
         UpdateSessionToggle();
@@ -100,9 +103,8 @@ public sealed partial class MainPage : Page
         {
             "translation" => "Tłumaczenie",
             "api" => "Google Cloud API",
-            "appearance" => "Wygląd nakładki",
             "appTheme" => "Wygląd aplikacji",
-            "recognition" => "Rozpoznawanie tekstu",
+            "recognition" => "Przetwarzanie tekstu",
             "triggers" => "Globalny hotkey",
             "floatingButton" => "Przycisk pływający",
             "permissions" => "Uprawnienia",
@@ -112,7 +114,6 @@ public sealed partial class MainPage : Page
         TranslationSection.Visibility = section == "translation" ? Visibility.Visible : Visibility.Collapsed;
         ApiSection.Visibility = section == "api" ? Visibility.Visible : Visibility.Collapsed;
         ApiKeyTestFooter.Visibility = section == "api" ? Visibility.Visible : Visibility.Collapsed;
-        AppearanceSection.Visibility = section == "appearance" ? Visibility.Visible : Visibility.Collapsed;
         RecognitionSection.Visibility = section == "recognition" ? Visibility.Visible : Visibility.Collapsed;
         TriggersSection.Visibility = section == "triggers" ? Visibility.Visible : Visibility.Collapsed;
         FloatingButtonSection.Visibility = section == "floatingButton" ? Visibility.Visible : Visibility.Collapsed;
@@ -469,6 +470,7 @@ public sealed partial class MainPage : Page
             GetLanguage(SourceLanguageBox),
             GetLanguage(TargetLanguageBox),
             (float)RecognitionConfidenceSlider.Value,
+            (float)GroupingPowerSlider.Value,
             (float)FontScaleSlider.Value,
             HideIdenticalTranslationsToggle.IsOn);
         if (requireValidTranslationSettings && !settings.IsValid)
@@ -541,6 +543,12 @@ public sealed partial class MainPage : Page
         SaveSettings(requireValidTranslationSettings: false);
     }
 
+    private void GroupingPowerSlider_ValueChanged(object sender, RangeBaseValueChangedEventArgs e)
+    {
+        UpdateGroupingPowerValue();
+        SaveSettings(requireValidTranslationSettings: false);
+    }
+
     private void FloatingButtonSetting_Changed(object sender, RoutedEventArgs e)
     {
         SaveSettings(requireValidTranslationSettings: false);
@@ -572,6 +580,8 @@ public sealed partial class MainPage : Page
     private void UpdateFontScaleValue() => FontScaleValue.Text = FormatFontScale(FontScaleSlider.Value);
 
     private void UpdateRecognitionConfidenceValue() => RecognitionConfidenceValue.Text = FormatRecognitionConfidence(RecognitionConfidenceSlider.Value);
+
+    private void UpdateGroupingPowerValue() => GroupingPowerValue.Text = GroupingPowerSlider.Value.ToString("0.00", CultureInfo.CurrentCulture);
 
     private void UpdateFloatingButtonValues()
     {
