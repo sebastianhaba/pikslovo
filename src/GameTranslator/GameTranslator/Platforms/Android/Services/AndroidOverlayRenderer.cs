@@ -15,8 +15,10 @@ internal sealed partial class AndroidOverlayPresenter
     private readonly Context _context;
     private readonly IWindowManager _windowManager;
     private DismissableOverlayImageView? _imageView;
+    private ProcessingFrameView? _processingFrameView;
     private Bitmap? _bitmap;
     private WindowManagerLayoutParams? _layout;
+    private WindowManagerLayoutParams? _processingFrameLayout;
     private BrightnessObserver? _brightnessObserver;
     private bool _isAttached;
 
@@ -29,6 +31,31 @@ internal sealed partial class AndroidOverlayPresenter
     }
 
     public bool IsShowing => _imageView is not null;
+
+    public void ShowProcessingFrame(Color borderColor)
+    {
+        DismissProcessingFrame();
+
+        var bounds = _windowManager.CurrentWindowMetrics?.Bounds;
+        var width = bounds?.Width() ?? 0;
+        var height = bounds?.Height() ?? 0;
+        if (width <= 0 || height <= 0)
+        {
+            return;
+        }
+
+        _processingFrameView = new ProcessingFrameView(_context, borderColor);
+        _processingFrameLayout = new WindowManagerLayoutParams(
+            width,
+            height,
+            WindowManagerTypes.ApplicationOverlay,
+            WindowManagerFlags.NotFocusable | WindowManagerFlags.NotTouchable | WindowManagerFlags.LayoutInScreen | WindowManagerFlags.LayoutNoLimits,
+            Format.Rgba8888)
+        {
+            Gravity = GravityFlags.Top | GravityFlags.Start,
+        };
+        _windowManager.AddView(_processingFrameView, _processingFrameLayout);
+    }
 
     public void Show(Bitmap bitmap, Action onDismiss)
     {
@@ -61,6 +88,8 @@ internal sealed partial class AndroidOverlayPresenter
 
     public void Dismiss()
     {
+        DismissProcessingFrame();
+
         if (_imageView is null)
         {
             return;
@@ -82,6 +111,19 @@ internal sealed partial class AndroidOverlayPresenter
         _bitmap?.Recycle();
         _bitmap?.Dispose();
         _bitmap = null;
+    }
+
+    private void DismissProcessingFrame()
+    {
+        if (_processingFrameView is null)
+        {
+            return;
+        }
+
+        _windowManager.RemoveViewImmediate(_processingFrameView);
+        _processingFrameView.Dispose();
+        _processingFrameView = null;
+        _processingFrameLayout = null;
     }
 
     private void UpdateBrightness()
@@ -129,6 +171,38 @@ internal sealed partial class AndroidOverlayPresenter
             }
 
             return true;
+        }
+    }
+
+    private sealed partial class ProcessingFrameView : View
+    {
+        private readonly Paint _border;
+
+        public ProcessingFrameView(Context context, Color borderColor) : base(context)
+        {
+            _border = new Paint { Color = borderColor, StrokeWidth = 6, AntiAlias = true };
+            _border.SetStyle(Paint.Style.Stroke);
+        }
+
+        protected override void OnDraw(Android.Graphics.Canvas? canvas)
+        {
+            if (canvas is null)
+            {
+                return;
+            }
+
+            base.OnDraw(canvas);
+            canvas.DrawRect(3, 3, Width - 3, Height - 3, _border);
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                _border.Dispose();
+            }
+
+            base.Dispose(disposing);
         }
     }
 }

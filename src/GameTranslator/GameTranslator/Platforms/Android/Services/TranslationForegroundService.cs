@@ -207,6 +207,10 @@ public sealed class TranslationForegroundService : Service
                 return;
             }
 
+            var processingAccent = global::GameTranslator.App.GetAccentColor(AndroidSettingsStore.Load(this).Accent);
+            new Handler(Looper.MainLooper!).Post(() =>
+                _overlayPresenter?.ShowProcessingFrame(Color.Rgb(processingAccent.R, processingAccent.G, processingAccent.B)));
+
             var bitmap = await CaptureBitmapAsync().ConfigureAwait(false);
             _floatingTrigger?.ShowAfterCapture();
             if (bitmap is null)
@@ -263,7 +267,7 @@ public sealed class TranslationForegroundService : Service
 
             if (!resultShown)
             {
-                _floatingTrigger?.SetState(FloatingTranslationTriggerState.Ready);
+                DismissOverlay();
             }
         }
     }
