@@ -108,6 +108,7 @@ public sealed partial class MainPage : Page
             "api" => "Google Cloud API",
             "appTheme" => "Wygląd aplikacji",
             "recognition" => "Przetwarzanie tekstu",
+            "configurations" => "Konfiguracje",
             "triggers" => "Globalny hotkey",
             "floatingButton" => "Przycisk pływający",
             "permissions" => "Uprawnienia",
@@ -118,6 +119,7 @@ public sealed partial class MainPage : Page
         ApiSection.Visibility = section == "api" ? Visibility.Visible : Visibility.Collapsed;
         ApiKeyTestFooter.Visibility = section == "api" ? Visibility.Visible : Visibility.Collapsed;
         RecognitionSection.Visibility = section == "recognition" ? Visibility.Visible : Visibility.Collapsed;
+        ConfigurationsSection.Visibility = section == "configurations" ? Visibility.Visible : Visibility.Collapsed;
         TriggersSection.Visibility = section == "triggers" ? Visibility.Visible : Visibility.Collapsed;
         FloatingButtonSection.Visibility = section == "floatingButton" ? Visibility.Visible : Visibility.Collapsed;
         PermissionsSection.Visibility = section == "permissions" ? Visibility.Visible : Visibility.Collapsed;
@@ -143,6 +145,11 @@ public sealed partial class MainPage : Page
 
     private void Setting_Changed(object sender, RoutedEventArgs e)
     {
+        if (_isLoading)
+        {
+            return;
+        }
+
         SaveSettings(requireValidTranslationSettings: false);
         UpdateFloatingButtonValues();
         UpdateSettingSummaries();
@@ -344,6 +351,82 @@ public sealed partial class MainPage : Page
         await dialog.ShowAsync();
     }
 
+    private async Task<bool> ShowConfirmationAsync(string title, string message)
+    {
+        var dialog = new ContentDialog
+        {
+            XamlRoot = XamlRoot,
+            Title = title,
+            Content = new TextBlock { Text = message, TextWrapping = TextWrapping.Wrap },
+            PrimaryButtonText = "Przywróć",
+            CloseButtonText = "Anuluj",
+            DefaultButton = ContentDialogButton.Close
+        };
+        return await dialog.ShowAsync() == ContentDialogResult.Primary;
+    }
+
+    private void ExportSettings_Click(object sender, RoutedEventArgs e)
+    {
+#if __ANDROID__
+        if (MainActivity.CurrentActivity is not { } activity)
+        {
+            ShowStatus("Aktywność Androida nie jest gotowa. Zamknij i otwórz aplikację ponownie.");
+            return;
+        }
+
+        try
+        {
+            AndroidTranslationHost.CreateSettingsExportFile(activity);
+        }
+        catch (Exception exception)
+        {
+            ShowStatus($"Nie można otworzyć wyboru pliku: {exception.Message}");
+        }
+#endif
+    }
+
+    private void ImportSettings_Click(object sender, RoutedEventArgs e)
+    {
+#if __ANDROID__
+        if (MainActivity.CurrentActivity is not { } activity)
+        {
+            ShowStatus("Aktywność Androida nie jest gotowa. Zamknij i otwórz aplikację ponownie.");
+            return;
+        }
+
+        try
+        {
+            AndroidTranslationHost.OpenSettingsImportFile(activity);
+        }
+        catch (Exception exception)
+        {
+            ShowStatus($"Nie można otworzyć wyboru pliku: {exception.Message}");
+        }
+#endif
+    }
+
+    private async void RestoreDefaultSettings_Click(object sender, RoutedEventArgs e)
+    {
+        if (!await ShowConfirmationAsync(
+                "Przywrócić ustawienia domyślne?",
+                "Zostaną zresetowane ustawienia OCR i nakładki, obszar przechwytywania oraz przycisk pływający. Klucz API, języki, hotkey i wygląd aplikacji pozostaną bez zmian."))
+        {
+            return;
+        }
+
+#if __ANDROID__
+        try
+        {
+            ApplySettingsProfile(SettingsProfile.Defaults);
+            ShowStatus("Przywrócono domyślne ustawienia konfiguracji.");
+        }
+        catch (Exception exception)
+        {
+            ShowStatus($"Nie można przywrócić ustawień: {exception.Message}");
+        }
+#endif
+    }
+
     private void RequestOverlayPermission_Click(object sender, RoutedEventArgs e)
     {
 #if __ANDROID__
@@ -436,12 +519,16 @@ public sealed partial class MainPage : Page
     private void MainPage_Loaded(object sender, RoutedEventArgs e)
     {
         AndroidTranslationHost.SessionStateChanged += OnSessionStateChanged;
+        AndroidTranslationHost.SettingsExportFileCreated += OnSettingsExportFileCreated;
+        AndroidTranslationHost.SettingsImportFileSelected += OnSettingsImportFileSelected;
         UpdateSessionToggle();
     }
 
     private void MainPage_Unloaded(object sender, RoutedEventArgs e)
     {
         AndroidTranslationHost.SessionStateChanged -= OnSessionStateChanged;
+        AndroidTranslationHost.SettingsExportFileCreated -= OnSettingsExportFileCreated;
+        AndroidTranslationHost.SettingsImportFileSelected -= OnSettingsImportFileSelected;
         DismissFloatingButtonPreview();
     }
 
@@ -453,6 +540,72 @@ public sealed partial class MainPage : Page
             DismissFloatingButtonPreview();
         }
     });
+
+    private async void OnSettingsExportFileCreated(global::Android.App.Result resultCode, global::Android.Content.Intent? data)
+    {
+        if (resultCode != global::Android.App.Result.Ok || data?.Data is not { } uri)
+        {
+            return;
+        }
+
+        try
+        {
+            var context = global::Android.App.Application.Context!;
+            using var stream = context.ContentResolver?.OpenOutputStream(uri)
+                ?? throw new InvalidOperationException("Nie można zapisać wybranego pliku.");
+            await SettingsProfile.WriteAsync(
+                stream,
+                SettingsProfile.FromSettings(AndroidSettingsStore.Load(context)),
+                CancellationToken.None);
+            ShowStatus("Ustawienia wyeksportowano do pliku JSON.");
+        }
+        catch (Exception exception)
+        {
+            ShowStatus($"Nie można wyeksportować ustawień: {exception.Message}");
+        }
+    }
+
+    private async void OnSettingsImportFileSelected(global::Android.App.Result resultCode, global::Android.Content.Intent? data)
+    {
+        if (resultCode != global::Android.App.Result.Ok || data?.Data is not { } uri)
+        {
+            return;
+        }
+
+        try
+        {
+            var context = global::Android.App.Application.Context!;
+            using var stream = context.ContentResolver?.OpenInputStream(uri)
+                ?? throw new InvalidOperationException("Nie można odczytać wybranego pliku.");
+            var profile = await SettingsProfile.ReadAsync(stream, CancellationToken.None);
+            ApplySettingsProfile(profile);
+            ShowStatus("Ustawienia zaimportowano z pliku JSON.");
+        }
+        catch (Exception exception)
+        {
+            ShowStatus($"Nie można zaimportować ustawień: {exception.Message}");
+        }
+    }
+
+    private void ApplySettingsProfile(SettingsProfile profile)
+    {
+        var context = global::Android.App.Application.Context!;
+        AndroidSettingsStore.Save(context, profile.ApplyTo(AndroidSettingsStore.Load(context)));
+
+        var wasLoading = _isLoading;
+        _isLoading = true;
+        try
+        {
+            LoadSettings();
+        }
+        finally
+        {
+            _isLoading = wasLoading;
+        }
+
+        // One refresh updates the live trigger after the atomic preference write.
+        RefreshFloatingButtonConfiguration();
+    }
 #endif
 
     private bool SaveSettings(bool requireValidTranslationSettings)
@@ -539,30 +692,55 @@ public sealed partial class MainPage : Page
 
     private void RecognitionConfidenceSlider_ValueChanged(object sender, RangeBaseValueChangedEventArgs e)
     {
+        if (_isLoading)
+        {
+            return;
+        }
+
         UpdateRecognitionConfidenceValue();
         SaveSettings(requireValidTranslationSettings: false);
     }
 
     private void FontScaleSlider_ValueChanged(object sender, RangeBaseValueChangedEventArgs e)
     {
+        if (_isLoading)
+        {
+            return;
+        }
+
         UpdateFontScaleValue();
         SaveSettings(requireValidTranslationSettings: false);
     }
 
     private void GroupingPowerSlider_ValueChanged(object sender, RangeBaseValueChangedEventArgs e)
     {
+        if (_isLoading)
+        {
+            return;
+        }
+
         UpdateGroupingPowerValue();
         SaveSettings(requireValidTranslationSettings: false);
     }
 
     private void OcrImageScaleSlider_ValueChanged(object sender, RangeBaseValueChangedEventArgs e)
     {
+        if (_isLoading)
+        {
+            return;
+        }
+
         UpdateOcrImageScaleValue();
         SaveSettings(requireValidTranslationSettings: false);
     }
 
     private void FloatingButtonSetting_Changed(object sender, RoutedEventArgs e)
     {
+        if (_isLoading)
+        {
+            return;
+        }
+
         SaveSettings(requireValidTranslationSettings: false);
         UpdateFloatingButtonValues();
         RefreshFloatingButtonConfiguration();
@@ -570,6 +748,11 @@ public sealed partial class MainPage : Page
 
     private void FloatingButtonScaleSlider_ValueChanged(object sender, RangeBaseValueChangedEventArgs e)
     {
+        if (_isLoading)
+        {
+            return;
+        }
+
         UpdateFloatingButtonValues();
         SaveSettings(requireValidTranslationSettings: false);
         RefreshFloatingButtonConfiguration();
@@ -577,6 +760,11 @@ public sealed partial class MainPage : Page
 
     private void FloatingButtonHorizontalPositionSlider_ValueChanged(object sender, RangeBaseValueChangedEventArgs e)
     {
+        if (_isLoading)
+        {
+            return;
+        }
+
         UpdateFloatingButtonValues();
         SaveSettings(requireValidTranslationSettings: false);
         RefreshFloatingButtonConfiguration();
@@ -584,6 +772,11 @@ public sealed partial class MainPage : Page
 
     private void FloatingButtonVerticalPositionSlider_ValueChanged(object sender, RangeBaseValueChangedEventArgs e)
     {
+        if (_isLoading)
+        {
+            return;
+        }
+
         UpdateFloatingButtonValues();
         SaveSettings(requireValidTranslationSettings: false);
         RefreshFloatingButtonConfiguration();

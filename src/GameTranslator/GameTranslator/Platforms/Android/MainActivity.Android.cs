@@ -31,7 +31,10 @@ public class MainActivity : Microsoft.UI.Xaml.ApplicationActivity
         if (requestCode == AndroidTranslationHost.ProjectionRequestCode)
         {
             AndroidTranslationHost.HandleProjectionResult(this, resultCode, data);
+            return;
         }
+
+        AndroidTranslationHost.HandleSettingsFileResult(requestCode, resultCode, data);
     }
 
     protected override void OnDestroy()

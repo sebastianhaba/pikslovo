@@ -9,9 +9,13 @@ namespace GameTranslator.Droid.Services;
 internal static class AndroidTranslationHost
 {
     public const int ProjectionRequestCode = 4817;
+    public const int ExportSettingsRequestCode = 4819;
+    public const int ImportSettingsRequestCode = 4820;
     private const int NotificationRequestCode = 4818;
 
     public static event Action? SessionStateChanged;
+    public static event Action<Result, Intent?>? SettingsExportFileCreated;
+    public static event Action<Result, Intent?>? SettingsImportFileSelected;
 
     public static void RequestSession(MainActivity activity)
     {
@@ -58,6 +62,40 @@ internal static class AndroidTranslationHost
         var intent = new Intent(context, typeof(TranslationForegroundService));
         intent.SetAction(TranslationForegroundService.RefreshAppearanceAction);
         context.StartService(intent);
+    }
+
+    public static void CreateSettingsExportFile(Activity activity)
+    {
+        var intent = new Intent(Intent.ActionCreateDocument);
+        intent.AddCategory(Intent.CategoryOpenable);
+        intent.SetType("application/json");
+        intent.PutExtra(Intent.ExtraTitle, "pikslovo-settings.json");
+        activity.StartActivityForResult(intent, ExportSettingsRequestCode);
+    }
+
+    public static void OpenSettingsImportFile(Activity activity)
+    {
+        var intent = new Intent(Intent.ActionOpenDocument);
+        intent.AddCategory(Intent.CategoryOpenable);
+        intent.SetType("application/json");
+        activity.StartActivityForResult(intent, ImportSettingsRequestCode);
+    }
+
+    public static bool HandleSettingsFileResult(int requestCode, Result resultCode, Intent? data)
+    {
+        if (requestCode == ExportSettingsRequestCode)
+        {
+            SettingsExportFileCreated?.Invoke(resultCode, data);
+            return true;
+        }
+
+        if (requestCode == ImportSettingsRequestCode)
+        {
+            SettingsImportFileSelected?.Invoke(resultCode, data);
+            return true;
+        }
+
+        return false;
     }
 
     public static void NotifySessionStateChanged()
