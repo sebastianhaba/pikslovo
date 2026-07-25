@@ -156,6 +156,13 @@
               <Button Style="{StaticResource SettingsListItemButton}" Click="RestoreDefaultSettings_Click" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch" Padding="16,14"><Grid ColumnSpacing="16"><Grid.ColumnDefinitions><ColumnDefinition Width="32" /><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions><FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE777;" FontSize="20" VerticalAlignment="Center" /><StackPanel Grid.Column="1" Spacing="3"><TextBlock Text="Przywróć domyślne" FontWeight="SemiBold" /><TextBlock Text="Wyczyść konfigurację OCR, obszaru i przycisku pływającego." Opacity="0.65" TextWrapping="Wrap" /></StackPanel><FontIcon Grid.Column="2" FontFamily="Segoe MDL2 Assets" Glyph="&#xE8A7;" FontSize="16" VerticalAlignment="Center" /></Grid></Button>
             </StackPanel>
           </Border>
+
+          <TextBlock Text="Wsparcie" FontSize="15" FontWeight="SemiBold" Opacity="0.65" Margin="16,16,0,8" />
+          <Border Style="{StaticResource SettingsGroupBorder}">
+            <Button Style="{StaticResource SettingsListItemButton}" Tag="diagnostics" Click="OpenSection_Click" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch" Padding="16,14">
+              <Grid ColumnSpacing="16"><Grid.ColumnDefinitions><ColumnDefinition Width="32" /><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions><FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE9D9;" FontSize="20" VerticalAlignment="Center" /><StackPanel Grid.Column="1" Spacing="3"><TextBlock Text="Diagnostyka" FontWeight="SemiBold" /><TextBlock Text="Ostatnie czasy tłumaczenia i sprawdzenia klucza API" Opacity="0.65" TextWrapping="Wrap" /></StackPanel><FontIcon Grid.Column="2" FontFamily="Segoe MDL2 Assets" Glyph="&#xE76C;" FontSize="16" VerticalAlignment="Center" /></Grid>
+            </Button>
+          </Border>
         </StackPanel>
       </ScrollViewer>
 
@@ -284,6 +291,39 @@
           <StackPanel x:Name="PermissionsSection" Visibility="Collapsed" Spacing="8">
             <Border Style="{StaticResource SettingsGroupBorder}">
             <Button Style="{StaticResource SettingsListItemButton}" Click="RequestOverlayPermission_Click" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch" Padding="16,14"><Grid ColumnSpacing="16"><Grid.ColumnDefinitions><ColumnDefinition Width="32" /><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions><FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE72E;" FontSize="20" VerticalAlignment="Center" /><StackPanel Grid.Column="1" Spacing="3"><TextBlock Text="Nakładka nad grą" FontWeight="SemiBold" /><TextBlock Text="Zezwól aplikacji wyświetlać tłumaczenie nad innymi aplikacjami." Opacity="0.65" TextWrapping="Wrap" /></StackPanel><FontIcon Grid.Column="2" FontFamily="Segoe MDL2 Assets" Glyph="&#xE76C;" FontSize="16" VerticalAlignment="Center" /></Grid></Button>
+            </Border>
+          </StackPanel>
+
+          <StackPanel x:Name="DiagnosticsSection" Visibility="Collapsed" Spacing="12">
+            <Border Style="{StaticResource SettingsGroupBorder}">
+              <StackPanel>
+                <Grid Margin="16,14" ColumnSpacing="16">
+                  <Grid.ColumnDefinitions><ColumnDefinition Width="32" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+                  <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE9D9;" FontSize="20" VerticalAlignment="Top" Margin="0,2,0,0" />
+                  <StackPanel Grid.Column="1" Spacing="3">
+                    <TextBlock Text="Ostatnie tłumaczenie" FontWeight="SemiBold" />
+                    <TextBlock Text="Pomiar jest aktualizowany po zakończeniu tłumaczenia." Opacity="0.65" TextWrapping="Wrap" />
+                  </StackPanel>
+                </Grid>
+                <Border Height="1" Margin="16,0" Background="{ThemeResource AppBorderBrush}" />
+                <Grid Margin="16,14"><Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions><TextBlock Text="Przechwycenie + PNG" /><TextBlock x:Name="CaptureAndPngDurationValue" Grid.Column="1" FontWeight="SemiBold" /></Grid>
+                <Border Height="1" Margin="16,0" Background="{ThemeResource AppBorderBrush}" />
+                <Grid Margin="16,14"><Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions><TextBlock Text="Cloud Vision OCR" /><TextBlock x:Name="CloudVisionOcrDurationValue" Grid.Column="1" FontWeight="SemiBold" /></Grid>
+                <Border Height="1" Margin="16,0" Background="{ThemeResource AppBorderBrush}" />
+                <Grid Margin="16,14"><Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions><TextBlock Text="Cloud Translation" /><TextBlock x:Name="CloudTranslationDurationValue" Grid.Column="1" FontWeight="SemiBold" /></Grid>
+                <Border Height="1" Margin="16,0" Background="{ThemeResource AppBorderBrush}" />
+                <Grid Margin="16,14"><Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions><TextBlock Text="Całość" FontWeight="SemiBold" /><TextBlock x:Name="TranslationTotalDurationValue" Grid.Column="1" FontWeight="SemiBold" /></Grid>
+              </StackPanel>
+            </Border>
+            <Border Style="{StaticResource SettingsGroupBorder}">
+              <Grid Margin="16,14" ColumnSpacing="16">
+                <Grid.ColumnDefinitions><ColumnDefinition Width="32" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+                <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE72E;" FontSize="20" VerticalAlignment="Center" />
+                <StackPanel Grid.Column="1" Spacing="3">
+                  <TextBlock Text="Ostatnie sprawdzenie klucza API" FontWeight="SemiBold" />
+                  <TextBlock x:Name="ApiKeyValidationDurationValue" Opacity="0.65" />
+                </StackPanel>
+              </Grid>
             </Border>
           </StackPanel>
 

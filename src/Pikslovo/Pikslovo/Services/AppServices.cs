@@ -10,6 +10,8 @@ public static class AppServices
 {
     private static readonly HttpClient HttpClient = CreateHttpClient();
 
+    public static TranslationDiagnostics Diagnostics { get; } = new();
+
     public static TranslationOrchestrator TranslationOrchestrator { get; } = new(
         new GoogleVisionOcrProvider(HttpClient),
         new GoogleTranslationProvider(HttpClient));

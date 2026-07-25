@@ -265,8 +265,6 @@ public sealed class TranslationForegroundService : Service
                 ShowMessage("Nie udało się pobrać klatki ekranu.");
                 return;
             }
-            var captureMilliseconds = operationStopwatch.ElapsedMilliseconds;
-
             var processingAccent = global::Pikslovo.App.GetAccentColor(AndroidSettingsStore.Load(this).Accent);
             new Handler(Looper.MainLooper!).Post(() =>
                 _overlayPresenter?.ShowProcessingFrame(Color.Rgb(processingAccent.R, processingAccent.G, processingAccent.B)));
@@ -289,16 +287,22 @@ public sealed class TranslationForegroundService : Service
                 bitmapForVision.Compress(Bitmap.CompressFormat.Png!, 100, stream);
                 var imageBytes = stream.ToArray();
                 var encodingMilliseconds = encodingStopwatch.ElapsedMilliseconds;
+                var captureAndPngMilliseconds = operationStopwatch.ElapsedMilliseconds;
                 Android.Util.Log.Debug(
                     "Pikslovo",
-                    $"Capture: {captureMilliseconds} ms; encode: {encodingMilliseconds} ms; {bitmapForVision.Width}x{bitmapForVision.Height}; png={imageBytes.Length / 1024d:0.0} KiB");
-                var translationStopwatch = Stopwatch.StartNew();
-                var result = await AppServices.TranslationOrchestrator
-                    .TranslateAsync(imageBytes, settings, cancellationToken)
+                    $"Capture + PNG: {captureAndPngMilliseconds} ms; PNG encode: {encodingMilliseconds} ms; {bitmapForVision.Width}x{bitmapForVision.Height}; png={imageBytes.Length / 1024d:0.0} KiB");
+                var execution = await AppServices.TranslationOrchestrator
+                    .TranslateWithTimingsAsync(imageBytes, settings, cancellationToken)
                     .ConfigureAwait(false);
+                var result = execution.Result;
+                AppServices.Diagnostics.RecordTranslation(
+                    captureAndPngMilliseconds,
+                    execution.CloudVisionOcrMilliseconds,
+                    execution.CloudTranslationMilliseconds,
+                    operationStopwatch.ElapsedMilliseconds);
                 Android.Util.Log.Debug(
                     "Pikslovo",
-                    $"Translation pipeline: {translationStopwatch.ElapsedMilliseconds} ms; total={operationStopwatch.ElapsedMilliseconds} ms");
+                    $"Cloud Vision OCR: {execution.CloudVisionOcrMilliseconds} ms; Cloud Translation: {execution.CloudTranslationMilliseconds} ms; total={operationStopwatch.ElapsedMilliseconds} ms");
                 if (result is null)
                 {
                     return;

@@ -4,6 +4,7 @@ using Microsoft.UI.Xaml.Controls.Primitives;
 using Microsoft.UI.Xaml.Input;
 using System.Globalization;
 using System.Net;
+using System.Diagnostics;
 using System.Threading.Tasks;
 
 #if __ANDROID__
@@ -113,6 +114,7 @@ public sealed partial class MainPage : Page
             "triggers" => "Globalny hotkey",
             "floatingButton" => "Przycisk pływający",
             "permissions" => "Uprawnienia",
+            "diagnostics" => "Diagnostyka",
             _ => string.Empty
         };
 
@@ -123,12 +125,14 @@ public sealed partial class MainPage : Page
         TriggersSection.Visibility = section == "triggers" ? Visibility.Visible : Visibility.Collapsed;
         FloatingButtonSection.Visibility = section == "floatingButton" ? Visibility.Visible : Visibility.Collapsed;
         PermissionsSection.Visibility = section == "permissions" ? Visibility.Visible : Visibility.Collapsed;
+        DiagnosticsSection.Visibility = section == "diagnostics" ? Visibility.Visible : Visibility.Collapsed;
         ThemeSection.Visibility = section == "appTheme" ? Visibility.Visible : Visibility.Collapsed;
         HomeHeader.Visibility = Visibility.Collapsed;
         DetailHeader.Visibility = Visibility.Visible;
         HomeView.Visibility = Visibility.Collapsed;
         DetailLayout.Visibility = Visibility.Visible;
         DetailView.ChangeView(null, 0, null, true);
+        UpdateDiagnostics();
         UpdateFloatingButtonPreview();
     }
 
@@ -275,37 +279,46 @@ public sealed partial class MainPage : Page
 
         ApiKeyTestButton.IsEnabled = false;
         ApiKeyTestButton.Content = ApiKeyValidationInProgressButtonText;
+        var stopwatch = Stopwatch.StartNew();
+        string? errorTitle = null;
+        string? errorMessage = null;
         try
         {
             await AppServices.GoogleCloudApiKeyValidator.ValidateAsync(apiKey, CancellationToken.None);
-            await ShowMessageAsync(
-                "Klucz działa",
-                "Klucz ma dostęp do Cloud Translation API i Cloud Vision API.");
         }
         catch (GoogleCloudApiKeyValidationException exception)
         {
-            var message = exception.StatusCode is HttpStatusCode.Unauthorized or HttpStatusCode.Forbidden
+            errorTitle = "Klucz nie działa";
+            errorMessage = exception.StatusCode is HttpStatusCode.Unauthorized or HttpStatusCode.Forbidden
                 ? $"Klucz nie ma dostępu do {exception.ServiceName}. Sprawdź poprawność klucza oraz czy to API jest włączone w projekcie Google Cloud."
                 : $"Nie udało się sprawdzić dostępu do {exception.ServiceName}. Usługa Google zwróciła błąd {(int)exception.StatusCode}.";
-            await ShowMessageAsync("Klucz nie działa", message);
         }
         catch (HttpRequestException)
         {
-            await ShowMessageAsync(
-                "Brak połączenia",
-                "Nie udało się połączyć z Google Cloud. Sprawdź połączenie z Internetem i spróbuj ponownie.");
+            errorTitle = "Brak połączenia";
+            errorMessage = "Nie udało się połączyć z Google Cloud. Sprawdź połączenie z Internetem i spróbuj ponownie.";
         }
         catch (TaskCanceledException)
         {
-            await ShowMessageAsync(
-                "Limit czasu",
-                "Sprawdzenie klucza trwało zbyt długo. Spróbuj ponownie przy stabilnym połączeniu.");
+            errorTitle = "Limit czasu";
+            errorMessage = "Sprawdzenie klucza trwało zbyt długo. Spróbuj ponownie przy stabilnym połączeniu.";
         }
         finally
         {
+            AppServices.Diagnostics.RecordApiKeyValidation(stopwatch.ElapsedMilliseconds);
             ApiKeyTestButton.IsEnabled = true;
             ApiKeyTestButton.Content = ApiKeyTestButtonText;
         }
+
+        if (errorTitle is not null)
+        {
+            await ShowMessageAsync(errorTitle, errorMessage!);
+            return;
+        }
+
+        await ShowMessageAsync(
+            "Klucz działa",
+            "Klucz ma dostęp do Cloud Translation API i Cloud Vision API.");
     }
 
     private async void EditHotkeyCode_Click(object sender, RoutedEventArgs e)
@@ -804,6 +817,16 @@ public sealed partial class MainPage : Page
                 : "W aktywnej sesji jest widoczny, ponieważ globalny hotkey jest wyłączony.";
     }
 
+    private void UpdateDiagnostics()
+    {
+        var diagnostics = AppServices.Diagnostics.Snapshot;
+        CaptureAndPngDurationValue.Text = FormatDuration(diagnostics.CaptureAndPngMilliseconds);
+        CloudVisionOcrDurationValue.Text = FormatDuration(diagnostics.CloudVisionOcrMilliseconds);
+        CloudTranslationDurationValue.Text = FormatDuration(diagnostics.CloudTranslationMilliseconds);
+        TranslationTotalDurationValue.Text = FormatDuration(diagnostics.TranslationTotalMilliseconds);
+        ApiKeyValidationDurationValue.Text = FormatDuration(diagnostics.ApiKeyValidationMilliseconds);
+    }
+
     private void RefreshFloatingButtonConfiguration()
     {
 #if __ANDROID__
@@ -941,6 +964,10 @@ public sealed partial class MainPage : Page
     private static string FormatFontScale(double value) => $"{value.ToString("0.0", CultureInfo.CurrentCulture)}x";
 
     private static string FormatOcrImageScale(double value) => $"{value.ToString("0.##", CultureInfo.CurrentCulture)}x";
+
+    private static string FormatDuration(long? milliseconds) => milliseconds is { } value
+        ? $"{value} ms"
+        : "Brak pomiaru";
 
     private static string FormatPosition(double value) => value.ToString("0.00", CultureInfo.CurrentCulture);
 

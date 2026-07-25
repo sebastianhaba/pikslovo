@@ -17,6 +17,16 @@ public sealed class TranslationOrchestrator
         TranslationSettings settings,
         CancellationToken cancellationToken)
     {
+        var execution = await TranslateWithTimingsAsync(imageBytes, settings, cancellationToken)
+            .ConfigureAwait(false);
+        return execution.Result;
+    }
+
+    public async Task<TranslationExecution> TranslateWithTimingsAsync(
+        ReadOnlyMemory<byte> imageBytes,
+        TranslationSettings settings,
+        CancellationToken cancellationToken)
+    {
         if (!settings.IsValid)
         {
             throw new TranslationException("Uzupełnij klucz API oraz oba języki przed uruchomieniem tłumaczenia.");
@@ -24,25 +34,29 @@ public sealed class TranslationOrchestrator
 
         if (!await _operationLock.WaitAsync(0, cancellationToken).ConfigureAwait(false))
         {
-            return null;
+            return new TranslationExecution(null, 0, 0);
         }
 
         try
         {
+            var ocrStopwatch = System.Diagnostics.Stopwatch.StartNew();
             var document = await _ocrProvider
                 .RecognizeAsync(imageBytes, settings, cancellationToken)
                 .ConfigureAwait(false);
+            var ocrMilliseconds = ocrStopwatch.ElapsedMilliseconds;
 
             var groupedRegions = new TextRegionGrouper(settings.GroupingPower).Group(document.Regions);
             if (groupedRegions.Count == 0)
             {
-                return new TranslationResult([]);
+                return new TranslationExecution(new TranslationResult([]), ocrMilliseconds, 0);
             }
 
             var sourceTexts = groupedRegions.Select(region => region.Text).ToArray();
+            var translationStopwatch = System.Diagnostics.Stopwatch.StartNew();
             var translatedTexts = await _translationProvider
                 .TranslateAsync(sourceTexts, settings, cancellationToken)
                 .ConfigureAwait(false);
+            var translationMilliseconds = translationStopwatch.ElapsedMilliseconds;
 
             if (translatedTexts.Count != groupedRegions.Count)
             {
@@ -58,7 +72,7 @@ public sealed class TranslationOrchestrator
                         StringComparison.OrdinalIgnoreCase))
                 .ToArray();
 
-            return new TranslationResult(regions);
+            return new TranslationExecution(new TranslationResult(regions), ocrMilliseconds, translationMilliseconds);
         }
         finally
         {
@@ -66,3 +80,8 @@ public sealed class TranslationOrchestrator
         }
     }
 }
+
+public sealed record TranslationExecution(
+    TranslationResult? Result,
+    long CloudVisionOcrMilliseconds,
+    long CloudTranslationMilliseconds);
