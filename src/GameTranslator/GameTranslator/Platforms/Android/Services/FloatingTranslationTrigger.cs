@@ -76,7 +76,14 @@ internal sealed partial class FloatingTranslationTrigger
         _button.Background = CreateBackground();
         _button.Click += (_, _) =>
         {
+            var menuWasExpanded = _menu is not null;
             CollapseMenu(animated: true);
+            if (menuWasExpanded)
+            {
+                _mainHandler.PostDelayed(onClick, MenuAnimationDurationMilliseconds);
+                return;
+            }
+
             onClick();
         };
         _button.LongClick += (_, _) => ExpandMenu(onEditRegion, onStopSession);

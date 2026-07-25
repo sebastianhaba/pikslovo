@@ -27,6 +27,7 @@ public sealed class TranslationForegroundService : Service
     public const string ProjectionResultDataExtra = "projection_result_data";
 
     private const int NotificationId = 1001;
+    private const int CaptureSurfaceRefreshDelayMilliseconds = 200;
     private const string NotificationChannelId = "translation_session";
     private readonly object _stateLock = new();
     private MediaProjection? _mediaProjection;
@@ -386,13 +387,13 @@ public sealed class TranslationForegroundService : Service
 
     private async Task<Bitmap?> CaptureBitmapAsync(CancellationToken cancellationToken)
     {
-        await Task.Delay(100, cancellationToken).ConfigureAwait(false);
         if (_floatingTrigger is not null)
         {
             await _floatingTrigger.HideForCaptureAsync().ConfigureAwait(false);
-            await Task.Delay(32, cancellationToken).ConfigureAwait(false);
         }
 
+        // Let the virtual display receive a frame after every app-owned overlay is gone.
+        await Task.Delay(CaptureSurfaceRefreshDelayMilliseconds, cancellationToken).ConfigureAwait(false);
         cancellationToken.ThrowIfCancellationRequested();
 
         var image = _imageReader?.AcquireLatestImage();
