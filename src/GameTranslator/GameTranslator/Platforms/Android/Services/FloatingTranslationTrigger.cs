@@ -19,15 +19,20 @@ internal enum FloatingTranslationTriggerState
 
 internal sealed partial class FloatingTranslationTrigger
 {
+    private const long MenuAnimationDurationMilliseconds = 180;
     private readonly Context _context;
     private readonly IWindowManager _windowManager;
     private readonly Handler _mainHandler = new(Looper.MainLooper!);
     private ImageButton? _button;
     private WindowManagerLayoutParams? _layout;
+    private readonly List<FloatingMenuAction> _menuActions = [];
     private BrightnessObserver? _brightnessObserver;
     private int _stateRevision;
+    private int _menuRevision;
     private bool _isAttached;
     private bool _buttonShouldBeVisible = true;
+    private bool _isMenuExpanded;
+    private FloatingTranslationTriggerState _state = FloatingTranslationTriggerState.Ready;
 
     public FloatingTranslationTrigger(Context context)
     {
@@ -39,14 +44,14 @@ internal sealed partial class FloatingTranslationTrigger
 
     public bool IsAttached => _isAttached;
 
-    public void Show(Action onClick, Action onLongClick, bool buttonVisible = true)
+    public void Show(Action onClick, Action onEditRegion, Action onStopSession, bool buttonVisible = true)
     {
-        ShowCore(onClick, onLongClick, buttonVisible);
+        ShowCore(onClick, onEditRegion, onStopSession, buttonVisible);
     }
 
     public void ShowPreview()
     {
-        ShowCore(static () => { }, static () => { }, buttonVisible: true);
+        ShowCore(static () => { }, static () => { }, static () => { }, buttonVisible: true);
     }
 
     public void SetButtonVisibility(bool visible)
@@ -55,7 +60,7 @@ internal sealed partial class FloatingTranslationTrigger
         _mainHandler.Post(ApplyButtonVisibility);
     }
 
-    private void ShowCore(Action onClick, Action onLongClick, bool buttonVisible)
+    private void ShowCore(Action onClick, Action onEditRegion, Action onStopSession, bool buttonVisible)
     {
         Dismiss();
         _buttonShouldBeVisible = buttonVisible;
@@ -69,8 +74,12 @@ internal sealed partial class FloatingTranslationTrigger
         _button.SetPadding(iconPadding, iconPadding, iconPadding, iconPadding);
         _button.SetScaleType(ImageView.ScaleType.FitCenter);
         _button.Background = CreateBackground();
-        _button.Click += (_, _) => onClick();
-        _button.LongClick += (_, _) => onLongClick();
+        _button.Click += (_, _) =>
+        {
+            CollapseMenu(animated: true);
+            onClick();
+        };
+        _button.LongClick += (_, _) => ExpandMenu(onEditRegion, onStopSession);
 
         _layout = new WindowManagerLayoutParams(
             size,
@@ -108,6 +117,7 @@ internal sealed partial class FloatingTranslationTrigger
         {
             if (_button is not null && _layout is not null)
             {
+                CollapseMenu(animated: false);
                 var settings = AndroidSettingsStore.Load(_context).FloatingButton;
                 var size = GetButtonSize(settings.Scale);
                 _button.Background = CreateBackground();
@@ -164,6 +174,7 @@ internal sealed partial class FloatingTranslationTrigger
 
     public void Dismiss()
     {
+        CollapseMenu(animated: false);
         if (_button is null)
         {
             return;
@@ -183,12 +194,195 @@ internal sealed partial class FloatingTranslationTrigger
         _layout = null;
     }
 
-    private Drawable CreateBackground()
+    private void ExpandMenu(Action onEditRegion, Action onStopSession)
     {
-        var accent = global::GameTranslator.App.GetAccentColor(AndroidSettingsStore.Load(_context).Accent);
+        if (_button is null || _layout is null || !_isAttached || !_buttonShouldBeVisible ||
+            _state == FloatingTranslationTriggerState.Processing || _isMenuExpanded)
+        {
+            return;
+        }
+
+        var settings = AndroidSettingsStore.Load(_context).FloatingButton;
+        var mainSize = GetButtonSize(settings.Scale);
+        var actionSize = GetMenuActionSize(settings.Scale);
+        var spacing = ToPixels(12f);
+        var step = mainSize + spacing;
+        var direction = GetMenuDirection(mainSize, actionSize, step);
+        var actionY = Math.Max(0, _layout.Y + ((mainSize - actionSize) / 2));
+
+        _isMenuExpanded = true;
+        AddMenuAction(
+            Resource.Drawable.ic_edit,
+            "Edytuj obszar przechwytywania",
+            _layout.X + (direction * step),
+            actionY,
+            actionSize,
+            direction,
+            step,
+            () =>
+            {
+                CollapseMenu(animated: true);
+                onEditRegion();
+            },
+            CreateBackground());
+        AddMenuAction(
+            Resource.Drawable.ic_stop,
+            "Zatrzymaj tłumacza",
+            _layout.X + (direction * step * 2),
+            actionY,
+            actionSize,
+            direction,
+            step * 2,
+            () =>
+            {
+                CollapseMenu(animated: true);
+                onStopSession();
+            },
+            CreateBackground(Color.Rgb(183, 28, 28)));
+    }
+
+    private void AddMenuAction(
+        int iconResource,
+        string contentDescription,
+        int x,
+        int y,
+        int size,
+        int direction,
+        int distance,
+        Action onClick,
+        Drawable background)
+    {
+        var button = new ImageButton(_context)
+        {
+            ContentDescription = contentDescription,
+            Alpha = 0f,
+            ScaleX = 0.65f,
+            ScaleY = 0.65f,
+            TranslationX = -direction * distance,
+        };
+        var iconPadding = ToPixels(10f);
+        button.SetPadding(iconPadding, iconPadding, iconPadding, iconPadding);
+        button.SetScaleType(ImageView.ScaleType.FitCenter);
+        button.SetImageResource(iconResource);
+        button.Background = background;
+        button.Click += (_, _) => onClick();
+
+        var layout = new WindowManagerLayoutParams(
+            size,
+            size,
+            WindowManagerTypes.ApplicationOverlay,
+            WindowManagerFlags.NotFocusable,
+            Format.Rgba8888)
+        {
+            Gravity = GravityFlags.Top | GravityFlags.Start,
+            X = x,
+            Y = y,
+        };
+        var action = new FloatingMenuAction(button);
+        _menuActions.Add(action);
+        _windowManager.AddView(button, layout);
+        var openingAnimation = button.Animate();
+        openingAnimation?.Alpha(1f)
+            .ScaleX(1f)
+            .ScaleY(1f)
+            .TranslationX(0f)
+            .SetDuration(MenuAnimationDurationMilliseconds)
+            .Start();
+    }
+
+    private int GetMenuDirection(int mainSize, int actionSize, int step)
+    {
+        if (_layout is null)
+        {
+            return 1;
+        }
+
+        var bounds = _windowManager.CurrentWindowMetrics?.Bounds;
+        var screenWidth = bounds?.Width() ?? 0;
+        var requiredRightSpace = (step * 2) + actionSize;
+        var requiredLeftSpace = step * 2;
+        var freeSpaceOnRight = screenWidth - (_layout.X + mainSize);
+        if (freeSpaceOnRight >= requiredRightSpace)
+        {
+            return 1;
+        }
+
+        if (_layout.X >= requiredLeftSpace)
+        {
+            return -1;
+        }
+
+        return freeSpaceOnRight >= _layout.X ? 1 : -1;
+    }
+
+    private void CollapseMenu(bool animated)
+    {
+        if (_menuActions.Count == 0)
+        {
+            _isMenuExpanded = false;
+            return;
+        }
+
+        _isMenuExpanded = false;
+        var actions = _menuActions.ToArray();
+        _menuActions.Clear();
+        var revision = Interlocked.Increment(ref _menuRevision);
+        if (!animated)
+        {
+            RemoveMenuActions(actions);
+            return;
+        }
+
+        foreach (var action in actions)
+        {
+            action.Button.Enabled = false;
+            var closingAnimation = action.Button.Animate();
+            closingAnimation?.Alpha(0f)
+                .ScaleX(0.65f)
+                .ScaleY(0.65f)
+                .SetDuration(MenuAnimationDurationMilliseconds)
+                .Start();
+        }
+
+        _mainHandler.PostDelayed(() =>
+        {
+            if (revision == Volatile.Read(ref _menuRevision))
+            {
+                RemoveMenuActions(actions);
+            }
+        }, MenuAnimationDurationMilliseconds);
+    }
+
+    private void RemoveMenuActions(IEnumerable<FloatingMenuAction> actions)
+    {
+        foreach (var action in actions)
+        {
+            try
+            {
+                _windowManager.RemoveViewImmediate(action.Button);
+            }
+            catch (Java.Lang.IllegalArgumentException)
+            {
+                // The view was already detached while the menu animation was ending.
+            }
+
+            action.Button.Dispose();
+        }
+    }
+
+    private Drawable CreateBackground(Color? color = null)
+    {
         var background = new GradientDrawable();
         background.SetShape(ShapeType.Oval);
-        background.SetColor(Color.Rgb(accent.R, accent.G, accent.B));
+        if (color is { } backgroundColor)
+        {
+            background.SetColor(backgroundColor);
+        }
+        else
+        {
+            var accent = global::GameTranslator.App.GetAccentColor(AndroidSettingsStore.Load(_context).Accent);
+            background.SetColor(Color.Rgb(accent.R, accent.G, accent.B));
+        }
         return background;
     }
 
@@ -202,6 +396,10 @@ internal sealed partial class FloatingTranslationTrigger
         _button.Visibility = ViewStates.Visible;
         _button.Alpha = _buttonShouldBeVisible ? 1f : 0f;
         _button.Clickable = _buttonShouldBeVisible;
+        if (!_buttonShouldBeVisible)
+        {
+            CollapseMenu(animated: false);
+        }
         _layout.Flags = _buttonShouldBeVisible
             ? WindowManagerFlags.NotFocusable
             : WindowManagerFlags.NotFocusable | WindowManagerFlags.NotTouchable;
@@ -226,6 +424,8 @@ internal sealed partial class FloatingTranslationTrigger
     }
 
     private int GetButtonSize(float scale) => ToPixels(56f * scale);
+
+    private int GetMenuActionSize(float scale) => ToPixels(48f * scale);
 
     private int ToPixels(float dp) => (int)(dp * _context.Resources!.DisplayMetrics!.Density + 0.5f);
 
@@ -255,6 +455,11 @@ internal sealed partial class FloatingTranslationTrigger
             return;
         }
 
+        _state = state;
+        if (state == FloatingTranslationTriggerState.Processing)
+        {
+            CollapseMenu(animated: true);
+        }
         _button.Enabled = state != FloatingTranslationTriggerState.Processing;
         _button.SetImageResource(state switch
         {
@@ -278,4 +483,6 @@ internal sealed partial class FloatingTranslationTrigger
             owner.UpdateBrightness();
         }
     }
+
+    private sealed record FloatingMenuAction(ImageButton Button);
 }

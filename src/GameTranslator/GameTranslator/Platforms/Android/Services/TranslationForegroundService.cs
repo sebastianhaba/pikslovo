@@ -35,6 +35,7 @@ public sealed class TranslationForegroundService : Service
     private AndroidOverlayPresenter? _overlayPresenter;
     private FloatingTranslationTrigger? _floatingTrigger;
     private CaptureRegionSelectorOverlay? _captureRegionSelector;
+    private CancellationTokenSource? _sessionCancellation;
     private bool _isProcessing;
     private bool _isStopping;
 
@@ -128,6 +129,7 @@ public sealed class TranslationForegroundService : Service
 
         _mediaProjection.RegisterCallback(new ProjectionCallback(this), new Handler(Looper.MainLooper!));
         CreateCaptureSurface();
+        _sessionCancellation = new CancellationTokenSource();
         _overlayPresenter = new AndroidOverlayPresenter(this);
         IsSessionActive = true;
         UpdateFloatingTriggerVisibility();
@@ -181,6 +183,7 @@ public sealed class TranslationForegroundService : Service
         _floatingTrigger.Show(
             () => _ = CaptureAndTranslateAsync(),
             ShowCaptureRegionSelector,
+            StopSession,
             shouldShowButton);
     }
 
@@ -224,6 +227,7 @@ public sealed class TranslationForegroundService : Service
 
     private async Task CaptureAndTranslateAsync()
     {
+        CancellationToken cancellationToken;
         lock (_stateLock)
         {
             if (!IsSessionActive || _isProcessing)
@@ -238,19 +242,21 @@ public sealed class TranslationForegroundService : Service
             }
 
             _isProcessing = true;
+            cancellationToken = _sessionCancellation?.Token ?? CancellationToken.None;
             _floatingTrigger?.SetState(FloatingTranslationTriggerState.Processing);
         }
 
         var resultShown = false;
         try
         {
+            cancellationToken.ThrowIfCancellationRequested();
             if (!Settings.CanDrawOverlays(this))
             {
                 ShowMessage("Przyznaj uprawnienie do wyświetlania nad innymi aplikacjami.");
                 return;
             }
 
-            var bitmap = await CaptureBitmapAsync().ConfigureAwait(false);
+            var bitmap = await CaptureBitmapAsync(cancellationToken).ConfigureAwait(false);
             if (bitmap is null)
             {
                 ShowMessage("Nie udało się pobrać klatki ekranu.");
@@ -261,6 +267,7 @@ public sealed class TranslationForegroundService : Service
             new Handler(Looper.MainLooper!).Post(() =>
                 _overlayPresenter?.ShowProcessingFrame(Color.Rgb(processingAccent.R, processingAccent.G, processingAccent.B)));
             _floatingTrigger?.ShowAfterCapture();
+            cancellationToken.ThrowIfCancellationRequested();
 
             using (bitmap)
             using (var stream = new MemoryStream())
@@ -276,7 +283,7 @@ public sealed class TranslationForegroundService : Service
                 var bitmapForVision = scaledBitmap ?? bitmapForOcr;
                 bitmapForVision.Compress(Bitmap.CompressFormat.Png!, 100, stream);
                 var result = await AppServices.TranslationOrchestrator
-                    .TranslateAsync(stream.ToArray(), settings, CancellationToken.None)
+                    .TranslateAsync(stream.ToArray(), settings, cancellationToken)
                     .ConfigureAwait(false);
                 if (result is null)
                 {
@@ -308,14 +315,24 @@ public sealed class TranslationForegroundService : Service
                     result,
                     settings.FontScale,
                     Color.Rgb(accent.R, accent.G, accent.B));
+                cancellationToken.ThrowIfCancellationRequested();
                 resultShown = true;
                 new Handler(Looper.MainLooper!).Post(() =>
                 {
+                    if (cancellationToken.IsCancellationRequested || !IsSessionActive)
+                    {
+                        overlay.Dispose();
+                        return;
+                    }
+
                     _overlayPresenter?.Show(overlay, DismissOverlay);
                     _floatingTrigger?.BringToFront();
                     _floatingTrigger?.SetState(FloatingTranslationTriggerState.ResultVisible);
                 });
             }
+        }
+        catch (System.OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
         }
         catch (Exception exception)
         {
@@ -367,14 +384,16 @@ public sealed class TranslationForegroundService : Service
                 Math.Max((int)Math.Round(region.Bounds.Left * scaleX) + 1, (int)Math.Round(region.Bounds.Right * scaleX)),
                 Math.Max((int)Math.Round(region.Bounds.Top * scaleY) + 1, (int)Math.Round(region.Bounds.Bottom * scaleY))))).ToArray());
 
-    private async Task<Bitmap?> CaptureBitmapAsync()
+    private async Task<Bitmap?> CaptureBitmapAsync(CancellationToken cancellationToken)
     {
-        await Task.Delay(100).ConfigureAwait(false);
+        await Task.Delay(100, cancellationToken).ConfigureAwait(false);
         if (_floatingTrigger is not null)
         {
             await _floatingTrigger.HideForCaptureAsync().ConfigureAwait(false);
-            await Task.Delay(32).ConfigureAwait(false);
+            await Task.Delay(32, cancellationToken).ConfigureAwait(false);
         }
+
+        cancellationToken.ThrowIfCancellationRequested();
 
         var image = _imageReader?.AcquireLatestImage();
         if (image is null)
@@ -434,11 +453,15 @@ public sealed class TranslationForegroundService : Service
         }
 
         _isStopping = true;
+        CancellationTokenSource? sessionCancellation;
         lock (_stateLock)
         {
             IsSessionActive = false;
             _isProcessing = false;
+            sessionCancellation = _sessionCancellation;
+            _sessionCancellation = null;
         }
+        sessionCancellation?.Cancel();
         AndroidTranslationHost.NotifySessionStateChanged();
 
         DismissOverlay();
