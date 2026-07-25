@@ -223,8 +223,24 @@ internal sealed partial class FloatingTranslationTrigger
         var menuY = direction > 0
             ? _layout.Y + mainSize + spacing
             : _layout.Y - menuHeight - spacing;
+        var outerGap = containerPadding;
+        var containerWidth = menuWidth;
+        var containerHeight = mainSize + spacing + menuHeight + outerGap;
+        var containerX = menuX;
+        var containerY = direction > 0
+            ? _layout.Y - outerGap
+            : menuY;
 
         _isMenuExpanded = true;
+        var container = new View(_context)
+        {
+            Alpha = 0f,
+            ScaleX = 0.92f,
+            ScaleY = 0.35f,
+            PivotX = containerWidth / 2f,
+            PivotY = direction > 0 ? 0f : containerHeight,
+            Background = CreateMenuContainerBackground(containerWidth / 2),
+        };
         var menu = new LinearLayout(_context)
         {
             Orientation = Android.Widget.Orientation.Vertical,
@@ -234,11 +250,9 @@ internal sealed partial class FloatingTranslationTrigger
             TranslationY = -direction * (menuHeight + spacing),
             PivotX = menuWidth / 2f,
             PivotY = direction > 0 ? 0f : menuHeight,
-            Elevation = ToPixels(8f),
         };
         menu.SetGravity(GravityFlags.Center);
         menu.SetPadding(containerPadding, containerPadding, containerPadding, containerPadding);
-        menu.Background = CreateRoundedBackground(Color.Argb(230, 35, 35, 35), menuWidth / 2);
         menu.AddView(
             CreateMenuActionButton(
                 Resource.Drawable.ic_edit,
@@ -278,8 +292,27 @@ internal sealed partial class FloatingTranslationTrigger
             X = menuX,
             Y = menuY,
         };
+        var containerLayout = new WindowManagerLayoutParams(
+            containerWidth,
+            containerHeight,
+            WindowManagerTypes.ApplicationOverlay,
+            WindowManagerFlags.NotFocusable | WindowManagerFlags.NotTouchable,
+            Format.Rgba8888)
+        {
+            Gravity = GravityFlags.Top | GravityFlags.Start,
+            X = containerX,
+            Y = containerY,
+        };
+        _windowManager.AddView(container, containerLayout);
         _windowManager.AddView(menu, menuLayout);
-        _menu = new FloatingMenu(menu, direction, menuHeight + spacing);
+        _menu = new FloatingMenu(menu, container, direction, menuHeight + spacing);
+        BringToFront();
+        var containerAnimation = container.Animate();
+        containerAnimation?.Alpha(1f)
+            .ScaleX(1f)
+            .ScaleY(1f)
+            .SetDuration(MenuAnimationDurationMilliseconds)
+            .Start();
         var openingAnimation = menu.Animate();
         openingAnimation?.Alpha(1f)
             .ScaleX(1f)
@@ -360,6 +393,7 @@ internal sealed partial class FloatingTranslationTrigger
         if (!animated)
         {
             RemoveMenu(menu.View);
+            RemoveMenu(menu.Container);
             return;
         }
 
@@ -379,12 +413,19 @@ internal sealed partial class FloatingTranslationTrigger
             .TranslationY(-menu.Direction * menu.Distance)
             .SetDuration(MenuAnimationDurationMilliseconds)
             .Start();
+        var containerAnimation = menu.Container.Animate();
+        containerAnimation?.Alpha(0f)
+            .ScaleX(0.92f)
+            .ScaleY(0.35f)
+            .SetDuration(MenuAnimationDurationMilliseconds)
+            .Start();
 
         _mainHandler.PostDelayed(() =>
         {
             if (revision == Volatile.Read(ref _menuRevision))
             {
                 RemoveMenu(menu.View);
+                RemoveMenu(menu.Container);
             }
         }, MenuAnimationDurationMilliseconds);
     }
@@ -419,10 +460,10 @@ internal sealed partial class FloatingTranslationTrigger
         return background;
     }
 
-    private static Drawable CreateRoundedBackground(Color color, int radius)
+    private Drawable CreateMenuContainerBackground(int radius)
     {
         var background = new GradientDrawable();
-        background.SetColor(color);
+        background.SetColor(Color.Argb(230, 35, 35, 35));
         background.SetCornerRadius(radius);
         return background;
     }
@@ -525,5 +566,5 @@ internal sealed partial class FloatingTranslationTrigger
         }
     }
 
-    private sealed record FloatingMenu(LinearLayout View, int Direction, int Distance);
+    private sealed record FloatingMenu(LinearLayout View, View Container, int Direction, int Distance);
 }
