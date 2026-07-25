@@ -140,13 +140,20 @@
             <Grid ColumnSpacing="16"><Grid.ColumnDefinitions><ColumnDefinition Width="32" /><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions><FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE8C8;" FontSize="20" VerticalAlignment="Center" /><StackPanel Grid.Column="1" Spacing="3"><TextBlock Text="Przetwarzanie tekstu" FontWeight="SemiBold" /><TextBlock Text="Pewność OCR, skala obrazu, łączenie dialogów i nakładka" Opacity="0.65" TextWrapping="Wrap" /></StackPanel><FontIcon Grid.Column="2" FontFamily="Segoe MDL2 Assets" Glyph="&#xE76C;" FontSize="16" VerticalAlignment="Center" /></Grid>
           </Button>
           <Border Height="1" Margin="16,0" Background="{ThemeResource AppBorderBrush}" />
-          <Button Style="{StaticResource SettingsListItemButton}" Tag="configurations" Click="OpenSection_Click" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch" Padding="16,14">
-            <Grid ColumnSpacing="16"><Grid.ColumnDefinitions><ColumnDefinition Width="32" /><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions><FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE74D;" FontSize="20" VerticalAlignment="Center" /><StackPanel Grid.Column="1" Spacing="3"><TextBlock Text="Konfiguracje" FontWeight="SemiBold" /><TextBlock Text="Import, eksport i reset ustawień gry" Opacity="0.65" TextWrapping="Wrap" /></StackPanel><FontIcon Grid.Column="2" FontFamily="Segoe MDL2 Assets" Glyph="&#xE76C;" FontSize="16" VerticalAlignment="Center" /></Grid>
-          </Button>
-          <Border Height="1" Margin="16,0" Background="{ThemeResource AppBorderBrush}" />
           <Button Style="{StaticResource SettingsListItemButton}" Tag="appTheme" Click="OpenSection_Click" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch" Padding="16,14">
             <Grid ColumnSpacing="16"><Grid.ColumnDefinitions><ColumnDefinition Width="32" /><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions><FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE793;" FontSize="20" VerticalAlignment="Center" /><StackPanel Grid.Column="1" Spacing="3"><TextBlock Text="Wygląd aplikacji" FontWeight="SemiBold" /><TextBlock x:Name="ThemeModeValue" Opacity="0.65" TextWrapping="Wrap" /></StackPanel><FontIcon Grid.Column="2" FontFamily="Segoe MDL2 Assets" Glyph="&#xE76C;" FontSize="16" VerticalAlignment="Center" /></Grid>
           </Button>
+            </StackPanel>
+          </Border>
+
+          <TextBlock Text="Konfiguracje" FontSize="15" FontWeight="SemiBold" Opacity="0.65" Margin="16,16,0,8" />
+          <Border Style="{StaticResource SettingsGroupBorder}">
+            <StackPanel>
+              <Button Style="{StaticResource SettingsListItemButton}" Click="ExportSettings_Click" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch" Padding="16,14"><Grid ColumnSpacing="16"><Grid.ColumnDefinitions><ColumnDefinition Width="32" /><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions><FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE898;" FontSize="20" VerticalAlignment="Center" /><StackPanel Grid.Column="1" Spacing="3"><TextBlock Text="Eksportuj ustawienia" FontWeight="SemiBold" /><TextBlock Text="Zapisz konfigurację OCR, obszaru i przycisku do pliku JSON." Opacity="0.65" TextWrapping="Wrap" /></StackPanel><FontIcon Grid.Column="2" FontFamily="Segoe MDL2 Assets" Glyph="&#xE8A7;" FontSize="16" VerticalAlignment="Center" /></Grid></Button>
+              <Border Height="1" Margin="16,0" Background="{ThemeResource AppBorderBrush}" />
+              <Button Style="{StaticResource SettingsListItemButton}" Click="ImportSettings_Click" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch" Padding="16,14"><Grid ColumnSpacing="16"><Grid.ColumnDefinitions><ColumnDefinition Width="32" /><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions><FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE8E5;" FontSize="20" VerticalAlignment="Center" /><StackPanel Grid.Column="1" Spacing="3"><TextBlock Text="Importuj ustawienia" FontWeight="SemiBold" /><TextBlock Text="Wczytaj zapisaną konfigurację z pliku JSON." Opacity="0.65" TextWrapping="Wrap" /></StackPanel><FontIcon Grid.Column="2" FontFamily="Segoe MDL2 Assets" Glyph="&#xE8A7;" FontSize="16" VerticalAlignment="Center" /></Grid></Button>
+              <Border Height="1" Margin="16,0" Background="{ThemeResource AppBorderBrush}" />
+              <Button Style="{StaticResource SettingsListItemButton}" Click="RestoreDefaultSettings_Click" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch" Padding="16,14"><Grid ColumnSpacing="16"><Grid.ColumnDefinitions><ColumnDefinition Width="32" /><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions><FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE777;" FontSize="20" VerticalAlignment="Center" /><StackPanel Grid.Column="1" Spacing="3"><TextBlock Text="Przywróć domyślne" FontWeight="SemiBold" /><TextBlock Text="Wyczyść konfigurację OCR, obszaru i przycisku pływającego." Opacity="0.65" TextWrapping="Wrap" /></StackPanel><FontIcon Grid.Column="2" FontFamily="Segoe MDL2 Assets" Glyph="&#xE8A7;" FontSize="16" VerticalAlignment="Center" /></Grid></Button>
             </StackPanel>
           </Border>
         </StackPanel>
@@ -244,18 +251,6 @@
                   </Button>
                   <ToggleSwitch x:Name="HideIdenticalTranslationsToggle" HorizontalAlignment="Right" Margin="0,0,16,0" Toggled="Setting_Changed" VerticalAlignment="Center" />
                 </Grid>
-              </StackPanel>
-            </Border>
-          </StackPanel>
-
-          <StackPanel x:Name="ConfigurationsSection" Visibility="Collapsed" Spacing="8">
-            <Border Style="{StaticResource SettingsGroupBorder}">
-              <StackPanel>
-                <Button Style="{StaticResource SettingsListItemButton}" Click="ExportSettings_Click" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch" Padding="16,14"><Grid ColumnSpacing="16"><Grid.ColumnDefinitions><ColumnDefinition Width="32" /><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions><FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE898;" FontSize="20" VerticalAlignment="Center" /><StackPanel Grid.Column="1" Spacing="3"><TextBlock Text="Eksportuj ustawienia" FontWeight="SemiBold" /><TextBlock Text="Zapisz konfigurację OCR, obszaru i przycisku do pliku JSON." Opacity="0.65" TextWrapping="Wrap" /></StackPanel><FontIcon Grid.Column="2" FontFamily="Segoe MDL2 Assets" Glyph="&#xE8A7;" FontSize="16" VerticalAlignment="Center" /></Grid></Button>
-                <Border Height="1" Margin="16,0" Background="{ThemeResource AppBorderBrush}" />
-                <Button Style="{StaticResource SettingsListItemButton}" Click="ImportSettings_Click" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch" Padding="16,14"><Grid ColumnSpacing="16"><Grid.ColumnDefinitions><ColumnDefinition Width="32" /><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions><FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE8E5;" FontSize="20" VerticalAlignment="Center" /><StackPanel Grid.Column="1" Spacing="3"><TextBlock Text="Importuj ustawienia" FontWeight="SemiBold" /><TextBlock Text="Wczytaj zapisaną konfigurację z pliku JSON." Opacity="0.65" TextWrapping="Wrap" /></StackPanel><FontIcon Grid.Column="2" FontFamily="Segoe MDL2 Assets" Glyph="&#xE8A7;" FontSize="16" VerticalAlignment="Center" /></Grid></Button>
-                <Border Height="1" Margin="16,0" Background="{ThemeResource AppBorderBrush}" />
-                <Button Style="{StaticResource SettingsListItemButton}" Click="RestoreDefaultSettings_Click" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch" Padding="16,14"><Grid ColumnSpacing="16"><Grid.ColumnDefinitions><ColumnDefinition Width="32" /><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions><FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE777;" FontSize="20" VerticalAlignment="Center" /><StackPanel Grid.Column="1" Spacing="3"><TextBlock Text="Przywróć domyślne" FontWeight="SemiBold" /><TextBlock Text="Wyczyść konfigurację OCR, obszaru i przycisku pływającego." Opacity="0.65" TextWrapping="Wrap" /></StackPanel><FontIcon Grid.Column="2" FontFamily="Segoe MDL2 Assets" Glyph="&#xE8A7;" FontSize="16" VerticalAlignment="Center" /></Grid></Button>
               </StackPanel>
             </Border>
           </StackPanel>

@@ -108,7 +108,6 @@ public sealed partial class MainPage : Page
             "api" => "Google Cloud API",
             "appTheme" => "Wygląd aplikacji",
             "recognition" => "Przetwarzanie tekstu",
-            "configurations" => "Konfiguracje",
             "triggers" => "Globalny hotkey",
             "floatingButton" => "Przycisk pływający",
             "permissions" => "Uprawnienia",
@@ -119,7 +118,6 @@ public sealed partial class MainPage : Page
         ApiSection.Visibility = section == "api" ? Visibility.Visible : Visibility.Collapsed;
         ApiKeyTestFooter.Visibility = section == "api" ? Visibility.Visible : Visibility.Collapsed;
         RecognitionSection.Visibility = section == "recognition" ? Visibility.Visible : Visibility.Collapsed;
-        ConfigurationsSection.Visibility = section == "configurations" ? Visibility.Visible : Visibility.Collapsed;
         TriggersSection.Visibility = section == "triggers" ? Visibility.Visible : Visibility.Collapsed;
         FloatingButtonSection.Visibility = section == "floatingButton" ? Visibility.Visible : Visibility.Collapsed;
         PermissionsSection.Visibility = section == "permissions" ? Visibility.Visible : Visibility.Collapsed;
