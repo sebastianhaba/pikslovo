@@ -6,6 +6,14 @@ Project requirements, domain model, and architecture decision records are in `do
 Read the MVP specification and relevant ADRs before changing the product scope or Android
 integration architecture.
 
+## Commit messages
+
+Use the Conventional Commits format for every commit message:
+`type(optional-scope): concise imperative description`.
+
+Use an appropriate lowercase type, such as `feat`, `fix`, `docs`, `refactor`, `style`,
+`test`, `build`, `ci`, or `chore`.
+
 ## Reference projects
 
 Use these projects as behavioural and UX references when evolving the translator:
