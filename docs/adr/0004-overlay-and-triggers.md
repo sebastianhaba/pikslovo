@@ -19,7 +19,7 @@ probkuje tla gry ani nie rekonstruuje grafiki pod tekstem.
 
 Udostepniamy trzy triggery: przycisk plywajacy, AccessibilityService w trybie
 przelaczania oraz wyeksportowany publiczny BroadcastReceiver o akcji
-`com.gametranslator.action.CAPTURE_AND_TRANSLATE`.
+`app.pikslovo.action.CAPTURE_AND_TRANSLATE`.
 
 ## Konsekwencje
 

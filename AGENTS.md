@@ -1,4 +1,4 @@
-# GameTranslator
+# Pikslovo
 
 ## Project documentation
 
@@ -21,7 +21,7 @@ Use these projects as behavioural and UX references when evolving the translator
 - [Decky-Translator](https://github.com/cat-in-a-box/Decky-Translator): screenshot OCR,
   translation, and a temporary translated-screen overlay.
 - [PlayTranslate](https://github.com/dominostars/playtranslate): Android-oriented capture and
-  translation workflow. GameTranslator intentionally keeps the first version simpler.
+  translation workflow. Pikslovo intentionally keeps the first version simpler.
 
 ## Local Android build environment
 
@@ -43,15 +43,16 @@ export DOTNET_CLI_HOME="$PWD/.dotnet"
 Build and sign the installable debug APK:
 
 ```bash
-dotnet build src/GameTranslator/GameTranslator/GameTranslator.csproj \
-  -f net10.0-android -c Debug -r android-arm64 --no-restore -t:SignAndroidPackage
+dotnet msbuild src/Pikslovo/Pikslovo/Pikslovo.csproj \
+  -p:TargetFramework=net10.0-android -p:Configuration=Debug -p:RuntimeIdentifier=android-arm64 \
+  -t:Package,_Sign
 ```
 
 Install the output on the connected device:
 
 ```bash
-/home/sho/Android/Sdk/platform-tools/adb -s RG477M01025672 install -r \
-  src/GameTranslator/GameTranslator/bin/Debug/net10.0-android/android-arm64/com.gametranslator-Signed.apk
+/home/sho/Android/Sdk/platform-tools/adb -s RG477M01025672 install -r --no-incremental \
+  src/Pikslovo/Pikslovo/bin/Debug/net10.0-android/android-arm64/app.pikslovo-Signed.apk
 ```
 
 Keep `EmbedAssembliesIntoApk` enabled for debug packages. The target LineageOS/GammaOS

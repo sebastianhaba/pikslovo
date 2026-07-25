@@ -1,8 +1,8 @@
-# GameTranslator - Specyfikacja MVP
+# Pikslovo - Specyfikacja MVP
 
 ## Cel
 
-GameTranslator jest aplikacja Android dla graczy, ktora tlumaczy tekst widoczny
+Pikslovo jest aplikacja Android dla graczy, ktora tlumaczy tekst widoczny
 w innej aplikacji lub grze. Uzytkownik uruchamia aktywna sesje, wywoluje
 tlumaczenie przyciskiem plywajacym, globalnym hotkeyem albo broadcastem, a
 aplikacja wyswietla zatrzymany zrzut ekranu z nalozonym tlumaczeniem.
@@ -80,8 +80,8 @@ MVP obsluguje tylko zdarzenia przekazywane przez Android jako key events.
 Zewnetrzny menedzer hotkeyow moze wyslac broadcast:
 
 ```text
-action: com.gametranslator.action.CAPTURE_AND_TRANSLATE
-package: com.gametranslator
+action: app.pikslovo.action.CAPTURE_AND_TRANSLATE
+package: app.pikslovo
 ```
 
 Odbiornik jest wyeksportowany, bez tokenu, i ignoruje zadanie, jezeli aktywna
