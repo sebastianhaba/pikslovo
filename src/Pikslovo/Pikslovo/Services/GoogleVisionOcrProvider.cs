@@ -1,5 +1,6 @@
 using System.Net;
 using System.Net.Http.Json;
+using System.Diagnostics;
 using System.Text.Json.Serialization;
 using Pikslovo.Core;
 
@@ -14,6 +15,7 @@ public sealed class GoogleVisionOcrProvider(HttpClient httpClient) : IOcrProvide
         TranslationSettings settings,
         CancellationToken cancellationToken)
     {
+        var stopwatch = Stopwatch.StartNew();
         var request = new VisionRequest(
             [new VisionImageRequest(
                 new VisionImage(Convert.ToBase64String(imageBytes.Span)),
@@ -48,7 +50,15 @@ public sealed class GoogleVisionOcrProvider(HttpClient httpClient) : IOcrProvide
             .Cast<TextRegion>()
             .ToArray() ?? [];
 
+        LogDuration("Vision OCR", stopwatch.ElapsedMilliseconds, imageBytes.Length);
         return new OcrDocument(regions);
+    }
+
+    private static void LogDuration(string operation, long elapsedMilliseconds, int imageBytes)
+    {
+#if __ANDROID__
+        global::Android.Util.Log.Debug("Pikslovo", $"{operation}: {elapsedMilliseconds} ms; image={imageBytes / 1024d:0.0} KiB");
+#endif
     }
 
     private static TextRegion? ToRegion(VisionParagraph paragraph)

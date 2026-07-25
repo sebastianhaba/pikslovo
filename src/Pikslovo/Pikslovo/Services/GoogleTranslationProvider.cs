@@ -1,5 +1,6 @@
 using System.Net.Http.Json;
 using System.Net;
+using System.Diagnostics;
 using System.Text.Json.Serialization;
 using Pikslovo.Core;
 
@@ -19,6 +20,7 @@ public sealed class GoogleTranslationProvider(HttpClient httpClient) : ITranslat
             return [];
         }
 
+        var stopwatch = Stopwatch.StartNew();
         var request = new TranslationRequest(sourceTexts, settings.SourceLanguage, settings.TargetLanguage, "text");
         using var response = await httpClient
             .PostAsJsonAsync($"{Endpoint}?key={Uri.EscapeDataString(settings.ApiKey)}", request, cancellationToken)
@@ -42,6 +44,9 @@ public sealed class GoogleTranslationProvider(HttpClient httpClient) : ITranslat
             throw new TranslationException("Cloud Translation API zwróciło niepełną odpowiedź.");
         }
 
+#if __ANDROID__
+        global::Android.Util.Log.Debug("Pikslovo", $"Google Translation: {stopwatch.ElapsedMilliseconds} ms; segments={sourceTexts.Count}");
+#endif
         return translations;
     }
 

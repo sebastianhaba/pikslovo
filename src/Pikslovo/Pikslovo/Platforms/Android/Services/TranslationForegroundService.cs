@@ -9,6 +9,7 @@ using Android.OS;
 using Android.Provider;
 using Android.Views;
 using Android.Widget;
+using System.Diagnostics;
 using Pikslovo.Core;
 using Pikslovo.Services;
 using Java.Interop;
@@ -228,6 +229,7 @@ public sealed class TranslationForegroundService : Service
 
     private async Task CaptureAndTranslateAsync()
     {
+        var operationStopwatch = Stopwatch.StartNew();
         CancellationToken cancellationToken;
         lock (_stateLock)
         {
@@ -263,6 +265,7 @@ public sealed class TranslationForegroundService : Service
                 ShowMessage("Nie udało się pobrać klatki ekranu.");
                 return;
             }
+            var captureMilliseconds = operationStopwatch.ElapsedMilliseconds;
 
             var processingAccent = global::Pikslovo.App.GetAccentColor(AndroidSettingsStore.Load(this).Accent);
             new Handler(Looper.MainLooper!).Post(() =>
@@ -282,10 +285,20 @@ public sealed class TranslationForegroundService : Service
                 var bitmapForOcr = croppedBitmap ?? bitmap;
                 using var scaledBitmap = CreateScaledOcrBitmap(bitmapForOcr, settings.OcrImageScale);
                 var bitmapForVision = scaledBitmap ?? bitmapForOcr;
+                var encodingStopwatch = Stopwatch.StartNew();
                 bitmapForVision.Compress(Bitmap.CompressFormat.Png!, 100, stream);
+                var imageBytes = stream.ToArray();
+                var encodingMilliseconds = encodingStopwatch.ElapsedMilliseconds;
+                Android.Util.Log.Debug(
+                    "Pikslovo",
+                    $"Capture: {captureMilliseconds} ms; encode: {encodingMilliseconds} ms; {bitmapForVision.Width}x{bitmapForVision.Height}; png={imageBytes.Length / 1024d:0.0} KiB");
+                var translationStopwatch = Stopwatch.StartNew();
                 var result = await AppServices.TranslationOrchestrator
-                    .TranslateAsync(stream.ToArray(), settings, cancellationToken)
+                    .TranslateAsync(imageBytes, settings, cancellationToken)
                     .ConfigureAwait(false);
+                Android.Util.Log.Debug(
+                    "Pikslovo",
+                    $"Translation pipeline: {translationStopwatch.ElapsedMilliseconds} ms; total={operationStopwatch.ElapsedMilliseconds} ms");
                 if (result is null)
                 {
                     return;
