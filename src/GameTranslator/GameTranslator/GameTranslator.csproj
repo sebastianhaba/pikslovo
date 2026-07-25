@@ -6,16 +6,16 @@
     <UnoSingleProject>true</UnoSingleProject>
 
     <!-- Display name -->
-    <ApplicationTitle>GameTranslator</ApplicationTitle>
+    <ApplicationTitle>Pikslovo</ApplicationTitle>
     <!-- App Identifier -->
     <ApplicationId>com.gametranslator</ApplicationId>
     <!-- Versions -->
     <ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
     <ApplicationVersion>1</ApplicationVersion>
     <!-- Package Publisher -->
-    <ApplicationPublisher>GameTranslator</ApplicationPublisher>
+    <ApplicationPublisher>Pikslovo</ApplicationPublisher>
     <!-- Package Description -->
-    <Description>GameTranslator powered by Uno Platform.</Description>
+    <Description>Pikslovo powered by Uno Platform.</Description>
 
     <!--
       UnoFeatures are used to quickly add and manage features enabled for your app.

@@ -91,7 +91,7 @@
         <ColumnDefinition Width="*" />
         <ColumnDefinition Width="Auto" />
       </Grid.ColumnDefinitions>
-      <TextBlock Text="GameTranslator" FontSize="24" FontWeight="SemiBold" VerticalAlignment="Center" />
+      <TextBlock Text="Pikslovo" FontSize="24" FontWeight="SemiBold" VerticalAlignment="Center" />
       <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
         <TextBlock Text="Tłumacz" VerticalAlignment="Center" />
         <ToggleSwitch x:Name="SessionToggle" Toggled="SessionToggle_Toggled" />

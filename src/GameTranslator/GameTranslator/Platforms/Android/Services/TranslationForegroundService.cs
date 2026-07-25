@@ -516,7 +516,7 @@ public sealed class TranslationForegroundService : Service
             PendingIntentFlags.Immutable | PendingIntentFlags.UpdateCurrent);
 
         return new Notification.Builder(this, NotificationChannelId)
-            .SetContentTitle("GameTranslator jest aktywny")
+            .SetContentTitle("Pikslovo jest aktywne")
             .SetContentText("Hotkey i przycisk pływający są gotowe.")
             .SetSmallIcon(Resource.Mipmap.icon)
             .SetOngoing(true)

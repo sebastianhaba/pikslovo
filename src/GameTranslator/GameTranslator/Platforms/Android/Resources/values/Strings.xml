@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 	<string name="Hello">Hello World, Click Me!</string>
-	<string name="ApplicationName">GameTranslator</string>
+	<string name="ApplicationName">Pikslovo</string>
 	<string name="hotkey_accessibility_description">Obsługa globalnego skrótu do pokazania tłumaczenia ekranu podczas aktywnej sesji.</string>
 </resources>

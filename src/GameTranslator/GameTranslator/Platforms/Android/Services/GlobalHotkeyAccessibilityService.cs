@@ -9,7 +9,7 @@ namespace GameTranslator.Droid.Services;
 [Service(
     Permission = "android.permission.BIND_ACCESSIBILITY_SERVICE",
     Exported = true,
-    Label = "GameTranslator hotkey")]
+    Label = "Skrót Pikslovo")]
 [IntentFilter(["android.accessibilityservice.AccessibilityService"])]
 [MetaData("android.accessibilityservice", Resource = "@xml/global_hotkey_accessibility_service")]
 public sealed class GlobalHotkeyAccessibilityService : AccessibilityService
