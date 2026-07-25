@@ -86,7 +86,7 @@ internal sealed partial class FloatingTranslationTrigger
 
             onClick();
         };
-        _button.LongClick += (_, _) => ExpandMenu(onEditRegion, onStopSession);
+        _button.LongClick += (_, _) => ToggleMenu(onEditRegion, onStopSession);
 
         _layout = new WindowManagerLayoutParams(
             size,
@@ -320,6 +320,17 @@ internal sealed partial class FloatingTranslationTrigger
             .TranslationY(0f)
             .SetDuration(MenuAnimationDurationMilliseconds)
             .Start();
+    }
+
+    private void ToggleMenu(Action onEditRegion, Action onStopSession)
+    {
+        if (_isMenuExpanded)
+        {
+            CollapseMenu(animated: true);
+            return;
+        }
+
+        ExpandMenu(onEditRegion, onStopSession);
     }
 
     private ImageButton CreateMenuActionButton(
