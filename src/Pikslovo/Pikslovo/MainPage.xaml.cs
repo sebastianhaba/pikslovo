@@ -430,7 +430,7 @@ public sealed partial class MainPage : Page
     {
         if (!await ShowConfirmationAsync(
                 "Przywrócić ustawienia domyślne?",
-                "Zostaną zresetowane ustawienia OCR i nakładki, obszar przechwytywania oraz przycisk pływający. Klucz API, języki, hotkey i wygląd aplikacji pozostaną bez zmian."))
+                "Zostaną zresetowane ustawienia OCR, w tym kompresja JPEG i jakość obrazu, nakładka, obszar przechwytywania oraz przycisk pływający. Klucz API, języki, hotkey i wygląd aplikacji pozostaną bez zmian."))
         {
             return;
         }
