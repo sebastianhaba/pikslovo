@@ -5,9 +5,9 @@ MinimumVisualStudioVersion = 15.0.26124.0
 
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{4E059E40-ABDA-4CED-88DA-F8B67BA6BE35}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Pikslovo", "Pikslovo\Pikslovo.csproj", "{A576D81C-FF3E-482A-B151-142FDCB6E311}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Pikslovo", "src\Pikslovo\Pikslovo.csproj", "{A576D81C-FF3E-482A-B151-142FDCB6E311}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Pikslovo.Tests", "Pikslovo.Tests\Pikslovo.Tests.csproj", "{7420F85E-5A34-45B3-A7A9-3D0907F1B9A8}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Pikslovo.Tests", "src\Pikslovo.Tests\Pikslovo.Tests.csproj", "{7420F85E-5A34-45B3-A7A9-3D0907F1B9A8}"
 EndProject
 
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{BADA71DC-7FFD-4EDC-9F28-FB74AEADC713}"

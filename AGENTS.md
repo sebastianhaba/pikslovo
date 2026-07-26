@@ -43,7 +43,7 @@ export DOTNET_CLI_HOME="$PWD/.dotnet"
 Build and sign the installable debug APK:
 
 ```bash
-dotnet msbuild src/Pikslovo/Pikslovo/Pikslovo.csproj \
+dotnet msbuild src/Pikslovo/Pikslovo.csproj \
   -p:TargetFramework=net10.0-android -p:Configuration=Debug -p:RuntimeIdentifier=android-arm64 \
   -t:Package,_Sign
 ```
@@ -52,7 +52,7 @@ Install the output on the connected device:
 
 ```bash
 /home/sho/Android/Sdk/platform-tools/adb -s RG477M01025672 install -r --no-incremental \
-  src/Pikslovo/Pikslovo/bin/Debug/net10.0-android/android-arm64/app.pikslovo-Signed.apk
+  bin/Pikslovo/Debug/net10.0-android/android-arm64/app.pikslovo-Signed.apk
 ```
 
 Keep `EmbedAssembliesIntoApk` enabled for debug packages. The target LineageOS/GammaOS
@@ -65,7 +65,7 @@ Use semantic versioning with three numeric components: `major.minor.patch`
 
 Change the version in exactly one place:
 
-- `src/Pikslovo/Pikslovo/Pikslovo.csproj` -> `<Version>`
+- `src/Pikslovo/Pikslovo.csproj` -> `<Version>`
 
 Do not edit `ApplicationDisplayVersion` or `ApplicationVersion` manually unless the
 versioning scheme itself changes:

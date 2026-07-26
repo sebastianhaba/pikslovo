@@ -1,5 +1,11 @@
 .dotnet/
 .tmp/
+.vs/
+*.rsuser
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
 **/bin/
 **/obj/
 publish/
