@@ -22,12 +22,19 @@ public sealed class DiagnosticsReportFormatterTests
             true,
             false);
         var diagnostics = new TranslationDiagnosticsSnapshot(12, 34, 56, 78, 90, 123);
+        var ocrSettings = new DiagnosticsReportOcrSettings(0.75f, 0.5f, 0.85f, 1.25f, true, true, 80);
 
-        var report = DiagnosticsReportFormatter.Format(metadata, diagnostics);
+        var report = DiagnosticsReportFormatter.Format(metadata, diagnostics, ocrSettings);
 
         report.Should().Contain("Cloud Translation: 78 ms");
         report.Should().Contain("API key validation: 123 ms");
-        report.Should().Contain("API key, screen content, OCR result and translated text");
+        report.Should().Contain("User OCR settings:");
+        report.Should().Contain("OCR confidence: 0.75");
+        report.Should().Contain("OCR image scale: 0.5x");
+        report.Should().Contain("Dialog grouping strength: 0.85");
+        report.Should().Contain("Font scale: 1.25x");
+        report.Should().Contain("Hide identical translations: yes");
+        report.Should().Contain("OCR image encoding: JPEG 80%");
         report.Should().NotContain("AIza");
     }
 

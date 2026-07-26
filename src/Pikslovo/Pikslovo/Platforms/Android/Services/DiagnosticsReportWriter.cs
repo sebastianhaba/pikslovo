@@ -63,7 +63,16 @@ internal static class DiagnosticsReportWriter
             TranslationForegroundService.IsSessionActive,
             Settings.CanDrawOverlays(context),
             notificationPermissionGranted);
-        var contents = DiagnosticsReportFormatter.Format(metadata, diagnostics);
+        var settings = AndroidSettingsStore.Load(context);
+        var ocrSettings = new DiagnosticsReportOcrSettings(
+            settings.Translation.RecognitionConfidence,
+            settings.Translation.OcrImageScale,
+            settings.Translation.GroupingPower,
+            settings.Translation.FontScale,
+            settings.Translation.HideIdenticalTranslations,
+            settings.Translation.UseJpegForOcr,
+            settings.Translation.OcrJpegQuality);
+        var contents = DiagnosticsReportFormatter.Format(metadata, diagnostics, ocrSettings);
 
         await stream.WriteAsync(Encoding.UTF8.GetBytes(contents), cancellationToken);
     }

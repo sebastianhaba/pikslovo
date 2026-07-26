@@ -12,9 +12,21 @@ public sealed record DiagnosticsReportMetadata(
     bool IsOverlayPermissionGranted,
     bool IsNotificationPermissionGranted);
 
+public sealed record DiagnosticsReportOcrSettings(
+    float RecognitionConfidence,
+    float OcrImageScale,
+    float GroupingPower,
+    float FontScale,
+    bool HideIdenticalTranslations,
+    bool UseJpegForOcr,
+    int OcrJpegQuality);
+
 public static class DiagnosticsReportFormatter
 {
-    public static string Format(DiagnosticsReportMetadata metadata, TranslationDiagnosticsSnapshot diagnostics)
+    public static string Format(
+        DiagnosticsReportMetadata metadata,
+        TranslationDiagnosticsSnapshot diagnostics,
+        DiagnosticsReportOcrSettings? ocrSettings = null)
     {
         var report = new StringBuilder();
         report.AppendLine(AppStrings.Get("Pikslovo - raport diagnostyczny"));
@@ -33,8 +45,18 @@ public static class DiagnosticsReportFormatter
         AppendDuration(report, "Cloud Translation", diagnostics.CloudTranslationMilliseconds);
         AppendDuration(report, AppStrings.Get("Całość tłumaczenia"), diagnostics.TranslationTotalMilliseconds);
         AppendDuration(report, AppStrings.Get("Sprawdzenie klucza API"), diagnostics.ApiKeyValidationMilliseconds);
-        report.AppendLine();
-        report.AppendLine(AppStrings.Get("Wykluczone dane: klucz API, treść ekranu, wynik OCR i tekst tłumaczenia."));
+        if (ocrSettings is not null)
+        {
+            report.AppendLine();
+            report.AppendLine(AppStrings.Get("Ustawienia OCR użytkownika:"));
+            report.AppendLine(AppStrings.Format("Pewność OCR: {0}", FormatFloat(ocrSettings.RecognitionConfidence)));
+            report.AppendLine(AppStrings.Format("Skala obrazu OCR: {0}", FormatScale(ocrSettings.OcrImageScale)));
+            report.AppendLine(AppStrings.Format("Siła łączenia dialogów: {0}", FormatFloat(ocrSettings.GroupingPower)));
+            report.AppendLine(AppStrings.Format("Skalowanie czcionki: {0}", FormatScale(ocrSettings.FontScale)));
+            report.AppendLine(AppStrings.Format("Ukrywaj identyczne tłumaczenia: {0}", FormatBoolean(ocrSettings.HideIdenticalTranslations)));
+            report.AppendLine(AppStrings.Format("Kodowanie obrazu OCR: {0}", FormatImageEncoding(ocrSettings)));
+        }
+
         return report.ToString();
     }
 
@@ -45,6 +67,15 @@ public static class DiagnosticsReportFormatter
                 ? string.Format(CultureInfo.InvariantCulture, "{0} ms", value)
                 : AppStrings.Get("brak danych"))
             .AppendLine();
+
+    private static string FormatFloat(float value) => value.ToString("0.##", CultureInfo.InvariantCulture);
+
+    private static string FormatScale(float value) => $"{value.ToString("0.##", CultureInfo.InvariantCulture)}x";
+
+    private static string FormatImageEncoding(DiagnosticsReportOcrSettings settings) =>
+        settings.UseJpegForOcr
+            ? string.Format(CultureInfo.InvariantCulture, "JPEG {0}%", settings.OcrJpegQuality)
+            : "PNG";
 
     private static string FormatBoolean(bool value) => AppStrings.Get(value ? "tak" : "nie");
 }
