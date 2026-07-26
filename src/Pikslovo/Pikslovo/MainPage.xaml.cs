@@ -419,6 +419,32 @@ public sealed partial class MainPage : Page
 #endif
     }
 
+    private void OpenGitHubPage_Click(object sender, RoutedEventArgs e) =>
+        OpenSupportWebPage("https://github.com/sebastianhaba/pikslovo", "Nie można otworzyć strony Pikslovo: {0}");
+
+    private void OpenSupportPage_Click(object sender, RoutedEventArgs e) =>
+        OpenSupportWebPage("https://ko-fi.com/pikslovo", "Nie można otworzyć strony wsparcia: {0}");
+
+    private void OpenSupportWebPage(string url, string errorMessage)
+    {
+#if __ANDROID__
+        if (MainActivity.CurrentActivity is not { } activity)
+        {
+            ShowStatus("Aktywność Androida nie jest gotowa. Zamknij i otwórz aplikację ponownie.");
+            return;
+        }
+
+        try
+        {
+            AndroidTranslationHost.OpenWebPage(activity, url);
+        }
+        catch (Exception exception)
+        {
+            ShowStatus(AppStrings.Format(errorMessage, exception.Message));
+        }
+#endif
+    }
+
     private void ToggleApiKeyVisibility_Click(object sender, RoutedEventArgs e)
     {
         _isApiKeyVisible = !_isApiKeyVisible;
