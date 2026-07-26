@@ -68,7 +68,7 @@ internal sealed partial class FloatingTranslationTrigger
         var size = GetButtonSize(settings.Scale);
         _button = new ImageButton(_context)
         {
-            ContentDescription = AppStrings.Get("Tłumacz ekran"),
+            ContentDescription = AppStrings.Get(AppStrings.Keys.TranslateScreen),
         };
         var iconPadding = ToPixels(12f * settings.Scale);
         _button.SetPadding(iconPadding, iconPadding, iconPadding, iconPadding);
@@ -257,7 +257,7 @@ internal sealed partial class FloatingTranslationTrigger
         menu.AddView(
             CreateMenuActionButton(
                 Resource.Drawable.ic_edit,
-                AppStrings.Get("Edytuj obszar przechwytywania"),
+                AppStrings.Get(AppStrings.Keys.EditCaptureRegion),
                 actionSize,
                 CreateBackground(),
                 () =>
@@ -272,7 +272,7 @@ internal sealed partial class FloatingTranslationTrigger
         menu.AddView(
             CreateMenuActionButton(
                 Resource.Drawable.ic_stop,
-                AppStrings.Get("Zatrzymaj tłumacza"),
+                AppStrings.Get(AppStrings.Keys.StopTranslator),
                 actionSize,
                 CreateBackground(Color.Rgb(183, 28, 28)),
                 () =>
@@ -563,9 +563,9 @@ internal sealed partial class FloatingTranslationTrigger
         });
         _button.ContentDescription = state switch
         {
-            FloatingTranslationTriggerState.Processing => AppStrings.Get("Tłumaczenie w toku"),
-            FloatingTranslationTriggerState.ResultVisible => AppStrings.Get("Wróć do gry"),
-            _ => AppStrings.Get("Tłumacz ekran"),
+            FloatingTranslationTriggerState.Processing => AppStrings.Get(AppStrings.Keys.TranslationInProgress),
+            FloatingTranslationTriggerState.ResultVisible => AppStrings.Get(AppStrings.Keys.ReturnToGame),
+            _ => AppStrings.Get(AppStrings.Keys.TranslateScreen),
         };
     }
 

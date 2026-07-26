@@ -21,8 +21,8 @@ namespace Pikslovo;
 
 public sealed partial class MainPage : Page
 {
-    private static string ApiKeyTestButtonText => AppStrings.Get("Sprawdź klucz");
-    private static string ApiKeyValidationInProgressButtonText => AppStrings.Get("Sprawdzanie...");
+    private static string ApiKeyTestButtonText => AppStrings.Get(AppStrings.Keys.CheckKey);
+    private static string ApiKeyValidationInProgressButtonText => AppStrings.Get(AppStrings.Keys.Checking);
 
     private readonly MainPageViewModel _viewModel = new();
     private readonly MainPageSettingsPersistenceService _settingsPersistence = new();
@@ -57,7 +57,7 @@ public sealed partial class MainPage : Page
         {
             SelectLanguage(SourceLanguageBox, "ja");
             SelectLanguage(TargetLanguageBox, "pl");
-            ShowStatus(AppStrings.Format("Nie można jeszcze odczytać ustawień: {0}", exception.Message));
+            ShowStatus(AppStrings.Format(AppStrings.Keys.SettingsReadFailed, exception.Message));
         }
         finally
         {
@@ -87,6 +87,9 @@ public sealed partial class MainPage : Page
         _viewModel.RequestOverlayPermissionCommand = new RelayCommand(RequestOverlayPermission);
         _viewModel.RequestNotificationPermissionCommand = new RelayCommand(RequestNotificationPermission);
         _viewModel.TestApiKeyCommand = new RelayCommand(async () => await TestApiKeyMainAsync());
+        _viewModel.SelectThemeModeCommand = new RelayCommand<string>(SelectThemeMode);
+        _viewModel.SelectAccentCommand = new RelayCommand<string>(SelectAccent);
+        _viewModel.SelectApplicationLanguageCommand = new RelayCommand<string>(SelectApplicationLanguage);
         _viewModel.EditOnboardingSourceLanguageCommand = new RelayCommand(async () => await EditOnboardingSourceLanguageAsync());
         _viewModel.EditOnboardingTargetLanguageCommand = new RelayCommand(async () => await EditOnboardingTargetLanguageAsync());
         _viewModel.ContinueOnboardingLanguageCommand = new RelayCommand(ContinueOnboardingLanguage);
@@ -145,9 +148,9 @@ public sealed partial class MainPage : Page
         DismissFloatingButtonPreview();
     }
 
-    private async Task EditSourceLanguageAsync() => await EditLanguageAsync(SourceLanguageBox, AppStrings.Get("Język źródłowy"));
+    private async Task EditSourceLanguageAsync() => await EditLanguageAsync(SourceLanguageBox, AppStrings.Get(AppStrings.Keys.SourceLanguage));
 
-    private async Task EditTargetLanguageAsync() => await EditLanguageAsync(TargetLanguageBox, AppStrings.Get("Język docelowy"));
+    private async Task EditTargetLanguageAsync() => await EditLanguageAsync(TargetLanguageBox, AppStrings.Get(AppStrings.Keys.TargetLanguage));
 
     private void Setting_Changed(object sender, RoutedEventArgs e)
     {
@@ -167,10 +170,9 @@ public sealed partial class MainPage : Page
         }
     }
 
-    private void ThemeModeOption_Tapped(object sender, TappedRoutedEventArgs e)
+    private void SelectThemeMode(string? value)
     {
-        if (_isLoading || sender is not Border { Tag: string value } ||
-            !Enum.TryParse<AppThemeMode>(value, out var mode))
+        if (_isLoading || !Enum.TryParse<AppThemeMode>(value, out var mode))
         {
             return;
         }
@@ -179,10 +181,9 @@ public sealed partial class MainPage : Page
         SaveSettings(requireValidTranslationSettings: false);
     }
 
-    private void AccentOption_Tapped(object sender, TappedRoutedEventArgs e)
+    private void SelectAccent(string? value)
     {
-        if (_isLoading || sender is not Border { Tag: string value } ||
-            !Enum.TryParse<AppAccent>(value, out var accent))
+        if (_isLoading || !Enum.TryParse<AppAccent>(value, out var accent))
         {
             return;
         }
@@ -197,10 +198,9 @@ public sealed partial class MainPage : Page
         }
     }
 
-    private void ApplicationLanguageOption_Tapped(object sender, TappedRoutedEventArgs e)
+    private void SelectApplicationLanguage(string? value)
     {
-        if (_isLoading || sender is not Border { Tag: string value } ||
-            !Enum.TryParse<AppLanguageMode>(value, out var languageMode))
+        if (_isLoading || !Enum.TryParse<AppLanguageMode>(value, out var languageMode))
         {
             return;
         }
@@ -258,7 +258,7 @@ public sealed partial class MainPage : Page
 #if __ANDROID__
         if (MainActivity.CurrentActivity is not { } activity)
         {
-            ShowStatus("Aktywność Androida nie jest gotowa. Zamknij i otwórz aplikację ponownie.");
+            ShowStatus(AppStrings.Keys.AndroidActivityNotReady);
             return;
         }
 
@@ -268,23 +268,23 @@ public sealed partial class MainPage : Page
         }
         catch (Exception exception)
         {
-            ShowStatus(AppStrings.Format("Nie można otworzyć strony Google Cloud: {0}", exception.Message));
+            ShowStatus(AppStrings.Format(AppStrings.Keys.OpenGoogleCloudPageFailed, exception.Message));
         }
 #endif
     }
 
     private void OpenGitHubPage() =>
-        OpenSupportWebPage("https://github.com/sebastianhaba/pikslovo", "Nie można otworzyć strony Pikslovo: {0}");
+        OpenSupportWebPage("https://github.com/sebastianhaba/pikslovo", AppStrings.Keys.OpenPikslovoPageFailed);
 
     private void OpenSupportPage() =>
-        OpenSupportWebPage("https://ko-fi.com/pikslovo", "Nie można otworzyć strony wsparcia: {0}");
+        OpenSupportWebPage("https://ko-fi.com/pikslovo", AppStrings.Keys.OpenSupportPageFailed);
 
     private void OpenSupportWebPage(string url, string errorMessage)
     {
 #if __ANDROID__
         if (MainActivity.CurrentActivity is not { } activity)
         {
-            ShowStatus("Aktywność Androida nie jest gotowa. Zamknij i otwórz aplikację ponownie.");
+            ShowStatus(AppStrings.Keys.AndroidActivityNotReady);
             return;
         }
 
@@ -348,8 +348,8 @@ public sealed partial class MainPage : Page
         if (string.IsNullOrWhiteSpace(apiKey))
         {
             await ShowMessageAsync(
-                "Brak klucza API",
-                "Wpisz klucz Google Cloud API, aby go sprawdzić.");
+                AppStrings.Keys.MissingApiKeyTitle,
+                AppStrings.Keys.MissingApiKeyMessage);
             return;
         }
 
@@ -364,20 +364,20 @@ public sealed partial class MainPage : Page
         }
         catch (GoogleCloudApiKeyValidationException exception)
         {
-            errorTitle = "Klucz nie działa";
+            errorTitle = AppStrings.Keys.KeyDoesNotWorkTitle;
             errorMessage = exception.StatusCode is HttpStatusCode.Unauthorized or HttpStatusCode.Forbidden
-                ? AppStrings.Format("Klucz nie ma dostępu do {0}. Sprawdź poprawność klucza oraz czy to API jest włączone w projekcie Google Cloud.", exception.ServiceName)
-                : AppStrings.Format("Nie udało się sprawdzić dostępu do {0}. Usługa Google zwróciła błąd {1}.", exception.ServiceName, (int)exception.StatusCode);
+                ? AppStrings.Format(AppStrings.Keys.ApiKeyNoAccess, exception.ServiceName)
+                : AppStrings.Format(AppStrings.Keys.ApiKeyCheckFailed, exception.ServiceName, (int)exception.StatusCode);
         }
         catch (HttpRequestException)
         {
-            errorTitle = "Brak połączenia";
-            errorMessage = "Nie udało się połączyć z Google Cloud. Sprawdź połączenie z Internetem i spróbuj ponownie.";
+            errorTitle = AppStrings.Keys.NoConnectionTitle;
+            errorMessage = AppStrings.Keys.NoConnectionMessage;
         }
         catch (TaskCanceledException)
         {
-            errorTitle = "Limit czasu";
-            errorMessage = "Sprawdzenie klucza trwało zbyt długo. Spróbuj ponownie przy stabilnym połączeniu.";
+            errorTitle = AppStrings.Keys.TimeoutTitle;
+            errorMessage = AppStrings.Keys.TimeoutMessage;
         }
         finally
         {
@@ -393,8 +393,8 @@ public sealed partial class MainPage : Page
         }
 
         await ShowMessageAsync(
-            "Klucz działa",
-            "Klucz ma dostęp do Cloud Translation API i Cloud Vision API.");
+            AppStrings.Keys.KeyWorksTitle,
+            AppStrings.Keys.KeyWorksMessage);
     }
 
     private async Task EditHotkeyCodeAsync()
@@ -402,7 +402,7 @@ public sealed partial class MainPage : Page
 #if __ANDROID__
         if (MainActivity.CurrentActivity is not { } activity)
         {
-            ShowStatus("Aktywność Androida nie jest gotowa. Zamknij i otwórz aplikację ponownie.");
+            ShowStatus(AppStrings.Keys.AndroidActivityNotReady);
             return;
         }
 
@@ -423,8 +423,8 @@ public sealed partial class MainPage : Page
             XamlRoot = XamlRoot,
             Title = title,
             Content = content,
-            PrimaryButtonText = AppStrings.Get("Zapisz"),
-            CloseButtonText = AppStrings.Get("Anuluj"),
+            PrimaryButtonText = AppStrings.Get(AppStrings.Keys.Save),
+            CloseButtonText = AppStrings.Get(AppStrings.Keys.Cancel),
             DefaultButton = ContentDialogButton.Primary
         };
 
@@ -438,7 +438,7 @@ public sealed partial class MainPage : Page
             XamlRoot = XamlRoot,
             Title = AppStrings.Get(title),
             Content = new TextBlock { Text = AppStrings.Get(message), TextWrapping = TextWrapping.Wrap },
-            CloseButtonText = AppStrings.Get("Zamknij")
+            CloseButtonText = AppStrings.Get(AppStrings.Keys.Close)
         };
 
         await dialog.ShowAsync();
@@ -451,8 +451,8 @@ public sealed partial class MainPage : Page
             XamlRoot = XamlRoot,
             Title = AppStrings.Get(title),
             Content = new TextBlock { Text = AppStrings.Get(message), TextWrapping = TextWrapping.Wrap },
-            PrimaryButtonText = AppStrings.Get("Przywróć"),
-            CloseButtonText = AppStrings.Get("Anuluj"),
+            PrimaryButtonText = AppStrings.Get(AppStrings.Keys.Restore),
+            CloseButtonText = AppStrings.Get(AppStrings.Keys.Cancel),
             DefaultButton = ContentDialogButton.Close
         };
 
@@ -470,7 +470,7 @@ public sealed partial class MainPage : Page
         var activity = MainActivity.CurrentActivity;
         if (activity is null)
         {
-            ShowStatus("Aktywność Androida nie jest jeszcze gotowa.");
+            ShowStatus(AppStrings.Keys.AndroidActivityNotReadyYet);
             UpdateSessionToggle();
             return;
         }
@@ -478,7 +478,7 @@ public sealed partial class MainPage : Page
         if (!SessionToggle.IsOn)
         {
             AndroidTranslationHost.StopSession(activity);
-            ShowStatus("Zatrzymano sesję tłumacza.");
+            ShowStatus(AppStrings.Keys.TranslatorSessionStopped);
             return;
         }
 
@@ -490,12 +490,12 @@ public sealed partial class MainPage : Page
 
         try
         {
-            ShowStatus("Otwieram dialog udostępniania ekranu Androida.");
+            ShowStatus(AppStrings.Keys.OpeningScreenSharingDialog);
             AndroidTranslationHost.RequestSession(activity);
         }
         catch (Exception exception)
         {
-            ShowStatus(AppStrings.Format("Nie można uruchomić przechwytywania ekranu: {0}", exception.Message));
+            ShowStatus(AppStrings.Format(AppStrings.Keys.StartScreenCaptureFailed, exception.Message));
             UpdateSessionToggle();
         }
 #endif
@@ -613,7 +613,7 @@ public sealed partial class MainPage : Page
         SetThemeModeOptionStyle(PolishLanguageOption, mode == AppLanguageMode.Polish);
     }
 
-    private void SetThemeModeOptionStyle(Border option, bool selected)
+    private void SetThemeModeOptionStyle(Button option, bool selected)
     {
         option.Style = (Style)Resources[selected ? "SelectedThemeModeOptionBorder" : "ThemeModeOptionBorder"];
         if (selected)
@@ -649,7 +649,7 @@ public sealed partial class MainPage : Page
         SetAccentOptionSelection(RoseAccentOption, AppAccent.Rose);
     }
 
-    private void SetAccentOptionSelection(Border option, AppAccent accent) =>
+    private void SetAccentOptionSelection(Button option, AppAccent accent) =>
         option.BorderThickness = accent == _viewModel.Accent ? new Thickness(2) : new Thickness(0);
 
     private static string FormatFontScale(double value) => $"{value.ToString("0.0", CultureInfo.CurrentCulture)}x";

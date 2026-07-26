@@ -54,7 +54,7 @@ internal sealed class MainPageSettingsPersistenceService
 
         var context = global::Android.App.Application.Context!;
         using var stream = context.ContentResolver?.OpenOutputStream(uri)
-            ?? throw new InvalidOperationException(AppStrings.Get("Nie można zapisać wybranego pliku."));
+            ?? throw new InvalidOperationException(AppStrings.Get(AppStrings.Keys.CannotSaveSelectedFile));
         await SettingsProfile.WriteAsync(
             stream,
             SettingsProfile.FromSettings(AndroidSettingsStore.Load(context)),
@@ -70,7 +70,7 @@ internal sealed class MainPageSettingsPersistenceService
 
         var context = global::Android.App.Application.Context!;
         using var stream = context.ContentResolver?.OpenInputStream(uri)
-            ?? throw new InvalidOperationException(AppStrings.Get("Nie można odczytać wybranego pliku."));
+            ?? throw new InvalidOperationException(AppStrings.Get(AppStrings.Keys.CannotReadSelectedFile));
         return await SettingsProfile.ReadAsync(stream, CancellationToken.None);
     }
 

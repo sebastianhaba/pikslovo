@@ -26,13 +26,13 @@ public sealed partial class MainPage
         UpdateViewModelFromControls();
         if (requireValidTranslationSettings && _viewModel.GlobalHotkeyEnabled && _viewModel.HotkeyCodes.Length == 0)
         {
-            ShowStatus("Ustaw skrót albo wyłącz globalny hotkey.");
+            ShowStatus(AppStrings.Keys.SetShortcutOrDisableHotkey);
             return false;
         }
 
         if (requireValidTranslationSettings && !_viewModel.CreateTranslationSettings().IsValid)
         {
-            ShowStatus("Wpisz klucz API i wybierz oba języki.");
+            ShowStatus(AppStrings.Keys.EnterApiKeyAndLanguages);
             return false;
         }
 
@@ -72,11 +72,11 @@ public sealed partial class MainPage
         try
         {
             await _settingsPersistence.ExportAsync(resultCode, data);
-            ShowStatus("Ustawienia wyeksportowano do pliku JSON.");
+            ShowStatus(AppStrings.Keys.SettingsExported);
         }
         catch (Exception exception)
         {
-            ShowStatus(AppStrings.Format("Nie można wyeksportować ustawień: {0}", exception.Message));
+            ShowStatus(AppStrings.Format(AppStrings.Keys.ExportSettingsFailed, exception.Message));
         }
     }
 
@@ -91,11 +91,11 @@ public sealed partial class MainPage
             }
 
             ApplySettingsProfile(profile);
-            ShowStatus("Ustawienia zaimportowano z pliku JSON.");
+            ShowStatus(AppStrings.Keys.SettingsImported);
         }
         catch (Exception exception)
         {
-            ShowStatus(AppStrings.Format("Nie można zaimportować ustawień: {0}", exception.Message));
+            ShowStatus(AppStrings.Format(AppStrings.Keys.ImportSettingsFailed, exception.Message));
         }
     }
 
@@ -126,7 +126,7 @@ public sealed partial class MainPage
 #if __ANDROID__
         if (MainActivity.CurrentActivity is not { } activity)
         {
-            ShowStatus("Aktywność Androida nie jest gotowa. Zamknij i otwórz aplikację ponownie.");
+            ShowStatus(AppStrings.Keys.AndroidActivityNotReady);
             return;
         }
 
@@ -136,7 +136,7 @@ public sealed partial class MainPage
         }
         catch (Exception exception)
         {
-            ShowStatus(AppStrings.Format("Nie można otworzyć wyboru pliku: {0}", exception.Message));
+            ShowStatus(AppStrings.Format(AppStrings.Keys.OpenFilePickerFailed, exception.Message));
         }
 #endif
     }
@@ -146,7 +146,7 @@ public sealed partial class MainPage
 #if __ANDROID__
         if (MainActivity.CurrentActivity is not { } activity)
         {
-            ShowStatus("Aktywność Androida nie jest gotowa. Zamknij i otwórz aplikację ponownie.");
+            ShowStatus(AppStrings.Keys.AndroidActivityNotReady);
             return;
         }
 
@@ -156,7 +156,7 @@ public sealed partial class MainPage
         }
         catch (Exception exception)
         {
-            ShowStatus(AppStrings.Format("Nie można otworzyć wyboru pliku: {0}", exception.Message));
+            ShowStatus(AppStrings.Format(AppStrings.Keys.OpenFilePickerFailed, exception.Message));
         }
 #endif
     }
@@ -164,8 +164,8 @@ public sealed partial class MainPage
     private async Task RestoreDefaultSettingsAsync()
     {
         if (!await ShowConfirmationAsync(
-                "Przywrócić ustawienia domyślne?",
-                "Zostaną zresetowane ustawienia OCR, w tym kompresja JPEG i jakość obrazu, nakładka, obszar przechwytywania oraz przycisk pływający. Klucz API, języki, hotkey i wygląd aplikacji pozostaną bez zmian."))
+                AppStrings.Keys.RestoreDefaultsQuestion,
+                AppStrings.Keys.RestoreDefaultsMessage))
         {
             return;
         }
@@ -174,11 +174,11 @@ public sealed partial class MainPage
         try
         {
             ApplySettingsProfile(SettingsProfile.Defaults);
-            ShowStatus("Przywrócono domyślne ustawienia konfiguracji.");
+            ShowStatus(AppStrings.Keys.DefaultConfigurationRestored);
         }
         catch (Exception exception)
         {
-            ShowStatus(AppStrings.Format("Nie można przywrócić ustawień: {0}", exception.Message));
+            ShowStatus(AppStrings.Format(AppStrings.Keys.RestoreSettingsFailed, exception.Message));
         }
 #endif
     }
@@ -205,7 +205,7 @@ public sealed partial class MainPage
 #if __ANDROID__
         _viewModel.SetHotkeyCodesSummary(HotkeyCaptureDialog.Format(_viewModel.HotkeyCodes));
 #else
-        _viewModel.SetHotkeyCodesSummary(AppStrings.Get("Nie ustawiono"));
+        _viewModel.SetHotkeyCodesSummary(AppStrings.Get(AppStrings.Keys.NotSet));
 #endif
     }
 }

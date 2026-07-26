@@ -5,6 +5,147 @@ namespace Pikslovo;
 
 public static class AppStrings
 {
+    public static class Keys
+    {
+        public const string CheckKey = "Sprawdź klucz";
+        public const string Checking = "Sprawdzanie...";
+        public const string SourceLanguage = "Język źródłowy";
+        public const string TargetLanguage = "Język docelowy";
+        public const string MissingApiKeyTitle = "Brak klucza API";
+        public const string MissingApiKeyMessage = "Wpisz klucz Google Cloud API, aby go sprawdzić.";
+        public const string KeyDoesNotWorkTitle = "Klucz nie działa";
+        public const string NoConnectionTitle = "Brak połączenia";
+        public const string NoConnectionMessage = "Nie udało się połączyć z Google Cloud. Sprawdź połączenie z Internetem i spróbuj ponownie.";
+        public const string TimeoutTitle = "Limit czasu";
+        public const string TimeoutMessage = "Sprawdzenie klucza trwało zbyt długo. Spróbuj ponownie przy stabilnym połączeniu.";
+        public const string KeyWorksTitle = "Klucz działa";
+        public const string KeyWorksMessage = "Klucz ma dostęp do Cloud Translation API i Cloud Vision API.";
+        public const string Save = "Zapisz";
+        public const string Cancel = "Anuluj";
+        public const string Close = "Zamknij";
+        public const string Restore = "Przywróć";
+        public const string RestoreDefaultsQuestion = "Przywrócić ustawienia domyślne?";
+        public const string RestoreDefaultsMessage = "Zostaną zresetowane ustawienia OCR, w tym kompresja JPEG i jakość obrazu, nakładka, obszar przechwytywania oraz przycisk pływający. Klucz API, języki, hotkey i wygląd aplikacji pozostaną bez zmian.";
+        public const string AndroidActivityNotReady = "Aktywność Androida nie jest gotowa. Zamknij i otwórz aplikację ponownie.";
+        public const string AndroidActivityNotReadyYet = "Aktywność Androida nie jest jeszcze gotowa.";
+        public const string TranslatorSessionStopped = "Zatrzymano sesję tłumacza.";
+        public const string OpeningScreenSharingDialog = "Otwieram dialog udostępniania ekranu Androida.";
+        public const string NotificationPermissionDenied = "Uprawnienie nie zostało przyznane. Możesz spróbować ponownie.";
+        public const string SetShortcutOrDisableHotkey = "Ustaw skrót albo wyłącz globalny hotkey.";
+        public const string EnterApiKeyAndLanguages = "Wpisz klucz API i wybierz oba języki.";
+        public const string SettingsExported = "Ustawienia wyeksportowano do pliku JSON.";
+        public const string SettingsImported = "Ustawienia zaimportowano z pliku JSON.";
+        public const string DefaultConfigurationRestored = "Przywrócono domyślne ustawienia konfiguracji.";
+        public const string OpeningAccessibilitySettings = "Otwieram ustawienia dostępności Androida.";
+        public const string NotSet = "Nie ustawiono";
+        public const string NoMeasurement = "Brak pomiaru";
+        public const string SettingsReadFailed = "Nie można jeszcze odczytać ustawień: {0}";
+        public const string OpenGoogleCloudPageFailed = "Nie można otworzyć strony Google Cloud: {0}";
+        public const string OpenPikslovoPageFailed = "Nie można otworzyć strony Pikslovo: {0}";
+        public const string OpenSupportPageFailed = "Nie można otworzyć strony wsparcia: {0}";
+        public const string ApiKeyNoAccess = "Klucz nie ma dostępu do {0}. Sprawdź poprawność klucza oraz czy to API jest włączone w projekcie Google Cloud.";
+        public const string ApiKeyCheckFailed = "Nie udało się sprawdzić dostępu do {0}. Usługa Google zwróciła błąd {1}.";
+        public const string StartScreenCaptureFailed = "Nie można uruchomić przechwytywania ekranu: {0}";
+        public const string ExportDiagnosticsFailed = "Nie można wyeksportować dziennika diagnostycznego: {0}";
+        public const string ExportSettingsFailed = "Nie można wyeksportować ustawień: {0}";
+        public const string ImportSettingsFailed = "Nie można zaimportować ustawień: {0}";
+        public const string OpenFilePickerFailed = "Nie można otworzyć wyboru pliku: {0}";
+        public const string RestoreSettingsFailed = "Nie można przywrócić ustawień: {0}";
+        public const string OpenOverlaySettingsFailed = "Nie można otworzyć ustawień nakładki: {0}";
+        public const string RequestNotificationPermissionFailed = "Nie można poprosić o uprawnienie powiadomień: {0}";
+        public const string OpenAccessibilitySettingsFailed = "Nie można otworzyć ustawień dostępności: {0}";
+        public const string DiagnosticsReportTitle = "Pikslovo - raport diagnostyczny";
+        public const string DiagnosticsGeneratedAtUtc = "Wygenerowano (UTC): {0}";
+        public const string DiagnosticsApplication = "Aplikacja: {0}";
+        public const string DiagnosticsDevice = "Urządzenie: {0}";
+        public const string DiagnosticsActiveSession = "Aktywna sesja tłumacza: {0}";
+        public const string DiagnosticsOverlayPermission = "Uprawnienie nakładki: {0}";
+        public const string DiagnosticsNotificationPermission = "Uprawnienie powiadomień: {0}";
+        public const string DiagnosticsLatestMeasurements = "Ostatnie pomiary:";
+        public const string CapturePlusEncoding = "Przechwycenie + kodowanie";
+        public const string OcrImageEncoding = "Kodowanie obrazu OCR";
+        public const string TotalTranslation = "Całość tłumaczenia";
+        public const string ApiKeyValidation = "Sprawdzenie klucza API";
+        public const string ThemeSystem = "System";
+        public const string ThemeDark = "Ciemny";
+        public const string ThemeLight = "Jasny";
+        public const string AccentCoral = "Koralowy";
+        public const string AccentAmber = "Bursztynowy";
+        public const string AccentLime = "Limonkowy";
+        public const string AccentMint = "Miętowy";
+        public const string AccentTeal = "Morski";
+        public const string AccentAqua = "Aqua";
+        public const string AccentSky = "Błękitny";
+        public const string AccentSteel = "Stalowy";
+        public const string AccentOrchid = "Orchidea";
+        public const string AccentRose = "Różowy";
+        public const string AccentLavender = "Lawendowy";
+        public const string LanguageJapanese = "Japoński";
+        public const string LanguageEnglish = "Angielski";
+        public const string LanguageKorean = "Koreański";
+        public const string LanguageChineseSimplified = "Chiński (uproszczony)";
+        public const string LanguageGerman = "Niemiecki";
+        public const string LanguageSpanish = "Hiszpański";
+        public const string LanguagePolish = "Polski";
+        public const string UserOcrSettings = "Ustawienia OCR użytkownika:";
+        public const string OcrConfidence = "Pewność OCR: {0}";
+        public const string OcrImageScale = "Skala obrazu OCR: {0}";
+        public const string DialogGroupingStrength = "Siła łączenia dialogów: {0}";
+        public const string FontScale = "Skalowanie czcionki: {0}";
+        public const string HideIdenticalTranslations = "Ukrywaj identyczne tłumaczenia: {0}";
+        public const string OcrImageEncodingFormat = "Kodowanie obrazu OCR: {0}";
+        public const string NoData = "brak danych";
+        public const string Yes = "tak";
+        public const string No = "nie";
+        public const string FillApiKeyAndLanguages = "Uzupełnij klucz API oraz oba języki przed uruchomieniem tłumaczenia.";
+        public const string GoogleTranslationIncomplete = "Google Translation zwróciło niepełną odpowiedź.";
+        public const string CloudTranslationRejected = "Cloud Translation API odrzuciło zadanie ({0} {1}): {2}";
+        public const string CloudTranslationIncomplete = "Cloud Translation API zwróciło niepełną odpowiedź.";
+        public const string CloudVisionRejected = "Cloud Vision API odrzuciło zrzut ({0} {1}): {2}";
+        public const string CloudVisionError = "Cloud Vision API: {0}";
+        public const string UnknownOcrError = "Nieznany błąd OCR.";
+        public const string CannotSaveSelectedFile = "Nie można zapisać wybranego pliku.";
+        public const string CannotReadSelectedFile = "Nie można odczytać wybranego pliku.";
+        public const string ShareDiagnostics = "Udostępnij dziennik diagnostyczny";
+        public const string CannotOpenSharePanel = "Nie można otworzyć panelu udostępniania.";
+        public const string CouldNotStartSession = "Nie udało się uruchomić sesji: {0}";
+        public const string CannotReadScreenSize = "Nie można odczytać rozmiaru ekranu.";
+        public const string CouldNotEncodeOcrImage = "Nie udało się zakodować obrazu OCR.";
+        public const string ActiveTranslatorSession = "Aktywna sesja tłumacza";
+        public const string PikslovoIsActive = "Pikslovo jest aktywne";
+        public const string HotkeyAndFloatingButtonReady = "Hotkey i przycisk pływający są gotowe.";
+        public const string Stop = "Zatrzymaj";
+        public const string HoldKeysForTwoSeconds = "Przytrzymaj klawisz(e) przez 2 sekundy";
+        public const string SetShortcut = "Ustaw skrót";
+        public const string TranslateScreen = "Tłumacz ekran";
+        public const string EditCaptureRegion = "Edytuj obszar przechwytywania";
+        public const string StopTranslator = "Zatrzymaj tłumacza";
+        public const string TranslationInProgress = "Tłumaczenie w toku";
+        public const string ReturnToGame = "Wróć do gry";
+        public const string DragDialogRegionCorners = "Przeciągnij narożniki obszaru dialogu";
+        public const string SaveRegion = "Zapisz obszar";
+        public const string CancelRegionSelection = "Anuluj wybór obszaru";
+        public const string ConfigurationFileMissing = "Plik nie zawiera konfiguracji.";
+        public const string UnsupportedConfigurationVersion = "Ten plik konfiguracji pochodzi z nieobsługiwanej wersji aplikacji.";
+        public const string IncompleteConfigurationFile = "Plik konfiguracji jest niekompletny.";
+        public const string InvalidOcrOrOverlaySettings = "Plik zawiera nieprawidłowe ustawienia OCR lub nakładki.";
+        public const string InvalidFloatingButtonSettings = "Plik zawiera nieprawidłowe ustawienia przycisku pływającego.";
+        public const string InvalidCaptureRegion = "Plik zawiera nieprawidłowy obszar przechwytywania.";
+        public const string CannotSaveAppConfigurationState = "Nie można zapisać stanu konfiguracji aplikacji.";
+        public const string CannotSaveAppSettings = "Nie można zapisać ustawień aplikacji.";
+        public const string KeystoreMissingInitializationVector = "Android Keystore nie zwrócił wektora inicjalizacyjnego.";
+        public const string KeystoreDidNotEncryptApiKey = "Android Keystore nie zaszyfrował klucza API.";
+        public const string CannotReadKeystoreKey = "Nie można odczytać klucza Android Keystore.";
+        public const string ScreenCaptureConsentExpired = "Zgoda na nagrywanie ekranu wygasła. Uruchom tłumacza ponownie i zaakceptuj nowy monit.";
+        public const string ScreenCaptureConsentDenied = "Nie udzielono zgody na przechwytywanie ekranu.";
+        public const string ScreenCaptureStartFailed = "Nie udało się uruchomić przechwytywania ekranu.";
+        public const string TranslatorIsActive = "Tłumacz jest aktywny.";
+        public const string DialogRegionSaved = "Obszar dialogu zapisany.";
+        public const string GrantOverlayPermission = "Przyznaj uprawnienie do wyświetlania nad innymi aplikacjami.";
+        public const string ScreenFrameCaptureFailed = "Nie udało się pobrać klatki ekranu.";
+        public const string NoTextFoundOnScreen = "Nie znaleziono tekstu na ekranie.";
+    }
+
     private static AppLanguageMode _languageMode = AppLanguageMode.System;
 
     private static readonly IReadOnlyDictionary<string, string> English = new Dictionary<string, string>
@@ -237,6 +378,10 @@ public static class AppStrings
         ["Pikslovo jest aktywne"] = "Pikslovo is active",
         ["Hotkey i przycisk pływający są gotowe."] = "The hotkey and floating button are ready.",
         ["Zatrzymaj"] = "Stop",
+        ["Zgoda na nagrywanie ekranu wygasła. Uruchom tłumacza ponownie i zaakceptuj nowy monit."] = "Screen recording consent expired. Restart the translator and accept the new prompt.",
+        ["Nie udzielono zgody na przechwytywanie ekranu."] = "Screen capture permission was not granted.",
+        ["Nie udało się uruchomić przechwytywania ekranu."] = "Could not start screen capture.",
+        ["Tłumacz jest aktywny."] = "Translator is active.",
     };
 
     public static AppLanguageMode LanguageMode => _languageMode;
@@ -255,6 +400,41 @@ public static class AppStrings
 
     public static string Format(string value, params object?[] arguments) =>
         string.Format(CultureInfo.CurrentCulture, Get(value), arguments);
+
+    public static string GetThemeModeLabel(AppThemeMode mode) => Get(mode switch
+    {
+        AppThemeMode.Dark => Keys.ThemeDark,
+        AppThemeMode.Light => Keys.ThemeLight,
+        _ => Keys.ThemeSystem
+    });
+
+    public static string GetAccentLabel(AppAccent accent) => Get(accent switch
+    {
+        AppAccent.Coral => Keys.AccentCoral,
+        AppAccent.Amber => Keys.AccentAmber,
+        AppAccent.Lime => Keys.AccentLime,
+        AppAccent.Mint => Keys.AccentMint,
+        AppAccent.Teal => Keys.AccentTeal,
+        AppAccent.Aqua => Keys.AccentAqua,
+        AppAccent.Sky => Keys.AccentSky,
+        AppAccent.Steel => Keys.AccentSteel,
+        AppAccent.Orchid => Keys.AccentOrchid,
+        AppAccent.Rose => Keys.AccentRose,
+        _ => Keys.AccentLavender
+    });
+
+    public static string GetLanguageName(string languageCode) => Get(languageCode switch
+    {
+        "ja" => Keys.LanguageJapanese,
+        "en" => Keys.LanguageEnglish,
+        "ko" => Keys.LanguageKorean,
+        "zh" => Keys.LanguageChineseSimplified,
+        "de" => Keys.LanguageGerman,
+        "es" => Keys.LanguageSpanish,
+        _ => Keys.LanguagePolish
+    });
+
+    public static string GetBooleanLabel(bool value) => Get(value ? Keys.Yes : Keys.No);
 
     private static bool UsesPolish => _languageMode switch
     {

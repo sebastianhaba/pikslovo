@@ -104,7 +104,7 @@ internal static class AndroidSettingsStore
 
     public static void CompleteOnboarding(Context context)
     {
-        using var editor = GetPreferences(context).Edit() ?? throw new InvalidOperationException(AppStrings.Get("Nie można zapisać stanu konfiguracji aplikacji."));
+        using var editor = GetPreferences(context).Edit() ?? throw new InvalidOperationException(AppStrings.Get(AppStrings.Keys.CannotSaveAppConfigurationState));
         editor.PutBoolean(OnboardingCompletedName, true);
         editor.Apply();
     }
@@ -144,7 +144,7 @@ internal static class AndroidSettingsStore
 
     public static void Save(Context context, AndroidAppSettings settings)
     {
-        using var editor = GetPreferences(context).Edit() ?? throw new InvalidOperationException(AppStrings.Get("Nie można zapisać ustawień aplikacji."));
+        using var editor = GetPreferences(context).Edit() ?? throw new InvalidOperationException(AppStrings.Get(AppStrings.Keys.CannotSaveAppSettings));
         editor.PutString(ApiKeyName, Encrypt(settings.Translation.ApiKey));
         editor.PutString(SourceLanguageName, settings.Translation.SourceLanguage);
         editor.PutString(TargetLanguageName, settings.Translation.TargetLanguage);
@@ -228,8 +228,8 @@ internal static class AndroidSettingsStore
         var key = GetOrCreateKey();
         using var cipher = Cipher.GetInstance("AES/GCM/NoPadding")!;
         cipher.Init(CipherMode.EncryptMode, key);
-        var iv = cipher.GetIV() ?? throw new InvalidOperationException(AppStrings.Get("Android Keystore nie zwrócił wektora inicjalizacyjnego."));
-        var encrypted = cipher.DoFinal(Encoding.UTF8.GetBytes(plaintext)) ?? throw new InvalidOperationException(AppStrings.Get("Android Keystore nie zaszyfrował klucza API."));
+        var iv = cipher.GetIV() ?? throw new InvalidOperationException(AppStrings.Get(AppStrings.Keys.KeystoreMissingInitializationVector));
+        var encrypted = cipher.DoFinal(Encoding.UTF8.GetBytes(plaintext)) ?? throw new InvalidOperationException(AppStrings.Get(AppStrings.Keys.KeystoreDidNotEncryptApiKey));
         return $"{Convert.ToBase64String(iv)}:{Convert.ToBase64String(encrypted)}";
     }
 
@@ -270,7 +270,7 @@ internal static class AndroidSettingsStore
         if (keyStore.ContainsAlias(KeyAlias))
         {
             var entry = keyStore.GetEntry(KeyAlias, null) as KeyStore.SecretKeyEntry;
-            return entry?.SecretKey ?? throw new InvalidOperationException(AppStrings.Get("Nie można odczytać klucza Android Keystore."));
+            return entry?.SecretKey ?? throw new InvalidOperationException(AppStrings.Get(AppStrings.Keys.CannotReadKeystoreKey));
         }
 
         using var keyGenerator = KeyGenerator.GetInstance(KeyProperties.KeyAlgorithmAes, "AndroidKeyStore")!;

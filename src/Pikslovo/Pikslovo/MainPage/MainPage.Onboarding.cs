@@ -36,7 +36,8 @@ public sealed partial class MainPage
         }
 
         SelectLanguage(picker, selectedLanguage);
-        if (!await ShowEditorAsync(AppStrings.Get(isSource ? "Język źródłowy" : "Język docelowy"), picker))
+        var title = AppStrings.Get(isSource ? AppStrings.Keys.SourceLanguage : AppStrings.Keys.TargetLanguage);
+        if (!await ShowEditorAsync(title, picker))
         {
             return;
         }
@@ -77,7 +78,7 @@ public sealed partial class MainPage
             return;
         }
 #endif
-        ShowStatus("Aktywność Androida nie jest gotowa. Zamknij i otwórz aplikację ponownie.");
+        ShowStatus(AppStrings.Keys.AndroidActivityNotReady);
     }
 
     private void RequestOnboardingOverlayPermission()
@@ -129,7 +130,7 @@ public sealed partial class MainPage
             return;
         }
 
-        ShowStatus("Uprawnienie nie zostało przyznane. Możesz spróbować ponownie.");
+        ShowStatus(AppStrings.Keys.NotificationPermissionDenied);
     });
 #endif
 }

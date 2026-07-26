@@ -73,16 +73,61 @@
         <Setter Property="FontWeight" Value="SemiBold" />
         <Setter Property="Padding" Value="12,0" />
       </Style>
-      <Style x:Key="ThemeModeOptionBorder" TargetType="Border">
+      <Style x:Key="ThemeModeOptionBorder" TargetType="Button">
         <Setter Property="Background" Value="{ThemeResource AppSurfaceBrush}" />
         <Setter Property="BorderBrush" Value="{ThemeResource AppBorderBrush}" />
         <Setter Property="BorderThickness" Value="1" />
         <Setter Property="CornerRadius" Value="12" />
         <Setter Property="Padding" Value="4" />
+        <Setter Property="Foreground" Value="{ThemeResource AppTextBrush}" />
+        <Setter Property="HorizontalAlignment" Value="Stretch" />
+        <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+        <Setter Property="VerticalContentAlignment" Value="Stretch" />
+        <Setter Property="Template">
+          <Setter.Value>
+            <ControlTemplate TargetType="Button">
+              <Border Background="{TemplateBinding Background}"
+                      BorderBrush="{TemplateBinding BorderBrush}"
+                      BorderThickness="{TemplateBinding BorderThickness}"
+                      CornerRadius="{TemplateBinding CornerRadius}"
+                      Padding="{TemplateBinding Padding}">
+                <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                  VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
+                                  Content="{TemplateBinding Content}"
+                                  ContentTemplate="{TemplateBinding ContentTemplate}" />
+              </Border>
+            </ControlTemplate>
+          </Setter.Value>
+        </Setter>
       </Style>
-      <Style x:Key="SelectedThemeModeOptionBorder" TargetType="Border" BasedOn="{StaticResource ThemeModeOptionBorder}">
+      <Style x:Key="SelectedThemeModeOptionBorder" TargetType="Button" BasedOn="{StaticResource ThemeModeOptionBorder}">
         <Setter Property="BorderBrush" Value="{ThemeResource AppAccentBrush}" />
         <Setter Property="BorderThickness" Value="2" />
+      </Style>
+      <Style x:Key="AccentOptionButton" TargetType="Button">
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="Padding" Value="8" />
+        <Setter Property="CornerRadius" Value="24" />
+        <Setter Property="HorizontalAlignment" Value="Stretch" />
+        <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+        <Setter Property="VerticalContentAlignment" Value="Stretch" />
+        <Setter Property="Template">
+          <Setter.Value>
+            <ControlTemplate TargetType="Button">
+              <Border Background="{TemplateBinding Background}"
+                      BorderBrush="{TemplateBinding BorderBrush}"
+                      BorderThickness="{TemplateBinding BorderThickness}"
+                      CornerRadius="{TemplateBinding CornerRadius}"
+                      Padding="{TemplateBinding Padding}">
+                <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                  VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
+                                  Content="{TemplateBinding Content}"
+                                  ContentTemplate="{TemplateBinding ContentTemplate}" />
+              </Border>
+            </ControlTemplate>
+          </Setter.Value>
+        </Setter>
       </Style>
       <Style TargetType="TextBlock">
         <Setter Property="Foreground" Value="{ThemeResource AppTextBrush}" />
@@ -389,40 +434,40 @@
                 <TextBlock Text="Motyw" FontSize="16" FontWeight="SemiBold" />
                 <Grid ColumnSpacing="10">
                 <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="*" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
-                <Border x:Name="SystemThemeOption" Tag="System" Style="{StaticResource ThemeModeOptionBorder}" Tapped="ThemeModeOption_Tapped">
+                <Button x:Name="SystemThemeOption" Command="{Binding SelectThemeModeCommand}" CommandParameter="System" Style="{StaticResource ThemeModeOptionBorder}">
                   <Grid RowSpacing="6"><Grid.RowDefinitions><RowDefinition Height="52" /><RowDefinition Height="Auto" /></Grid.RowDefinitions><Border CornerRadius="8"><Border.Background><LinearGradientBrush StartPoint="0,0" EndPoint="1,1"><GradientStop Color="#1C1B1F" Offset="0" /><GradientStop Color="#1C1B1F" Offset="0.5" /><GradientStop Color="#FCFBFF" Offset="0.5" /><GradientStop Color="#FCFBFF" Offset="1" /></LinearGradientBrush></Border.Background><Grid><Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions><StackPanel Spacing="3" HorizontalAlignment="Center" VerticalAlignment="Center"><Border Width="18" Height="3" Background="#E6E1E5" CornerRadius="1.5" /><Border Width="28" Height="3" Opacity="0.45" Background="#E6E1E5" CornerRadius="1.5" /><Border Width="22" Height="3" Opacity="0.45" Background="#E6E1E5" CornerRadius="1.5" /></StackPanel><StackPanel Grid.Column="1" Spacing="3" HorizontalAlignment="Center" VerticalAlignment="Center"><Border Width="18" Height="3" Background="#1C1B1F" CornerRadius="1.5" /><Border Width="28" Height="3" Opacity="0.45" Background="#1C1B1F" CornerRadius="1.5" /><Border Width="22" Height="3" Opacity="0.45" Background="#1C1B1F" CornerRadius="1.5" /></StackPanel></Grid></Border><TextBlock Grid.Row="1" Text="System" FontSize="12" HorizontalAlignment="Center" /></Grid>
-                </Border>
-                <Border x:Name="DarkThemeOption" Grid.Column="1" Tag="Dark" Style="{StaticResource ThemeModeOptionBorder}" Tapped="ThemeModeOption_Tapped">
+                </Button>
+                <Button x:Name="DarkThemeOption" Grid.Column="1" Command="{Binding SelectThemeModeCommand}" CommandParameter="Dark" Style="{StaticResource ThemeModeOptionBorder}">
                   <Grid RowSpacing="6"><Grid.RowDefinitions><RowDefinition Height="52" /><RowDefinition Height="Auto" /></Grid.RowDefinitions><Border Background="{ThemeResource ThemePreviewDarkBrush}" CornerRadius="8" Padding="8"><StackPanel Spacing="4" VerticalAlignment="Center"><Border Width="28" Height="4" Background="{ThemeResource ThemePreviewDarkTextBrush}" CornerRadius="2" /><Border Width="44" Height="3" Opacity="0.45" Background="{ThemeResource ThemePreviewDarkTextBrush}" CornerRadius="2" /><Border Width="34" Height="3" Opacity="0.45" Background="{ThemeResource ThemePreviewDarkTextBrush}" CornerRadius="2" /></StackPanel></Border><TextBlock Grid.Row="1" Text="Ciemny" FontSize="12" HorizontalAlignment="Center" /></Grid>
-                </Border>
-                <Border x:Name="LightThemeOption" Grid.Column="2" Tag="Light" Style="{StaticResource ThemeModeOptionBorder}" Tapped="ThemeModeOption_Tapped">
+                </Button>
+                <Button x:Name="LightThemeOption" Grid.Column="2" Command="{Binding SelectThemeModeCommand}" CommandParameter="Light" Style="{StaticResource ThemeModeOptionBorder}">
                   <Grid RowSpacing="6"><Grid.RowDefinitions><RowDefinition Height="52" /><RowDefinition Height="Auto" /></Grid.RowDefinitions><Border Background="{ThemeResource ThemePreviewLightBrush}" CornerRadius="8" Padding="8"><StackPanel Spacing="4" VerticalAlignment="Center"><Border Width="28" Height="4" Background="{ThemeResource ThemePreviewLightTextBrush}" CornerRadius="2" /><Border Width="44" Height="3" Opacity="0.45" Background="{ThemeResource ThemePreviewLightTextBrush}" CornerRadius="2" /><Border Width="34" Height="3" Opacity="0.45" Background="{ThemeResource ThemePreviewLightTextBrush}" CornerRadius="2" /></StackPanel></Border><TextBlock Grid.Row="1" Text="Jasny" FontSize="12" HorizontalAlignment="Center" /></Grid>
-                </Border>
+                </Button>
                 </Grid>
                 <Border Height="1" Background="{ThemeResource AppBorderBrush}" />
                 <TextBlock Text="Akcent" FontSize="16" FontWeight="SemiBold" />
                 <ScrollViewer HorizontalScrollBarVisibility="Hidden" VerticalScrollBarVisibility="Disabled" HorizontalContentAlignment="Center">
                   <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Center">
-                    <Border x:Name="LavenderAccentOption" Tag="Lavender" Width="48" Height="48" Padding="8" BorderBrush="#C7BFFF" CornerRadius="24" Tapped="AccentOption_Tapped"><Border Background="#C7BFFF" CornerRadius="16" /></Border>
-                    <Border x:Name="CoralAccentOption" Tag="Coral" Width="48" Height="48" Padding="8" BorderBrush="#F08A6D" CornerRadius="24" Tapped="AccentOption_Tapped"><Border Background="#F08A6D" CornerRadius="16" /></Border>
-                    <Border x:Name="AmberAccentOption" Tag="Amber" Width="48" Height="48" Padding="8" BorderBrush="#E4B24A" CornerRadius="24" Tapped="AccentOption_Tapped"><Border Background="#E4B24A" CornerRadius="16" /></Border>
-                    <Border x:Name="LimeAccentOption" Tag="Lime" Width="48" Height="48" Padding="8" BorderBrush="#AACF5B" CornerRadius="24" Tapped="AccentOption_Tapped"><Border Background="#AACF5B" CornerRadius="16" /></Border>
-                    <Border x:Name="MintAccentOption" Tag="Mint" Width="48" Height="48" Padding="8" BorderBrush="#67D39A" CornerRadius="24" Tapped="AccentOption_Tapped"><Border Background="#67D39A" CornerRadius="16" /></Border>
-                    <Border x:Name="TealAccentOption" Tag="Teal" Width="48" Height="48" Padding="8" BorderBrush="#4DD0C2" CornerRadius="24" Tapped="AccentOption_Tapped"><Border Background="#4DD0C2" CornerRadius="16" /></Border>
-                    <Border x:Name="AquaAccentOption" Tag="Aqua" Width="48" Height="48" Padding="8" BorderBrush="#00BCD4" CornerRadius="24" Tapped="AccentOption_Tapped"><Border Background="#00BCD4" CornerRadius="16" /></Border>
-                    <Border x:Name="SkyAccentOption" Tag="Sky" Width="48" Height="48" Padding="8" BorderBrush="#6BB6E8" CornerRadius="24" Tapped="AccentOption_Tapped"><Border Background="#6BB6E8" CornerRadius="16" /></Border>
-                    <Border x:Name="SteelAccentOption" Tag="Steel" Width="48" Height="48" Padding="8" BorderBrush="#8AA4B6" CornerRadius="24" Tapped="AccentOption_Tapped"><Border Background="#8AA4B6" CornerRadius="16" /></Border>
-                    <Border x:Name="OrchidAccentOption" Tag="Orchid" Width="48" Height="48" Padding="8" BorderBrush="#D184D8" CornerRadius="24" Tapped="AccentOption_Tapped"><Border Background="#D184D8" CornerRadius="16" /></Border>
-                    <Border x:Name="RoseAccentOption" Tag="Rose" Width="48" Height="48" Padding="8" BorderBrush="#EC7A9E" CornerRadius="24" Tapped="AccentOption_Tapped"><Border Background="#EC7A9E" CornerRadius="16" /></Border>
+                    <Button x:Name="LavenderAccentOption" Command="{Binding SelectAccentCommand}" CommandParameter="Lavender" Style="{StaticResource AccentOptionButton}" Width="48" Height="48" BorderBrush="#C7BFFF"><Border Background="#C7BFFF" CornerRadius="16" /></Button>
+                    <Button x:Name="CoralAccentOption" Command="{Binding SelectAccentCommand}" CommandParameter="Coral" Style="{StaticResource AccentOptionButton}" Width="48" Height="48" BorderBrush="#F08A6D"><Border Background="#F08A6D" CornerRadius="16" /></Button>
+                    <Button x:Name="AmberAccentOption" Command="{Binding SelectAccentCommand}" CommandParameter="Amber" Style="{StaticResource AccentOptionButton}" Width="48" Height="48" BorderBrush="#E4B24A"><Border Background="#E4B24A" CornerRadius="16" /></Button>
+                    <Button x:Name="LimeAccentOption" Command="{Binding SelectAccentCommand}" CommandParameter="Lime" Style="{StaticResource AccentOptionButton}" Width="48" Height="48" BorderBrush="#AACF5B"><Border Background="#AACF5B" CornerRadius="16" /></Button>
+                    <Button x:Name="MintAccentOption" Command="{Binding SelectAccentCommand}" CommandParameter="Mint" Style="{StaticResource AccentOptionButton}" Width="48" Height="48" BorderBrush="#67D39A"><Border Background="#67D39A" CornerRadius="16" /></Button>
+                    <Button x:Name="TealAccentOption" Command="{Binding SelectAccentCommand}" CommandParameter="Teal" Style="{StaticResource AccentOptionButton}" Width="48" Height="48" BorderBrush="#4DD0C2"><Border Background="#4DD0C2" CornerRadius="16" /></Button>
+                    <Button x:Name="AquaAccentOption" Command="{Binding SelectAccentCommand}" CommandParameter="Aqua" Style="{StaticResource AccentOptionButton}" Width="48" Height="48" BorderBrush="#00BCD4"><Border Background="#00BCD4" CornerRadius="16" /></Button>
+                    <Button x:Name="SkyAccentOption" Command="{Binding SelectAccentCommand}" CommandParameter="Sky" Style="{StaticResource AccentOptionButton}" Width="48" Height="48" BorderBrush="#6BB6E8"><Border Background="#6BB6E8" CornerRadius="16" /></Button>
+                    <Button x:Name="SteelAccentOption" Command="{Binding SelectAccentCommand}" CommandParameter="Steel" Style="{StaticResource AccentOptionButton}" Width="48" Height="48" BorderBrush="#8AA4B6"><Border Background="#8AA4B6" CornerRadius="16" /></Button>
+                    <Button x:Name="OrchidAccentOption" Command="{Binding SelectAccentCommand}" CommandParameter="Orchid" Style="{StaticResource AccentOptionButton}" Width="48" Height="48" BorderBrush="#D184D8"><Border Background="#D184D8" CornerRadius="16" /></Button>
+                    <Button x:Name="RoseAccentOption" Command="{Binding SelectAccentCommand}" CommandParameter="Rose" Style="{StaticResource AccentOptionButton}" Width="48" Height="48" BorderBrush="#EC7A9E"><Border Background="#EC7A9E" CornerRadius="16" /></Button>
                   </StackPanel>
                 </ScrollViewer>
                 <Border Height="1" Background="{ThemeResource AppBorderBrush}" />
                 <TextBlock Text="Język aplikacji" FontSize="16" FontWeight="SemiBold" />
                 <Grid ColumnSpacing="10">
                   <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="*" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
-                  <Border x:Name="SystemLanguageOption" Tag="System" Style="{StaticResource ThemeModeOptionBorder}" Tapped="ApplicationLanguageOption_Tapped" Padding="8"><TextBlock Text="System" HorizontalAlignment="Center" /></Border>
-                  <Border x:Name="EnglishLanguageOption" Grid.Column="1" Tag="English" Style="{StaticResource ThemeModeOptionBorder}" Tapped="ApplicationLanguageOption_Tapped" Padding="8"><TextBlock Text="English" HorizontalAlignment="Center" /></Border>
-                  <Border x:Name="PolishLanguageOption" Grid.Column="2" Tag="Polish" Style="{StaticResource ThemeModeOptionBorder}" Tapped="ApplicationLanguageOption_Tapped" Padding="8"><TextBlock Text="Polski" HorizontalAlignment="Center" /></Border>
+                  <Button x:Name="SystemLanguageOption" Command="{Binding SelectApplicationLanguageCommand}" CommandParameter="System" Style="{StaticResource ThemeModeOptionBorder}" Padding="8"><TextBlock Text="System" HorizontalAlignment="Center" /></Button>
+                  <Button x:Name="EnglishLanguageOption" Grid.Column="1" Command="{Binding SelectApplicationLanguageCommand}" CommandParameter="English" Style="{StaticResource ThemeModeOptionBorder}" Padding="8"><TextBlock Text="English" HorizontalAlignment="Center" /></Button>
+                  <Button x:Name="PolishLanguageOption" Grid.Column="2" Command="{Binding SelectApplicationLanguageCommand}" CommandParameter="Polish" Style="{StaticResource ThemeModeOptionBorder}" Padding="8"><TextBlock Text="Polski" HorizontalAlignment="Center" /></Button>
                 </Grid>
               </StackPanel>
             </Border>

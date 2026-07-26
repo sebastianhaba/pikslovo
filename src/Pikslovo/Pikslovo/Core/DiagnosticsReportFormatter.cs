@@ -29,32 +29,32 @@ public static class DiagnosticsReportFormatter
         DiagnosticsReportOcrSettings? ocrSettings = null)
     {
         var report = new StringBuilder();
-        report.AppendLine(AppStrings.Get("Pikslovo - raport diagnostyczny"));
-        report.AppendLine(AppStrings.Format("Wygenerowano (UTC): {0}", metadata.GeneratedAtUtc.ToString("O", CultureInfo.InvariantCulture)));
-        report.AppendLine(AppStrings.Format("Aplikacja: {0}", metadata.ApplicationVersion));
-        report.AppendLine(AppStrings.Format("Urządzenie: {0}", metadata.Device));
+        report.AppendLine(AppStrings.Get(AppStrings.Keys.DiagnosticsReportTitle));
+        report.AppendLine(AppStrings.Format(AppStrings.Keys.DiagnosticsGeneratedAtUtc, metadata.GeneratedAtUtc.ToString("O", CultureInfo.InvariantCulture)));
+        report.AppendLine(AppStrings.Format(AppStrings.Keys.DiagnosticsApplication, metadata.ApplicationVersion));
+        report.AppendLine(AppStrings.Format(AppStrings.Keys.DiagnosticsDevice, metadata.Device));
         report.AppendLine($"Android: {metadata.AndroidVersion}");
-        report.AppendLine(AppStrings.Format("Aktywna sesja tłumacza: {0}", FormatBoolean(metadata.IsSessionActive)));
-        report.AppendLine(AppStrings.Format("Uprawnienie nakładki: {0}", FormatBoolean(metadata.IsOverlayPermissionGranted)));
-        report.AppendLine(AppStrings.Format("Uprawnienie powiadomień: {0}", FormatBoolean(metadata.IsNotificationPermissionGranted)));
+        report.AppendLine(AppStrings.Format(AppStrings.Keys.DiagnosticsActiveSession, FormatBoolean(metadata.IsSessionActive)));
+        report.AppendLine(AppStrings.Format(AppStrings.Keys.DiagnosticsOverlayPermission, FormatBoolean(metadata.IsOverlayPermissionGranted)));
+        report.AppendLine(AppStrings.Format(AppStrings.Keys.DiagnosticsNotificationPermission, FormatBoolean(metadata.IsNotificationPermissionGranted)));
         report.AppendLine();
-        report.AppendLine(AppStrings.Get("Ostatnie pomiary:"));
-        AppendDuration(report, AppStrings.Get("Przechwycenie + kodowanie"), diagnostics.CaptureAndImageEncodingMilliseconds);
-        AppendDuration(report, AppStrings.Get("Kodowanie obrazu OCR"), diagnostics.OcrImageEncodingMilliseconds);
+        report.AppendLine(AppStrings.Get(AppStrings.Keys.DiagnosticsLatestMeasurements));
+        AppendDuration(report, AppStrings.Get(AppStrings.Keys.CapturePlusEncoding), diagnostics.CaptureAndImageEncodingMilliseconds);
+        AppendDuration(report, AppStrings.Get(AppStrings.Keys.OcrImageEncoding), diagnostics.OcrImageEncodingMilliseconds);
         AppendDuration(report, "Cloud Vision OCR", diagnostics.CloudVisionOcrMilliseconds);
         AppendDuration(report, "Cloud Translation", diagnostics.CloudTranslationMilliseconds);
-        AppendDuration(report, AppStrings.Get("Całość tłumaczenia"), diagnostics.TranslationTotalMilliseconds);
-        AppendDuration(report, AppStrings.Get("Sprawdzenie klucza API"), diagnostics.ApiKeyValidationMilliseconds);
+        AppendDuration(report, AppStrings.Get(AppStrings.Keys.TotalTranslation), diagnostics.TranslationTotalMilliseconds);
+        AppendDuration(report, AppStrings.Get(AppStrings.Keys.ApiKeyValidation), diagnostics.ApiKeyValidationMilliseconds);
         if (ocrSettings is not null)
         {
             report.AppendLine();
-            report.AppendLine(AppStrings.Get("Ustawienia OCR użytkownika:"));
-            report.AppendLine(AppStrings.Format("Pewność OCR: {0}", FormatFloat(ocrSettings.RecognitionConfidence)));
-            report.AppendLine(AppStrings.Format("Skala obrazu OCR: {0}", FormatScale(ocrSettings.OcrImageScale)));
-            report.AppendLine(AppStrings.Format("Siła łączenia dialogów: {0}", FormatFloat(ocrSettings.GroupingPower)));
-            report.AppendLine(AppStrings.Format("Skalowanie czcionki: {0}", FormatScale(ocrSettings.FontScale)));
-            report.AppendLine(AppStrings.Format("Ukrywaj identyczne tłumaczenia: {0}", FormatBoolean(ocrSettings.HideIdenticalTranslations)));
-            report.AppendLine(AppStrings.Format("Kodowanie obrazu OCR: {0}", FormatImageEncoding(ocrSettings)));
+            report.AppendLine(AppStrings.Get(AppStrings.Keys.UserOcrSettings));
+            report.AppendLine(AppStrings.Format(AppStrings.Keys.OcrConfidence, FormatFloat(ocrSettings.RecognitionConfidence)));
+            report.AppendLine(AppStrings.Format(AppStrings.Keys.OcrImageScale, FormatScale(ocrSettings.OcrImageScale)));
+            report.AppendLine(AppStrings.Format(AppStrings.Keys.DialogGroupingStrength, FormatFloat(ocrSettings.GroupingPower)));
+            report.AppendLine(AppStrings.Format(AppStrings.Keys.FontScale, FormatScale(ocrSettings.FontScale)));
+            report.AppendLine(AppStrings.Format(AppStrings.Keys.HideIdenticalTranslations, FormatBoolean(ocrSettings.HideIdenticalTranslations)));
+            report.AppendLine(AppStrings.Format(AppStrings.Keys.OcrImageEncodingFormat, FormatImageEncoding(ocrSettings)));
         }
 
         return report.ToString();
@@ -65,7 +65,7 @@ public static class DiagnosticsReportFormatter
             .Append(": ")
             .Append(milliseconds is { } value
                 ? string.Format(CultureInfo.InvariantCulture, "{0} ms", value)
-                : AppStrings.Get("brak danych"))
+                : AppStrings.Get(AppStrings.Keys.NoData))
             .AppendLine();
 
     private static string FormatFloat(float value) => value.ToString("0.##", CultureInfo.InvariantCulture);
@@ -77,5 +77,5 @@ public static class DiagnosticsReportFormatter
             ? string.Format(CultureInfo.InvariantCulture, "JPEG {0}%", settings.OcrJpegQuality)
             : "PNG";
 
-    private static string FormatBoolean(bool value) => AppStrings.Get(value ? "tak" : "nie");
+    private static string FormatBoolean(bool value) => AppStrings.GetBooleanLabel(value);
 }

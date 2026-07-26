@@ -40,8 +40,8 @@ internal static class DiagnosticsReportWriter
         intent.SetType("text/plain");
         intent.PutExtra(Intent.ExtraStream, reportUri);
         intent.AddFlags(ActivityFlags.GrantReadUriPermission);
-        var chooser = Intent.CreateChooser(intent, AppStrings.Get("Udostępnij dziennik diagnostyczny"))
-            ?? throw new InvalidOperationException(AppStrings.Get("Nie można otworzyć panelu udostępniania."));
+        var chooser = Intent.CreateChooser(intent, AppStrings.Get(AppStrings.Keys.ShareDiagnostics))
+            ?? throw new InvalidOperationException(AppStrings.Get(AppStrings.Keys.CannotOpenSharePanel));
         chooser.AddFlags(ActivityFlags.GrantReadUriPermission);
         activity.StartActivity(chooser);
     }

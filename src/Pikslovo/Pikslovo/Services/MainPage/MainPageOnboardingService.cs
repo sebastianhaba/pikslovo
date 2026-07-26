@@ -12,23 +12,15 @@ internal sealed class MainPageOnboardingService
 
     public (string Code, string Label)[] GetLanguageOptions(bool isSource) =>
         isSource
-            ? [("ja", "Japoński"), ("en", "Angielski"), ("ko", "Koreański"), ("zh", "Chiński (uproszczony)"), ("de", "Niemiecki")]
-            : [("pl", "Polski"), ("en", "Angielski"), ("de", "Niemiecki"), ("es", "Hiszpański")];
-
-    public string GetLanguageName(string language) => AppStrings.Get(language switch
-    {
-        "ja" => "Japoński",
-        "en" => "Angielski",
-        "ko" => "Koreański",
-        "zh" => "Chiński (uproszczony)",
-        "de" => "Niemiecki",
-        "es" => "Hiszpański",
-        _ => "Polski"
-    });
+            ? GetLanguageOptions("ja", "en", "ko", "zh", "de")
+            : GetLanguageOptions("pl", "en", "de", "es");
 
     private static string GetSystemTargetLanguage()
     {
         var language = CultureInfo.CurrentUICulture.TwoLetterISOLanguageName;
         return language is "pl" or "en" or "de" or "es" ? language : "pl";
     }
+
+    private static (string Code, string Label)[] GetLanguageOptions(params string[] languageCodes) =>
+        languageCodes.Select(code => (code, AppStrings.GetLanguageName(code))).ToArray();
 }

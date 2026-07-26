@@ -26,7 +26,7 @@ public sealed class MainPageViewModel : INotifyPropertyChanged
     private bool _useJpegForOcr = TranslationSettings.DefaultUseJpegForOcr;
     private int _ocrJpegQuality = TranslationSettings.DefaultOcrJpegQuality;
     private int[] _hotkeyCodes = [];
-    private string _hotkeyCodesSummary = AppStrings.Get("Nie ustawiono");
+    private string _hotkeyCodesSummary = AppStrings.Get(AppStrings.Keys.NotSet);
     private bool _globalHotkeyEnabled;
     private AppThemeMode _themeMode = AppThemeMode.System;
     private AppAccent _accent = AppAccent.Lavender;
@@ -37,12 +37,12 @@ public sealed class MainPageViewModel : INotifyPropertyChanged
     private float _floatingButtonVerticalPosition = 0.1f;
     private string _onboardingSourceLanguage = "ja";
     private string _onboardingTargetLanguage = "pl";
-    private string _captureAndImageEncodingDuration = AppStrings.Get("Brak pomiaru");
-    private string _ocrImageEncodingDuration = AppStrings.Get("Brak pomiaru");
-    private string _cloudVisionOcrDuration = AppStrings.Get("Brak pomiaru");
-    private string _cloudTranslationDuration = AppStrings.Get("Brak pomiaru");
-    private string _translationTotalDuration = AppStrings.Get("Brak pomiaru");
-    private string _apiKeyValidationDuration = AppStrings.Get("Brak pomiaru");
+    private string _captureAndImageEncodingDuration = AppStrings.Get(AppStrings.Keys.NoMeasurement);
+    private string _ocrImageEncodingDuration = AppStrings.Get(AppStrings.Keys.NoMeasurement);
+    private string _cloudVisionOcrDuration = AppStrings.Get(AppStrings.Keys.NoMeasurement);
+    private string _cloudTranslationDuration = AppStrings.Get(AppStrings.Keys.NoMeasurement);
+    private string _translationTotalDuration = AppStrings.Get(AppStrings.Keys.NoMeasurement);
+    private string _apiKeyValidationDuration = AppStrings.Get(AppStrings.Keys.NoMeasurement);
 
     public event PropertyChangedEventHandler? PropertyChanged;
 
@@ -79,6 +79,12 @@ public sealed class MainPageViewModel : INotifyPropertyChanged
     public ICommand RequestNotificationPermissionCommand { get; set; } = NoOpCommand;
 
     public ICommand TestApiKeyCommand { get; set; } = NoOpCommand;
+
+    public ICommand SelectThemeModeCommand { get; set; } = NoOpStringCommand;
+
+    public ICommand SelectAccentCommand { get; set; } = NoOpStringCommand;
+
+    public ICommand SelectApplicationLanguageCommand { get; set; } = NoOpStringCommand;
 
     public ICommand EditOnboardingSourceLanguageCommand { get; set; } = NoOpCommand;
 
@@ -363,9 +369,9 @@ public sealed class MainPageViewModel : INotifyPropertyChanged
         }
     }
 
-    public string SourceLanguageSummary => GetLanguageName(SourceLanguage);
+    public string SourceLanguageSummary => AppStrings.GetLanguageName(SourceLanguage);
 
-    public string TargetLanguageSummary => GetLanguageName(TargetLanguage);
+    public string TargetLanguageSummary => AppStrings.GetLanguageName(TargetLanguage);
 
     public string RecognitionConfidenceDisplay => RecognitionConfidence.ToString("0.0", CultureInfo.CurrentCulture);
 
@@ -394,11 +400,11 @@ public sealed class MainPageViewModel : INotifyPropertyChanged
                 ? "W aktywnej sesji jest ukryty, gdy globalny hotkey jest włączony."
                 : "W aktywnej sesji jest widoczny, ponieważ globalny hotkey jest wyłączony.";
 
-    public string ThemeModeSummary => $"{GetThemeModeLabel(ThemeMode)} · {GetAccentLabel(Accent)}";
+    public string ThemeModeSummary => $"{AppStrings.GetThemeModeLabel(ThemeMode)} · {AppStrings.GetAccentLabel(Accent)}";
 
-    public string OnboardingSourceLanguageLabel => GetLanguageName(OnboardingSourceLanguage);
+    public string OnboardingSourceLanguageLabel => AppStrings.GetLanguageName(OnboardingSourceLanguage);
 
-    public string OnboardingTargetLanguageLabel => GetLanguageName(OnboardingTargetLanguage);
+    public string OnboardingTargetLanguageLabel => AppStrings.GetLanguageName(OnboardingTargetLanguage);
 
     public string CaptureAndImageEncodingDuration
     {
@@ -449,7 +455,7 @@ public sealed class MainPageViewModel : INotifyPropertyChanged
         UseJpegForOcr = TranslationSettings.DefaultUseJpegForOcr;
         OcrJpegQuality = TranslationSettings.DefaultOcrJpegQuality;
         HotkeyCodes = [];
-        HotkeyCodesSummary = AppStrings.Get("Nie ustawiono");
+        HotkeyCodesSummary = AppStrings.Get(AppStrings.Keys.NotSet);
         GlobalHotkeyEnabled = false;
         ThemeMode = AppThemeMode.System;
         Accent = AppAccent.Lavender;
@@ -549,44 +555,11 @@ public sealed class MainPageViewModel : INotifyPropertyChanged
             captureRegion);
 #endif
 
-    private static string GetThemeModeLabel(AppThemeMode mode) => AppStrings.Get(mode switch
-    {
-        AppThemeMode.Dark => "Ciemny",
-        AppThemeMode.Light => "Jasny",
-        _ => "System"
-    });
-
-    private static string GetAccentLabel(AppAccent accent) => AppStrings.Get(accent switch
-    {
-        AppAccent.Coral => "Koralowy",
-        AppAccent.Amber => "Bursztynowy",
-        AppAccent.Lime => "Limonkowy",
-        AppAccent.Mint => "Miętowy",
-        AppAccent.Teal => "Morski",
-        AppAccent.Aqua => "Aqua",
-        AppAccent.Sky => "Błękitny",
-        AppAccent.Steel => "Stalowy",
-        AppAccent.Orchid => "Orchidea",
-        AppAccent.Rose => "Różowy",
-        _ => "Lawendowy"
-    });
-
-    private static string GetLanguageName(string language) => AppStrings.Get(language switch
-    {
-        "ja" => "Japoński",
-        "en" => "Angielski",
-        "ko" => "Koreański",
-        "zh" => "Chiński (uproszczony)",
-        "de" => "Niemiecki",
-        "es" => "Hiszpański",
-        _ => "Polski"
-    });
-
     private static string FormatScale(float value) => $"{value.ToString("0.0", CultureInfo.CurrentCulture)}x";
 
     private static string FormatDuration(long? milliseconds) => milliseconds is { } value
         ? $"{value} ms"
-        : AppStrings.Get("Brak pomiaru");
+        : AppStrings.Get(AppStrings.Keys.NoMeasurement);
 
     private bool SetProperty<T>(ref T field, T value, [CallerMemberName] string? propertyName = null)
     {

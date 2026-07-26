@@ -69,7 +69,7 @@ internal sealed record SettingsProfile(
         var profile = await JsonSerializer.DeserializeAsync<SettingsProfile>(stream, JsonOptions, cancellationToken);
         if (profile is null)
         {
-            throw new InvalidDataException(AppStrings.Get("Plik nie zawiera konfiguracji."));
+            throw new InvalidDataException(AppStrings.Get(AppStrings.Keys.ConfigurationFileMissing));
         }
 
         profile.Validate();
@@ -105,12 +105,12 @@ internal sealed record SettingsProfile(
     {
         if (SchemaVersion != CurrentSchemaVersion)
         {
-            throw new InvalidDataException(AppStrings.Get("Ten plik konfiguracji pochodzi z nieobsługiwanej wersji aplikacji."));
+            throw new InvalidDataException(AppStrings.Get(AppStrings.Keys.UnsupportedConfigurationVersion));
         }
 
         if (Ocr is null || CaptureRegion is null || FloatingButton is null)
         {
-            throw new InvalidDataException(AppStrings.Get("Plik konfiguracji jest niekompletny."));
+            throw new InvalidDataException(AppStrings.Get(AppStrings.Keys.IncompleteConfigurationFile));
         }
 
         if (!IsInRange(Ocr.RecognitionConfidence, 0f, 1f) ||
@@ -119,14 +119,14 @@ internal sealed record SettingsProfile(
             !IsInRange(Ocr.FontScale, 1f, 3f) ||
             Ocr.JpegQuality is < TranslationSettings.MinimumOcrJpegQuality or > TranslationSettings.MaximumOcrJpegQuality)
         {
-            throw new InvalidDataException(AppStrings.Get("Plik zawiera nieprawidłowe ustawienia OCR lub nakładki."));
+            throw new InvalidDataException(AppStrings.Get(AppStrings.Keys.InvalidOcrOrOverlaySettings));
         }
 
         if (!IsInRange(FloatingButton.Scale, 0.5f, 2f) ||
             !IsInRange(FloatingButton.HorizontalPosition, 0f, 1f) ||
             !IsInRange(FloatingButton.VerticalPosition, 0f, 1f))
         {
-            throw new InvalidDataException(AppStrings.Get("Plik zawiera nieprawidłowe ustawienia przycisku pływającego."));
+            throw new InvalidDataException(AppStrings.Get(AppStrings.Keys.InvalidFloatingButtonSettings));
         }
 
         if (CaptureRegion.IsEnabled &&
@@ -137,7 +137,7 @@ internal sealed record SettingsProfile(
              CaptureRegion.Right - CaptureRegion.Left < 0.05f ||
              CaptureRegion.Bottom - CaptureRegion.Top < 0.05f))
         {
-            throw new InvalidDataException(AppStrings.Get("Plik zawiera nieprawidłowy obszar przechwytywania."));
+            throw new InvalidDataException(AppStrings.Get(AppStrings.Keys.InvalidCaptureRegion));
         }
     }
 

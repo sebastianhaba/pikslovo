@@ -18,12 +18,12 @@ public sealed partial class MainPage
             }
             catch (Exception exception)
             {
-                ShowStatus(AppStrings.Format("Nie można otworzyć ustawień nakładki: {0}", exception.Message));
+                ShowStatus(AppStrings.Format(AppStrings.Keys.OpenOverlaySettingsFailed, exception.Message));
             }
         }
         else
         {
-            ShowStatus("Aktywność Androida nie jest gotowa. Zamknij i otwórz aplikację ponownie.");
+            ShowStatus(AppStrings.Keys.AndroidActivityNotReady);
         }
 #endif
     }
@@ -40,12 +40,12 @@ public sealed partial class MainPage
             }
             catch (Exception exception)
             {
-                ShowStatus(AppStrings.Format("Nie można poprosić o uprawnienie powiadomień: {0}", exception.Message));
+                ShowStatus(AppStrings.Format(AppStrings.Keys.RequestNotificationPermissionFailed, exception.Message));
             }
         }
         else
         {
-            ShowStatus("Aktywność Androida nie jest gotowa. Zamknij i otwórz aplikację ponownie.");
+            ShowStatus(AppStrings.Keys.AndroidActivityNotReady);
         }
 #endif
     }
@@ -57,17 +57,17 @@ public sealed partial class MainPage
         {
             try
             {
-                ShowStatus("Otwieram ustawienia dostępności Androida.");
+                ShowStatus(AppStrings.Keys.OpeningAccessibilitySettings);
                 _permissionsService.OpenAccessibilitySettings(activity);
             }
             catch (Exception exception)
             {
-                ShowStatus(AppStrings.Format("Nie można otworzyć ustawień dostępności: {0}", exception.Message));
+                ShowStatus(AppStrings.Format(AppStrings.Keys.OpenAccessibilitySettingsFailed, exception.Message));
             }
         }
         else
         {
-            ShowStatus("Aktywność Androida nie jest gotowa. Zamknij i otwórz aplikację ponownie.");
+            ShowStatus(AppStrings.Keys.AndroidActivityNotReady);
         }
 #endif
     }

@@ -71,13 +71,13 @@ public sealed class TranslationForegroundService : Service
         }
         catch (Java.Lang.SecurityException)
         {
-            ShowMessage("Zgoda na nagrywanie ekranu wygasła. Uruchom tłumacza ponownie i zaakceptuj nowy monit.");
+            ShowMessage(AppStrings.Keys.ScreenCaptureConsentExpired);
             StopSession();
         }
         catch (Exception exception)
         {
             Android.Util.Log.Error("Pikslovo", exception.ToString());
-            ShowMessage(AppStrings.Format("Nie udało się uruchomić sesji: {0}", exception.Message));
+            ShowMessage(AppStrings.Format(AppStrings.Keys.CouldNotStartSession, exception.Message));
             StopSession();
         }
 
@@ -116,7 +116,7 @@ public sealed class TranslationForegroundService : Service
         }
         if (resultCode != Result.Ok || resultData is null)
         {
-            ShowMessage("Nie udzielono zgody na przechwytywanie ekranu.");
+            ShowMessage(AppStrings.Keys.ScreenCaptureConsentDenied);
             StopSession();
             return;
         }
@@ -125,7 +125,7 @@ public sealed class TranslationForegroundService : Service
         _mediaProjection = manager?.GetMediaProjection((int)resultCode, resultData);
         if (_mediaProjection is null)
         {
-            ShowMessage("Nie udało się uruchomić przechwytywania ekranu.");
+            ShowMessage(AppStrings.Keys.ScreenCaptureStartFailed);
             StopSession();
             return;
         }
@@ -137,7 +137,7 @@ public sealed class TranslationForegroundService : Service
         IsSessionActive = true;
         UpdateFloatingTriggerVisibility();
         AndroidTranslationHost.NotifySessionStateChanged();
-        ShowMessage("Tłumacz jest aktywny.");
+        ShowMessage(AppStrings.Keys.TranslatorIsActive);
     }
 
     private void CreateCaptureSurface()
@@ -149,7 +149,7 @@ public sealed class TranslationForegroundService : Service
         var density = Resources?.Configuration?.DensityDpi ?? 0;
         if (width <= 0 || height <= 0 || density <= 0 || _mediaProjection is null)
         {
-            throw new InvalidOperationException(AppStrings.Get("Nie można odczytać rozmiaru ekranu."));
+            throw new InvalidOperationException(AppStrings.Get(AppStrings.Keys.CannotReadScreenSize));
         }
 
         // ImageFormat.RGBA_8888 is represented as value 1 by the Android API.
@@ -218,7 +218,7 @@ public sealed class TranslationForegroundService : Service
     {
         var settings = AndroidSettingsStore.Load(this);
         AndroidSettingsStore.Save(this, settings with { CaptureRegion = region.Normalize() });
-        ShowMessage("Obszar dialogu zapisany.");
+        ShowMessage(AppStrings.Keys.DialogRegionSaved);
         RestoreFloatingTrigger();
     }
 
@@ -256,14 +256,14 @@ public sealed class TranslationForegroundService : Service
             cancellationToken.ThrowIfCancellationRequested();
             if (!Settings.CanDrawOverlays(this))
             {
-                ShowMessage("Przyznaj uprawnienie do wyświetlania nad innymi aplikacjami.");
+                ShowMessage(AppStrings.Keys.GrantOverlayPermission);
                 return;
             }
 
             var bitmap = await CaptureBitmapAsync(cancellationToken).ConfigureAwait(false);
             if (bitmap is null)
             {
-                ShowMessage("Nie udało się pobrać klatki ekranu.");
+                ShowMessage(AppStrings.Keys.ScreenFrameCaptureFailed);
                 return;
             }
             var processingAccent = global::Pikslovo.App.GetAccentColor(AndroidSettingsStore.Load(this).Accent);
@@ -289,7 +289,7 @@ public sealed class TranslationForegroundService : Service
                 var imageQuality = settings.UseJpegForOcr ? settings.OcrJpegQuality : 100;
                 if (!bitmapForVision.Compress(imageFormat, imageQuality, stream))
                 {
-                    throw new InvalidOperationException(AppStrings.Get("Nie udało się zakodować obrazu OCR."));
+                    throw new InvalidOperationException(AppStrings.Get(AppStrings.Keys.CouldNotEncodeOcrImage));
                 }
 
                 var imageBytes = stream.ToArray();
@@ -319,7 +319,7 @@ public sealed class TranslationForegroundService : Service
 
                 if (result.Regions.Count == 0)
                 {
-                    ShowMessage("Nie znaleziono tekstu na ekranie.");
+                    ShowMessage(AppStrings.Keys.NoTextFoundOnScreen);
                     return;
                 }
 
@@ -528,7 +528,7 @@ public sealed class TranslationForegroundService : Service
 
         var channel = new NotificationChannel(
             NotificationChannelId,
-            AppStrings.Get("Aktywna sesja tłumacza"),
+            AppStrings.Get(AppStrings.Keys.ActiveTranslatorSession),
             NotificationImportance.Low);
         var notificationManager = (NotificationManager?)GetSystemService(NotificationService);
         notificationManager?.CreateNotificationChannel(channel);
@@ -545,11 +545,11 @@ public sealed class TranslationForegroundService : Service
             PendingIntentFlags.Immutable | PendingIntentFlags.UpdateCurrent);
 
         return new Notification.Builder(this, NotificationChannelId)
-            .SetContentTitle(AppStrings.Get("Pikslovo jest aktywne"))
-            .SetContentText(AppStrings.Get("Hotkey i przycisk pływający są gotowe."))
+            .SetContentTitle(AppStrings.Get(AppStrings.Keys.PikslovoIsActive))
+            .SetContentText(AppStrings.Get(AppStrings.Keys.HotkeyAndFloatingButtonReady))
             .SetSmallIcon(Resource.Mipmap.icon)
             .SetOngoing(true)
-            .AddAction(new Notification.Action.Builder(null, AppStrings.Get("Zatrzymaj"), pendingIntent).Build())
+            .AddAction(new Notification.Action.Builder(null, AppStrings.Get(AppStrings.Keys.Stop), pendingIntent).Build())
             .Build();
     }
 

@@ -11,7 +11,7 @@ public sealed partial class MainPage
 #if __ANDROID__
         if (MainActivity.CurrentActivity is not { } activity)
         {
-            ShowStatus("Aktywność Androida nie jest gotowa. Zamknij i otwórz aplikację ponownie.");
+            ShowStatus(AppStrings.Keys.AndroidActivityNotReady);
             return;
         }
 
@@ -21,7 +21,7 @@ public sealed partial class MainPage
         }
         catch (Exception exception)
         {
-            ShowStatus(AppStrings.Format("Nie można wyeksportować dziennika diagnostycznego: {0}", exception.Message));
+            ShowStatus(AppStrings.Format(AppStrings.Keys.ExportDiagnosticsFailed, exception.Message));
         }
 #endif
     }

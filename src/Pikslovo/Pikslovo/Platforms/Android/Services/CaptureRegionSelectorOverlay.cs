@@ -70,7 +70,7 @@ internal sealed partial class CaptureRegionSelectorOverlay
 
         var instruction = new TextView(_context)
         {
-            Text = AppStrings.Get("Przeciągnij narożniki obszaru dialogu"),
+            Text = AppStrings.Get(AppStrings.Keys.DragDialogRegionCorners),
             Gravity = GravityFlags.Center,
             TextSize = 14f,
         };
@@ -126,7 +126,7 @@ internal sealed partial class CaptureRegionSelectorOverlay
             Text = text,
             TextSize = 28f,
             Gravity = GravityFlags.Center,
-            ContentDescription = AppStrings.Get(text == "✓" ? "Zapisz obszar" : "Anuluj wybór obszaru"),
+            ContentDescription = AppStrings.Get(text == "✓" ? AppStrings.Keys.SaveRegion : AppStrings.Keys.CancelRegionSelection),
             Background = RoundedBackground(background, size / 2),
         };
         button.SetTextColor(foreground);

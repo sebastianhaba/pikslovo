@@ -11,7 +11,7 @@ namespace Pikslovo.Droid.Services;
 internal sealed class HotkeyCaptureDialog : Dialog
 {
     private const int CaptureDelayMilliseconds = 2000;
-    private static string CaptureInstruction => AppStrings.Get("Przytrzymaj klawisz(e) przez 2 sekundy");
+    private static string CaptureInstruction => AppStrings.Get(AppStrings.Keys.HoldKeysForTwoSeconds);
     private readonly TaskCompletionSource<int[]?> _completion = new(TaskCreationOptions.RunContinuationsAsynchronously);
     private readonly Handler _handler = new(Looper.MainLooper!);
     private readonly SortedSet<int> _heldCodes = [];
@@ -38,7 +38,7 @@ internal sealed class HotkeyCaptureDialog : Dialog
             .OrderBy(code => code)
             .Select(GetKeyLabel)
             .ToArray();
-        return labels.Length == 0 ? AppStrings.Get("Nie ustawiono") : string.Join(" + ", labels);
+        return labels.Length == 0 ? AppStrings.Get(AppStrings.Keys.NotSet) : string.Join(" + ", labels);
     }
 
     protected override void OnCreate(Bundle? savedInstanceState)
@@ -59,7 +59,7 @@ internal sealed class HotkeyCaptureDialog : Dialog
         content.SetGravity(GravityFlags.CenterHorizontal);
         content.SetPadding(padding, ToPixels(28), padding, padding);
 
-        var title = CreateText(AppStrings.Get("Ustaw skrót"), 18, colors.Text, bold: true);
+        var title = CreateText(AppStrings.Get(AppStrings.Keys.SetShortcut), 18, colors.Text, bold: true);
         content.AddView(title);
 
         _instruction = CreateText(CaptureInstruction, 18, colors.Accent, bold: true);
@@ -68,7 +68,7 @@ internal sealed class HotkeyCaptureDialog : Dialog
 
         var cancel = new Android.Widget.Button(Context)
         {
-            Text = AppStrings.Get("Anuluj"),
+            Text = AppStrings.Get(AppStrings.Keys.Cancel),
             TextSize = 18,
             Background = CreateRoundedBackground(colors.Button, 12),
         };
