@@ -133,12 +133,15 @@ internal static class AndroidTranslationHost
         inputManager?.HideSoftInputFromWindow(activity.Window?.DecorView?.WindowToken, HideSoftInputFlags.None);
     }
 
-    private static void RequestNotificationPermission(Activity activity)
+    public static bool RequestNotificationPermission(Activity activity)
     {
-        if (OperatingSystem.IsAndroidVersionAtLeast(33) &&
-            activity.CheckSelfPermission(Android.Manifest.Permission.PostNotifications) != Android.Content.PM.Permission.Granted)
+        if (!OperatingSystem.IsAndroidVersionAtLeast(33) ||
+            activity.CheckSelfPermission(Android.Manifest.Permission.PostNotifications) == Android.Content.PM.Permission.Granted)
         {
-            activity.RequestPermissions([Android.Manifest.Permission.PostNotifications], NotificationRequestCode);
+            return true;
         }
+
+        activity.RequestPermissions([Android.Manifest.Permission.PostNotifications], NotificationRequestCode);
+        return false;
     }
 }

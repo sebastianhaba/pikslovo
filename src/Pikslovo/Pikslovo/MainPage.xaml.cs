@@ -472,6 +472,30 @@ public sealed partial class MainPage : Page
 #endif
     }
 
+    private void RequestNotificationPermission_Click(object sender, RoutedEventArgs e)
+    {
+#if __ANDROID__
+        if (MainActivity.CurrentActivity is { } activity)
+        {
+            try
+            {
+                var alreadyAllowed = AndroidTranslationHost.RequestNotificationPermission(activity);
+                ShowStatus(alreadyAllowed
+                    ? "Uprawnienie powiadomień jest już przyznane."
+                    : "Wyświetlam prośbę Androida o zgodę na powiadomienia.");
+            }
+            catch (Exception exception)
+            {
+                ShowStatus($"Nie można poprosić o uprawnienie powiadomień: {exception.Message}");
+            }
+        }
+        else
+        {
+            ShowStatus("Aktywność Androida nie jest gotowa. Zamknij i otwórz aplikację ponownie.");
+        }
+#endif
+    }
+
     private void OpenAccessibilitySettings_Click(object sender, RoutedEventArgs e)
     {
 #if __ANDROID__
