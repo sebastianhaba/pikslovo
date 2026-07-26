@@ -1,3 +1,4 @@
+using CommunityToolkit.Mvvm.Input;
 using Pikslovo.Core;
 using Pikslovo.Services;
 using Microsoft.UI.Xaml.Controls.Primitives;
@@ -39,6 +40,7 @@ public sealed partial class MainPage : Page
     public MainPage()
     {
         _isLoading = true;
+        ConfigureCommands();
         InitializeComponent();
         DataContext = _viewModel;
         _viewModel.PropertyChanged += ViewModel_PropertyChanged;
@@ -66,9 +68,37 @@ public sealed partial class MainPage : Page
         LocalizeXamlStrings(this);
     }
 
-    private void OpenSection_Click(object sender, RoutedEventArgs e)
+    private void ConfigureCommands()
     {
-        if (sender is not Button { Tag: string section })
+        _viewModel.BackCommand = new RelayCommand(Back);
+        _viewModel.OpenSectionCommand = new RelayCommand<string>(OpenSection);
+        _viewModel.ExportSettingsCommand = new RelayCommand(ExportSettings);
+        _viewModel.ImportSettingsCommand = new RelayCommand(ImportSettings);
+        _viewModel.RestoreDefaultSettingsCommand = new RelayCommand(async () => await RestoreDefaultSettingsAsync());
+        _viewModel.ExportDiagnosticsCommand = new RelayCommand(async () => await ExportDiagnostics());
+        _viewModel.OpenGitHubPageCommand = new RelayCommand(OpenGitHubPage);
+        _viewModel.OpenSupportPageCommand = new RelayCommand(OpenSupportPage);
+        _viewModel.EditSourceLanguageCommand = new RelayCommand(async () => await EditSourceLanguageAsync());
+        _viewModel.EditTargetLanguageCommand = new RelayCommand(async () => await EditTargetLanguageAsync());
+        _viewModel.ToggleApiKeyVisibilityCommand = new RelayCommand(ToggleApiKeyVisibility);
+        _viewModel.OpenGoogleCloudCredentialsCommand = new RelayCommand(OpenGoogleCloudCredentials);
+        _viewModel.OpenAccessibilitySettingsCommand = new RelayCommand(OpenAccessibilitySettings);
+        _viewModel.EditHotkeyCodeCommand = new RelayCommand(async () => await EditHotkeyCodeAsync());
+        _viewModel.RequestOverlayPermissionCommand = new RelayCommand(RequestOverlayPermission);
+        _viewModel.RequestNotificationPermissionCommand = new RelayCommand(RequestNotificationPermission);
+        _viewModel.TestApiKeyCommand = new RelayCommand(async () => await TestApiKeyMainAsync());
+        _viewModel.EditOnboardingSourceLanguageCommand = new RelayCommand(async () => await EditOnboardingSourceLanguageAsync());
+        _viewModel.EditOnboardingTargetLanguageCommand = new RelayCommand(async () => await EditOnboardingTargetLanguageAsync());
+        _viewModel.ContinueOnboardingLanguageCommand = new RelayCommand(ContinueOnboardingLanguage);
+        _viewModel.RequestOnboardingNotificationPermissionCommand = new RelayCommand(RequestOnboardingNotificationPermission);
+        _viewModel.RequestOnboardingOverlayPermissionCommand = new RelayCommand(RequestOnboardingOverlayPermission);
+        _viewModel.TestOnboardingApiKeyCommand = new RelayCommand(async () => await TestOnboardingApiKeyAsync());
+        _viewModel.FinishOnboardingCommand = new RelayCommand(FinishOnboarding);
+    }
+
+    private void OpenSection(string? section)
+    {
+        if (string.IsNullOrWhiteSpace(section))
         {
             return;
         }
@@ -104,7 +134,7 @@ public sealed partial class MainPage : Page
         UpdateFloatingButtonPreview();
     }
 
-    private void Back_Click(object sender, RoutedEventArgs e)
+    private void Back()
     {
         HomeHeader.Visibility = Visibility.Visible;
         DetailHeader.Visibility = Visibility.Collapsed;
@@ -114,6 +144,10 @@ public sealed partial class MainPage : Page
         HomeView.ChangeView(null, 0, null, true);
         DismissFloatingButtonPreview();
     }
+
+    private async Task EditSourceLanguageAsync() => await EditLanguageAsync(SourceLanguageBox, AppStrings.Get("Język źródłowy"));
+
+    private async Task EditTargetLanguageAsync() => await EditLanguageAsync(TargetLanguageBox, AppStrings.Get("Język docelowy"));
 
     private void Setting_Changed(object sender, RoutedEventArgs e)
     {
@@ -184,12 +218,6 @@ public sealed partial class MainPage : Page
         (global::Microsoft.UI.Xaml.Application.Current as App)?.ReloadMainPage();
     }
 
-    private async void EditSourceLanguage_Click(object sender, RoutedEventArgs e) =>
-        await EditLanguageAsync(SourceLanguageBox, AppStrings.Get("Język źródłowy"));
-
-    private async void EditTargetLanguage_Click(object sender, RoutedEventArgs e) =>
-        await EditLanguageAsync(TargetLanguageBox, AppStrings.Get("Język docelowy"));
-
     private async Task EditLanguageAsync(ComboBox source, string title)
     {
         var picker = new ComboBox { HorizontalAlignment = HorizontalAlignment.Stretch };
@@ -225,7 +253,7 @@ public sealed partial class MainPage : Page
         UpdateFloatingButtonPreview();
     }
 
-    private void OpenGoogleCloudCredentials_Click(object sender, RoutedEventArgs e)
+    private void OpenGoogleCloudCredentials()
     {
 #if __ANDROID__
         if (MainActivity.CurrentActivity is not { } activity)
@@ -245,10 +273,10 @@ public sealed partial class MainPage : Page
 #endif
     }
 
-    private void OpenGitHubPage_Click(object sender, RoutedEventArgs e) =>
+    private void OpenGitHubPage() =>
         OpenSupportWebPage("https://github.com/sebastianhaba/pikslovo", "Nie można otworzyć strony Pikslovo: {0}");
 
-    private void OpenSupportPage_Click(object sender, RoutedEventArgs e) =>
+    private void OpenSupportPage() =>
         OpenSupportWebPage("https://ko-fi.com/pikslovo", "Nie można otworzyć strony wsparcia: {0}");
 
     private void OpenSupportWebPage(string url, string errorMessage)
@@ -271,7 +299,7 @@ public sealed partial class MainPage : Page
 #endif
     }
 
-    private void ToggleApiKeyVisibility_Click(object sender, RoutedEventArgs e)
+    private void ToggleApiKeyVisibility()
     {
         _isApiKeyVisible = !_isApiKeyVisible;
         ApiKeyBox.PasswordRevealMode = _isApiKeyVisible ? PasswordRevealMode.Visible : PasswordRevealMode.Hidden;
@@ -312,8 +340,7 @@ public sealed partial class MainPage : Page
 #endif
     }
 
-    private async void TestApiKey_Click(object sender, RoutedEventArgs e) =>
-        await TestApiKeyAsync(ApiKeyBox, ApiKeyTestButton);
+    private async Task TestApiKeyMainAsync() => await TestApiKeyAsync(ApiKeyBox, ApiKeyTestButton);
 
     private async Task TestApiKeyAsync(PasswordBox apiKeyBox, Button button)
     {
@@ -370,7 +397,7 @@ public sealed partial class MainPage : Page
             "Klucz ma dostęp do Cloud Translation API i Cloud Vision API.");
     }
 
-    private async void EditHotkeyCode_Click(object sender, RoutedEventArgs e)
+    private async Task EditHotkeyCodeAsync()
     {
 #if __ANDROID__
         if (MainActivity.CurrentActivity is not { } activity)

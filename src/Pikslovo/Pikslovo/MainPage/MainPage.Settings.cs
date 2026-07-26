@@ -121,7 +121,7 @@ public sealed partial class MainPage
     }
 #endif
 
-    private void ExportSettings_Click(object sender, RoutedEventArgs e)
+    private void ExportSettings()
     {
 #if __ANDROID__
         if (MainActivity.CurrentActivity is not { } activity)
@@ -141,7 +141,7 @@ public sealed partial class MainPage
 #endif
     }
 
-    private void ImportSettings_Click(object sender, RoutedEventArgs e)
+    private void ImportSettings()
     {
 #if __ANDROID__
         if (MainActivity.CurrentActivity is not { } activity)
@@ -161,7 +161,7 @@ public sealed partial class MainPage
 #endif
     }
 
-    private async void RestoreDefaultSettings_Click(object sender, RoutedEventArgs e)
+    private async Task RestoreDefaultSettingsAsync()
     {
         if (!await ShowConfirmationAsync(
                 "Przywrócić ustawienia domyślne?",

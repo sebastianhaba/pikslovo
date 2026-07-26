@@ -1,7 +1,9 @@
+using CommunityToolkit.Mvvm.Input;
 using Pikslovo.Core;
 using System.ComponentModel;
 using System.Globalization;
 using System.Runtime.CompilerServices;
+using System.Windows.Input;
 
 #if __ANDROID__
 using Pikslovo.Droid.Services;
@@ -11,6 +13,8 @@ namespace Pikslovo;
 
 public sealed class MainPageViewModel : INotifyPropertyChanged
 {
+    private static readonly ICommand NoOpCommand = new RelayCommand(() => { });
+    private static readonly ICommand NoOpStringCommand = new RelayCommand<string>(_ => { });
     private string _apiKey = string.Empty;
     private string _sourceLanguage = "ja";
     private string _targetLanguage = "pl";
@@ -41,6 +45,54 @@ public sealed class MainPageViewModel : INotifyPropertyChanged
     private string _apiKeyValidationDuration = AppStrings.Get("Brak pomiaru");
 
     public event PropertyChangedEventHandler? PropertyChanged;
+
+    public ICommand BackCommand { get; set; } = NoOpCommand;
+
+    public ICommand OpenSectionCommand { get; set; } = NoOpStringCommand;
+
+    public ICommand ExportSettingsCommand { get; set; } = NoOpCommand;
+
+    public ICommand ImportSettingsCommand { get; set; } = NoOpCommand;
+
+    public ICommand RestoreDefaultSettingsCommand { get; set; } = NoOpCommand;
+
+    public ICommand ExportDiagnosticsCommand { get; set; } = NoOpCommand;
+
+    public ICommand OpenGitHubPageCommand { get; set; } = NoOpCommand;
+
+    public ICommand OpenSupportPageCommand { get; set; } = NoOpCommand;
+
+    public ICommand EditSourceLanguageCommand { get; set; } = NoOpCommand;
+
+    public ICommand EditTargetLanguageCommand { get; set; } = NoOpCommand;
+
+    public ICommand ToggleApiKeyVisibilityCommand { get; set; } = NoOpCommand;
+
+    public ICommand OpenGoogleCloudCredentialsCommand { get; set; } = NoOpCommand;
+
+    public ICommand OpenAccessibilitySettingsCommand { get; set; } = NoOpCommand;
+
+    public ICommand EditHotkeyCodeCommand { get; set; } = NoOpCommand;
+
+    public ICommand RequestOverlayPermissionCommand { get; set; } = NoOpCommand;
+
+    public ICommand RequestNotificationPermissionCommand { get; set; } = NoOpCommand;
+
+    public ICommand TestApiKeyCommand { get; set; } = NoOpCommand;
+
+    public ICommand EditOnboardingSourceLanguageCommand { get; set; } = NoOpCommand;
+
+    public ICommand EditOnboardingTargetLanguageCommand { get; set; } = NoOpCommand;
+
+    public ICommand ContinueOnboardingLanguageCommand { get; set; } = NoOpCommand;
+
+    public ICommand RequestOnboardingNotificationPermissionCommand { get; set; } = NoOpCommand;
+
+    public ICommand RequestOnboardingOverlayPermissionCommand { get; set; } = NoOpCommand;
+
+    public ICommand TestOnboardingApiKeyCommand { get; set; } = NoOpCommand;
+
+    public ICommand FinishOnboardingCommand { get; set; } = NoOpCommand;
 
     public string ApiKey
     {

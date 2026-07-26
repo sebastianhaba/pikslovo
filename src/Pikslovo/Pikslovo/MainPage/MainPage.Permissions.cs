@@ -6,7 +6,7 @@ namespace Pikslovo;
 
 public sealed partial class MainPage
 {
-    private void RequestOverlayPermission_Click(object sender, RoutedEventArgs e)
+    private void RequestOverlayPermission()
     {
 #if __ANDROID__
         if (MainActivity.CurrentActivity is { } activity)
@@ -28,7 +28,7 @@ public sealed partial class MainPage
 #endif
     }
 
-    private void RequestNotificationPermission_Click(object sender, RoutedEventArgs e)
+    private void RequestNotificationPermission()
     {
 #if __ANDROID__
         if (MainActivity.CurrentActivity is { } activity)
@@ -50,7 +50,7 @@ public sealed partial class MainPage
 #endif
     }
 
-    private void OpenAccessibilitySettings_Click(object sender, RoutedEventArgs e)
+    private void OpenAccessibilitySettings()
     {
 #if __ANDROID__
         if (MainActivity.CurrentActivity is { } activity)

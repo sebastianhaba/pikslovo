@@ -19,10 +19,10 @@ public sealed partial class MainPage
 #endif
     }
 
-    private async void EditOnboardingSourceLanguage_Click(object sender, RoutedEventArgs e) =>
+    private async Task EditOnboardingSourceLanguageAsync() =>
         await EditOnboardingLanguageAsync(isSource: true);
 
-    private async void EditOnboardingTargetLanguage_Click(object sender, RoutedEventArgs e) =>
+    private async Task EditOnboardingTargetLanguageAsync() =>
         await EditOnboardingLanguageAsync(isSource: false);
 
     private async Task EditOnboardingLanguageAsync(bool isSource)
@@ -52,7 +52,7 @@ public sealed partial class MainPage
 
     }
 
-    private void ContinueOnboardingLanguage_Click(object sender, RoutedEventArgs e)
+    private void ContinueOnboardingLanguage()
     {
         SelectLanguage(SourceLanguageBox, _viewModel.OnboardingSourceLanguage);
         SelectLanguage(TargetLanguageBox, _viewModel.OnboardingTargetLanguage);
@@ -60,7 +60,7 @@ public sealed partial class MainPage
         ShowOnboardingStep(OnboardingNotificationStep);
     }
 
-    private void RequestOnboardingNotificationPermission_Click(object sender, RoutedEventArgs e)
+    private void RequestOnboardingNotificationPermission()
     {
 #if __ANDROID__
         if (MainActivity.CurrentActivity is { } activity)
@@ -80,7 +80,7 @@ public sealed partial class MainPage
         ShowStatus("Aktywność Androida nie jest gotowa. Zamknij i otwórz aplikację ponownie.");
     }
 
-    private void RequestOnboardingOverlayPermission_Click(object sender, RoutedEventArgs e)
+    private void RequestOnboardingOverlayPermission()
     {
 #if __ANDROID__
         if (MainActivity.CurrentActivity is { } activity)
@@ -91,10 +91,10 @@ public sealed partial class MainPage
         ShowOnboardingStep(OnboardingApiKeyStep);
     }
 
-    private async void TestOnboardingApiKey_Click(object sender, RoutedEventArgs e) =>
+    private async Task TestOnboardingApiKeyAsync() =>
         await TestApiKeyAsync(OnboardingApiKeyBox, OnboardingApiKeyTestButton);
 
-    private void FinishOnboarding_Click(object sender, RoutedEventArgs e)
+    private void FinishOnboarding()
     {
         ApiKeyBox.Password = OnboardingApiKeyBox.Password.Trim();
         SaveSettings(requireValidTranslationSettings: false);

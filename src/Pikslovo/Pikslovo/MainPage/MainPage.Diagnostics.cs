@@ -6,7 +6,7 @@ namespace Pikslovo;
 
 public sealed partial class MainPage
 {
-    private async void ExportDiagnostics_Click(object sender, RoutedEventArgs e)
+    private async Task ExportDiagnostics()
     {
 #if __ANDROID__
         if (MainActivity.CurrentActivity is not { } activity)
