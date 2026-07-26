@@ -3,6 +3,7 @@ using Pikslovo.Services;
 using Microsoft.UI.Xaml.Controls.Primitives;
 using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Globalization;
 using System.Net;
@@ -39,6 +40,8 @@ public sealed partial class MainPage : Page
     {
         _isLoading = true;
         InitializeComponent();
+        DataContext = _viewModel;
+        _viewModel.PropertyChanged += ViewModel_PropertyChanged;
         AppVersionText.Text = AppMetadata.DisplayVersionLabel;
 #if __ANDROID__
         Loaded += MainPage_Loaded;
@@ -120,8 +123,6 @@ public sealed partial class MainPage : Page
         }
 
         SaveSettings(requireValidTranslationSettings: false);
-        UpdateFloatingButtonValues();
-        UpdateSettingSummaries();
         if (ReferenceEquals(sender, GlobalHotkeyToggle))
         {
             RefreshFloatingButtonConfiguration();
@@ -142,7 +143,6 @@ public sealed partial class MainPage : Page
 
         SetThemeMode(mode);
         SaveSettings(requireValidTranslationSettings: false);
-        UpdateSettingSummaries();
     }
 
     private void AccentOption_Tapped(object sender, TappedRoutedEventArgs e)
@@ -161,8 +161,6 @@ public sealed partial class MainPage : Page
             UpdateFloatingButtonPreview();
 #endif
         }
-
-        UpdateSettingSummaries();
     }
 
     private void ApplicationLanguageOption_Tapped(object sender, TappedRoutedEventArgs e)
@@ -207,8 +205,24 @@ public sealed partial class MainPage : Page
         if (await ShowEditorAsync(title, picker))
         {
             source.SelectedIndex = picker.SelectedIndex;
-            UpdateSettingSummaries();
         }
+    }
+
+    private void ViewModel_PropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (_isLoading || !MainPageViewModel.IsAutoPersistedProperty(e.PropertyName))
+        {
+            return;
+        }
+
+        SaveSettings(requireValidTranslationSettings: false);
+        if (MainPageViewModel.RequiresFloatingButtonRefresh(e.PropertyName))
+        {
+            RefreshFloatingButtonConfiguration();
+            return;
+        }
+
+        UpdateFloatingButtonPreview();
     }
 
     private void OpenGoogleCloudCredentials_Click(object sender, RoutedEventArgs e)
@@ -369,8 +383,8 @@ public sealed partial class MainPage : Page
         if (hotkeyCodes is { Length: > 0 })
         {
             _viewModel.HotkeyCodes = hotkeyCodes;
+            UpdateHotkeyCodesSummary();
             SaveSettings(requireValidTranslationSettings: false);
-            UpdateSettingSummaries();
         }
 #endif
     }
@@ -488,9 +502,6 @@ public sealed partial class MainPage : Page
     private static string GetLanguage(ComboBox box) =>
         (box.SelectedItem as ComboBoxItem)?.Tag?.ToString() ?? string.Empty;
 
-    private static string GetLanguageLabel(ComboBox box) =>
-        (box.SelectedItem as ComboBoxItem)?.Content?.ToString() ?? AppStrings.Get("Nie wybrano");
-
     private static void SelectLanguage(ComboBox box, string language)
     {
         for (var index = 0; index < box.Items.Count; index++)
@@ -503,148 +514,6 @@ public sealed partial class MainPage : Page
         }
 
         box.SelectedIndex = 0;
-    }
-
-    private void RecognitionConfidenceSlider_ValueChanged(object sender, RangeBaseValueChangedEventArgs e)
-    {
-        if (_isLoading)
-        {
-            return;
-        }
-
-        UpdateRecognitionConfidenceValue();
-        SaveSettings(requireValidTranslationSettings: false);
-    }
-
-    private void FontScaleSlider_ValueChanged(object sender, RangeBaseValueChangedEventArgs e)
-    {
-        if (_isLoading)
-        {
-            return;
-        }
-
-        UpdateFontScaleValue();
-        SaveSettings(requireValidTranslationSettings: false);
-    }
-
-    private void GroupingPowerSlider_ValueChanged(object sender, RangeBaseValueChangedEventArgs e)
-    {
-        if (_isLoading)
-        {
-            return;
-        }
-
-        UpdateGroupingPowerValue();
-        SaveSettings(requireValidTranslationSettings: false);
-    }
-
-    private void OcrImageScaleSlider_ValueChanged(object sender, RangeBaseValueChangedEventArgs e)
-    {
-        if (_isLoading)
-        {
-            return;
-        }
-
-        UpdateOcrImageScaleValue();
-        SaveSettings(requireValidTranslationSettings: false);
-    }
-
-    private void UseJpegForOcrToggle_Toggled(object sender, RoutedEventArgs e)
-    {
-        if (_isLoading)
-        {
-            return;
-        }
-
-        UpdateOcrJpegQualityControl();
-        SaveSettings(requireValidTranslationSettings: false);
-    }
-
-    private void OcrJpegQualitySlider_ValueChanged(object sender, RangeBaseValueChangedEventArgs e)
-    {
-        if (_isLoading)
-        {
-            return;
-        }
-
-        UpdateOcrJpegQualityValue();
-        SaveSettings(requireValidTranslationSettings: false);
-    }
-
-    private void FloatingButtonSetting_Changed(object sender, RoutedEventArgs e)
-    {
-        if (_isLoading)
-        {
-            return;
-        }
-
-        SaveSettings(requireValidTranslationSettings: false);
-        UpdateFloatingButtonValues();
-        RefreshFloatingButtonConfiguration();
-    }
-
-    private void FloatingButtonScaleSlider_ValueChanged(object sender, RangeBaseValueChangedEventArgs e)
-    {
-        if (_isLoading)
-        {
-            return;
-        }
-
-        UpdateFloatingButtonValues();
-        SaveSettings(requireValidTranslationSettings: false);
-        RefreshFloatingButtonConfiguration();
-    }
-
-    private void FloatingButtonHorizontalPositionSlider_ValueChanged(object sender, RangeBaseValueChangedEventArgs e)
-    {
-        if (_isLoading)
-        {
-            return;
-        }
-
-        UpdateFloatingButtonValues();
-        SaveSettings(requireValidTranslationSettings: false);
-        RefreshFloatingButtonConfiguration();
-    }
-
-    private void FloatingButtonVerticalPositionSlider_ValueChanged(object sender, RangeBaseValueChangedEventArgs e)
-    {
-        if (_isLoading)
-        {
-            return;
-        }
-
-        UpdateFloatingButtonValues();
-        SaveSettings(requireValidTranslationSettings: false);
-        RefreshFloatingButtonConfiguration();
-    }
-
-    private void UpdateFontScaleValue() => FontScaleValue.Text = FormatFontScale(FontScaleSlider.Value);
-
-    private void UpdateRecognitionConfidenceValue() => RecognitionConfidenceValue.Text = FormatRecognitionConfidence(RecognitionConfidenceSlider.Value);
-
-    private void UpdateOcrImageScaleValue() => OcrImageScaleValue.Text = FormatOcrImageScale(OcrImageScaleSlider.Value);
-
-    private void UpdateOcrJpegQualityValue() => OcrJpegQualityValue.Text = $"{Math.Round(OcrJpegQualitySlider.Value):0}%";
-
-    private void UpdateOcrJpegQualityControl()
-    {
-        OcrJpegQualitySlider.IsEnabled = UseJpegForOcrToggle.IsOn;
-        OcrJpegQualityPanel.Opacity = UseJpegForOcrToggle.IsOn ? 1d : 0.45d;
-    }
-
-    private void UpdateGroupingPowerValue() => GroupingPowerValue.Text = GroupingPowerSlider.Value.ToString("0.00", CultureInfo.CurrentCulture);
-
-    private void UpdateFloatingButtonValues()
-    {
-        FloatingButtonScaleValue.Text = FormatFontScale(FloatingButtonScaleSlider.Value);
-        FloatingButtonHorizontalPositionValue.Text = FormatPosition(FloatingButtonHorizontalPositionSlider.Value);
-        FloatingButtonVerticalPositionValue.Text = FormatPosition(FloatingButtonVerticalPositionSlider.Value);
-        FloatingButtonVisibilityDescription.Text = FloatingButtonAlwaysVisibleToggle.IsOn
-            ? "W aktywnej sesji jest widoczny niezależnie od globalnego hotkeya."
-            : GlobalHotkeyToggle.IsOn
-                ? "W aktywnej sesji jest ukryty, gdy globalny hotkey jest włączony."
-                : "W aktywnej sesji jest widoczny, ponieważ globalny hotkey jest wyłączony.";
     }
 
     private void RefreshFloatingButtonConfiguration()
@@ -688,24 +557,6 @@ public sealed partial class MainPage : Page
         _floatingButtonPreview?.Dismiss();
         _floatingButtonPreview = null;
 #endif
-    }
-
-    private void UpdateSettingSummaries()
-    {
-        SourceLanguageValue.Text = GetLanguageLabel(SourceLanguageBox);
-        TargetLanguageValue.Text = GetLanguageLabel(TargetLanguageBox);
-#if __ANDROID__
-        HotkeyCodeValue.Text = HotkeyCaptureDialog.Format(_viewModel.HotkeyCodes);
-#else
-        HotkeyCodeValue.Text = AppStrings.Get("Nie ustawiono");
-#endif
-        var themeMode = _viewModel.ThemeMode switch
-        {
-            AppThemeMode.Dark => AppStrings.Get("Ciemny"),
-            AppThemeMode.Light => AppStrings.Get("Jasny"),
-            _ => AppStrings.Get("System")
-        };
-        ThemeModeValue.Text = $"{themeMode} · {GetAccentLabel(_viewModel.Accent)}";
     }
 
     private void SetThemeMode(AppThemeMode mode)
@@ -774,32 +625,7 @@ public sealed partial class MainPage : Page
     private void SetAccentOptionSelection(Border option, AppAccent accent) =>
         option.BorderThickness = accent == _viewModel.Accent ? new Thickness(2) : new Thickness(0);
 
-    private static string GetAccentLabel(AppAccent accent) => AppStrings.Get(accent switch
-    {
-        AppAccent.Coral => "Koralowy",
-        AppAccent.Amber => "Bursztynowy",
-        AppAccent.Lime => "Limonkowy",
-        AppAccent.Mint => "Miętowy",
-        AppAccent.Teal => "Morski",
-        AppAccent.Aqua => "Aqua",
-        AppAccent.Sky => "Błękitny",
-        AppAccent.Steel => "Stalowy",
-        AppAccent.Orchid => "Orchidea",
-        AppAccent.Rose => "Różowy",
-        _ => "Lawendowy"
-    });
-
     private static string FormatFontScale(double value) => $"{value.ToString("0.0", CultureInfo.CurrentCulture)}x";
-
-    private static string FormatOcrImageScale(double value) => $"{value.ToString("0.##", CultureInfo.CurrentCulture)}x";
-
-    private static string FormatDuration(long? milliseconds) => milliseconds is { } value
-        ? $"{value} ms"
-        : AppStrings.Get("Brak pomiaru");
-
-    private static string FormatPosition(double value) => value.ToString("0.00", CultureInfo.CurrentCulture);
-
-    private static string FormatRecognitionConfidence(double value) => value.ToString("0.0", CultureInfo.CurrentCulture);
 
     private static void LocalizeXamlStrings(DependencyObject element)
     {

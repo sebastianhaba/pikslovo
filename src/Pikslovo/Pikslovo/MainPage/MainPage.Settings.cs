@@ -10,15 +10,9 @@ public sealed partial class MainPage
     private void LoadSettings()
     {
         _settingsPersistence.Load(_viewModel);
+        UpdateHotkeyCodesSummary();
+        UpdateDiagnostics();
         ApplyViewModelToControls();
-        UpdateFontScaleValue();
-        UpdateRecognitionConfidenceValue();
-        UpdateOcrImageScaleValue();
-        UpdateOcrJpegQualityValue();
-        UpdateOcrJpegQualityControl();
-        UpdateGroupingPowerValue();
-        UpdateFloatingButtonValues();
-        UpdateSettingSummaries();
         UpdateSessionToggle();
     }
 
@@ -114,14 +108,8 @@ public sealed partial class MainPage
         try
         {
             ApplyViewModelToControls();
-            UpdateFontScaleValue();
-            UpdateRecognitionConfidenceValue();
-            UpdateOcrImageScaleValue();
-            UpdateOcrJpegQualityValue();
-            UpdateOcrJpegQualityControl();
-            UpdateGroupingPowerValue();
-            UpdateFloatingButtonValues();
-            UpdateSettingSummaries();
+            UpdateHotkeyCodesSummary();
+            UpdateDiagnostics();
             UpdateSessionToggle();
         }
         finally
@@ -200,21 +188,9 @@ public sealed partial class MainPage
         ApiKeyBox.Password = _viewModel.ApiKey;
         SelectLanguage(SourceLanguageBox, _viewModel.SourceLanguage);
         SelectLanguage(TargetLanguageBox, _viewModel.TargetLanguage);
-        FontScaleSlider.Value = _viewModel.FontScale;
-        RecognitionConfidenceSlider.Value = _viewModel.RecognitionConfidence;
-        OcrImageScaleSlider.Value = _viewModel.OcrImageScale;
-        UseJpegForOcrToggle.IsOn = _viewModel.UseJpegForOcr;
-        OcrJpegQualitySlider.Value = _viewModel.OcrJpegQuality;
-        GroupingPowerSlider.Value = _viewModel.GroupingPower;
-        HideIdenticalTranslationsToggle.IsOn = _viewModel.HideIdenticalTranslations;
-        GlobalHotkeyToggle.IsOn = _viewModel.GlobalHotkeyEnabled;
         SetThemeMode(_viewModel.ThemeMode);
         SetAccent(_viewModel.Accent);
         SetApplicationLanguage(_viewModel.LanguageMode);
-        FloatingButtonAlwaysVisibleToggle.IsOn = _viewModel.FloatingButtonAlwaysVisible;
-        FloatingButtonScaleSlider.Value = _viewModel.FloatingButtonScale;
-        FloatingButtonHorizontalPositionSlider.Value = _viewModel.FloatingButtonHorizontalPosition;
-        FloatingButtonVerticalPositionSlider.Value = _viewModel.FloatingButtonVerticalPosition;
     }
 
     private void UpdateViewModelFromControls()
@@ -222,17 +198,14 @@ public sealed partial class MainPage
         _viewModel.ApiKey = ApiKeyBox.Password.Trim();
         _viewModel.SourceLanguage = GetLanguage(SourceLanguageBox);
         _viewModel.TargetLanguage = GetLanguage(TargetLanguageBox);
-        _viewModel.FontScale = (float)FontScaleSlider.Value;
-        _viewModel.RecognitionConfidence = (float)RecognitionConfidenceSlider.Value;
-        _viewModel.OcrImageScale = (float)OcrImageScaleSlider.Value;
-        _viewModel.UseJpegForOcr = UseJpegForOcrToggle.IsOn;
-        _viewModel.OcrJpegQuality = (int)Math.Round(OcrJpegQualitySlider.Value);
-        _viewModel.GroupingPower = (float)GroupingPowerSlider.Value;
-        _viewModel.HideIdenticalTranslations = HideIdenticalTranslationsToggle.IsOn;
-        _viewModel.GlobalHotkeyEnabled = GlobalHotkeyToggle.IsOn;
-        _viewModel.FloatingButtonAlwaysVisible = FloatingButtonAlwaysVisibleToggle.IsOn;
-        _viewModel.FloatingButtonScale = (float)FloatingButtonScaleSlider.Value;
-        _viewModel.FloatingButtonHorizontalPosition = (float)FloatingButtonHorizontalPositionSlider.Value;
-        _viewModel.FloatingButtonVerticalPosition = (float)FloatingButtonVerticalPositionSlider.Value;
+    }
+
+    private void UpdateHotkeyCodesSummary()
+    {
+#if __ANDROID__
+        _viewModel.SetHotkeyCodesSummary(HotkeyCaptureDialog.Format(_viewModel.HotkeyCodes));
+#else
+        _viewModel.SetHotkeyCodesSummary(AppStrings.Get("Nie ustawiono"));
+#endif
     }
 }

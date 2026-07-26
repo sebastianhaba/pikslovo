@@ -15,7 +15,6 @@ public sealed partial class MainPage
         }
 
         _onboardingService.Initialize(_viewModel);
-        UpdateOnboardingLanguageLabels();
         OnboardingLayout.Visibility = Visibility.Visible;
 #endif
     }
@@ -51,7 +50,6 @@ public sealed partial class MainPage
             _viewModel.OnboardingTargetLanguage = GetLanguage(picker);
         }
 
-        UpdateOnboardingLanguageLabels();
     }
 
     private void ContinueOnboardingLanguage_Click(object sender, RoutedEventArgs e)
@@ -59,7 +57,6 @@ public sealed partial class MainPage
         SelectLanguage(SourceLanguageBox, _viewModel.OnboardingSourceLanguage);
         SelectLanguage(TargetLanguageBox, _viewModel.OnboardingTargetLanguage);
         SaveSettings(requireValidTranslationSettings: false);
-        UpdateSettingSummaries();
         ShowOnboardingStep(OnboardingNotificationStep);
     }
 
@@ -116,13 +113,6 @@ public sealed partial class MainPage
         OnboardingOverlayFooter.Visibility = ReferenceEquals(activeStep, OnboardingOverlayStep) ? Visibility.Visible : Visibility.Collapsed;
         OnboardingApiKeyFooter.Visibility = ReferenceEquals(activeStep, OnboardingApiKeyStep) ? Visibility.Visible : Visibility.Collapsed;
     }
-
-    private void UpdateOnboardingLanguageLabels()
-    {
-        OnboardingSourceLanguageValue.Text = _onboardingService.GetLanguageName(_viewModel.OnboardingSourceLanguage);
-        OnboardingTargetLanguageValue.Text = _onboardingService.GetLanguageName(_viewModel.OnboardingTargetLanguage);
-    }
-
 #if __ANDROID__
     private void OnNotificationPermissionResult(bool granted) => _ = DispatcherQueue.TryEnqueue(() =>
     {

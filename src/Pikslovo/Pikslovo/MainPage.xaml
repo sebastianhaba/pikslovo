@@ -154,7 +154,7 @@
           </Button>
           <Border Height="1" Margin="16,0" Background="{ThemeResource AppBorderBrush}" />
           <Button Style="{StaticResource SettingsListItemButton}" Tag="appTheme" Click="OpenSection_Click" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch" Padding="16,14">
-            <Grid ColumnSpacing="16"><Grid.ColumnDefinitions><ColumnDefinition Width="32" /><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions><FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE793;" FontSize="20" VerticalAlignment="Center" /><StackPanel Grid.Column="1" Spacing="3"><TextBlock Text="Wygląd aplikacji" FontWeight="SemiBold" /><TextBlock x:Name="ThemeModeValue" Opacity="0.65" TextWrapping="Wrap" /></StackPanel><FontIcon Grid.Column="2" FontFamily="Segoe MDL2 Assets" Glyph="&#xE76C;" FontSize="16" VerticalAlignment="Center" /></Grid>
+            <Grid ColumnSpacing="16"><Grid.ColumnDefinitions><ColumnDefinition Width="32" /><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions><FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE793;" FontSize="20" VerticalAlignment="Center" /><StackPanel Grid.Column="1" Spacing="3"><TextBlock Text="Wygląd aplikacji" FontWeight="SemiBold" /><TextBlock Text="{Binding ThemeModeSummary}" Opacity="0.65" TextWrapping="Wrap" /></StackPanel><FontIcon Grid.Column="2" FontFamily="Segoe MDL2 Assets" Glyph="&#xE76C;" FontSize="16" VerticalAlignment="Center" /></Grid>
           </Button>
             </StackPanel>
           </Border>
@@ -210,9 +210,9 @@
           <StackPanel x:Name="TranslationSection" Visibility="Collapsed" Spacing="8">
             <Border Style="{StaticResource SettingsGroupBorder}">
               <StackPanel>
-            <Button Style="{StaticResource SettingsListItemButton}" Click="EditSourceLanguage_Click" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch" Padding="16,14"><Grid ColumnSpacing="16"><Grid.ColumnDefinitions><ColumnDefinition Width="32" /><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions><FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE774;" FontSize="20" VerticalAlignment="Center" /><StackPanel Grid.Column="1" Spacing="3"><TextBlock Text="Język źródłowy" FontWeight="SemiBold" /><TextBlock x:Name="SourceLanguageValue" Opacity="0.65" /></StackPanel><FontIcon Grid.Column="2" FontFamily="Segoe MDL2 Assets" Glyph="&#xE76C;" FontSize="16" VerticalAlignment="Center" /></Grid></Button>
+            <Button Style="{StaticResource SettingsListItemButton}" Click="EditSourceLanguage_Click" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch" Padding="16,14"><Grid ColumnSpacing="16"><Grid.ColumnDefinitions><ColumnDefinition Width="32" /><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions><FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE774;" FontSize="20" VerticalAlignment="Center" /><StackPanel Grid.Column="1" Spacing="3"><TextBlock Text="Język źródłowy" FontWeight="SemiBold" /><TextBlock Text="{Binding SourceLanguageSummary}" Opacity="0.65" /></StackPanel><FontIcon Grid.Column="2" FontFamily="Segoe MDL2 Assets" Glyph="&#xE76C;" FontSize="16" VerticalAlignment="Center" /></Grid></Button>
             <Border Height="1" Margin="16,0" Background="{ThemeResource AppBorderBrush}" />
-            <Button Style="{StaticResource SettingsListItemButton}" Click="EditTargetLanguage_Click" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch" Padding="16,14"><Grid ColumnSpacing="16"><Grid.ColumnDefinitions><ColumnDefinition Width="32" /><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions><FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE774;" FontSize="20" VerticalAlignment="Center" /><StackPanel Grid.Column="1" Spacing="3"><TextBlock Text="Język docelowy" FontWeight="SemiBold" /><TextBlock x:Name="TargetLanguageValue" Opacity="0.65" /></StackPanel><FontIcon Grid.Column="2" FontFamily="Segoe MDL2 Assets" Glyph="&#xE76C;" FontSize="16" VerticalAlignment="Center" /></Grid></Button>
+            <Button Style="{StaticResource SettingsListItemButton}" Click="EditTargetLanguage_Click" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch" Padding="16,14"><Grid ColumnSpacing="16"><Grid.ColumnDefinitions><ColumnDefinition Width="32" /><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions><FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE774;" FontSize="20" VerticalAlignment="Center" /><StackPanel Grid.Column="1" Spacing="3"><TextBlock Text="Język docelowy" FontWeight="SemiBold" /><TextBlock Text="{Binding TargetLanguageSummary}" Opacity="0.65" /></StackPanel><FontIcon Grid.Column="2" FontFamily="Segoe MDL2 Assets" Glyph="&#xE76C;" FontSize="16" VerticalAlignment="Center" /></Grid></Button>
               </StackPanel>
             </Border>
           </StackPanel>
@@ -254,8 +254,8 @@
                   <Grid.ColumnDefinitions><ColumnDefinition Width="32" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
                   <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE8C8;" FontSize="20" VerticalAlignment="Center" />
                   <StackPanel Grid.Column="1" Spacing="8">
-                    <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions><TextBlock Text="Pewność rozpoznawania" FontWeight="SemiBold" /><TextBlock x:Name="RecognitionConfidenceValue" Grid.Column="1" Opacity="0.65" /></Grid>
-                    <Slider x:Name="RecognitionConfidenceSlider" Minimum="0" Maximum="1" StepFrequency="0.1" Value="0.6" ValueChanged="RecognitionConfidenceSlider_ValueChanged" />
+                    <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions><TextBlock Text="Pewność rozpoznawania" FontWeight="SemiBold" /><TextBlock Text="{Binding RecognitionConfidenceDisplay}" Grid.Column="1" Opacity="0.65" /></Grid>
+                    <Slider Minimum="0" Maximum="1" StepFrequency="0.1" Value="{Binding RecognitionConfidence, Mode=TwoWay}" />
                   </StackPanel>
                 </Grid>
                 <Border Height="1" Margin="16,0" Background="{ThemeResource AppBorderBrush}" />
@@ -263,8 +263,8 @@
                   <Grid.ColumnDefinitions><ColumnDefinition Width="32" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
                   <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE71E;" FontSize="20" VerticalAlignment="Center" />
                   <StackPanel Grid.Column="1" Spacing="8">
-                    <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions><TextBlock Text="Skala obrazu OCR" FontWeight="SemiBold" /><TextBlock x:Name="OcrImageScaleValue" Grid.Column="1" Opacity="0.65" /></Grid>
-                    <Slider x:Name="OcrImageScaleSlider" Minimum="0.25" Maximum="1" StepFrequency="0.25" Value="1" ValueChanged="OcrImageScaleSlider_ValueChanged" />
+                    <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions><TextBlock Text="Skala obrazu OCR" FontWeight="SemiBold" /><TextBlock Text="{Binding OcrImageScaleDisplay}" Grid.Column="1" Opacity="0.65" /></Grid>
+                    <Slider Minimum="0.25" Maximum="1" StepFrequency="0.25" Value="{Binding OcrImageScale, Mode=TwoWay}" />
                   </StackPanel>
                 </Grid>
                 <Border Height="1" Margin="16,0" Background="{ThemeResource AppBorderBrush}" />
@@ -272,15 +272,15 @@
                   <Button Style="{StaticResource SettingsListItemButton}" IsHitTestVisible="False" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch" Padding="16,14">
                     <Grid ColumnSpacing="16"><Grid.ColumnDefinitions><ColumnDefinition Width="32" /><ColumnDefinition Width="*" /><ColumnDefinition Width="52" /></Grid.ColumnDefinitions><FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE8B9;" FontSize="20" VerticalAlignment="Center" /><StackPanel Grid.Column="1" Spacing="3"><TextBlock Text="Kompresuj obraz OCR do JPEG" FontWeight="SemiBold" /><TextBlock Text="Zmniejsza dane wysyłane do Google Cloud." Opacity="0.65" TextWrapping="Wrap" /></StackPanel></Grid>
                   </Button>
-                  <ToggleSwitch x:Name="UseJpegForOcrToggle" HorizontalAlignment="Right" Margin="0,0,16,0" Toggled="UseJpegForOcrToggle_Toggled" VerticalAlignment="Center" />
+                  <ToggleSwitch HorizontalAlignment="Right" Margin="0,0,16,0" IsOn="{Binding UseJpegForOcr, Mode=TwoWay}" VerticalAlignment="Center" />
                 </Grid>
                 <Border Height="1" Margin="16,0" Background="{ThemeResource AppBorderBrush}" />
-                <Grid x:Name="OcrJpegQualityPanel" Margin="16,14" ColumnSpacing="16">
+                <Grid x:Name="OcrJpegQualityPanel" Margin="16,14" ColumnSpacing="16" Opacity="{Binding OcrJpegQualityOpacity}">
                   <Grid.ColumnDefinitions><ColumnDefinition Width="32" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
                   <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE91B;" FontSize="20" VerticalAlignment="Center" />
                   <StackPanel Grid.Column="1" Spacing="8">
-                    <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions><TextBlock Text="Jakość JPEG" FontWeight="SemiBold" /><TextBlock x:Name="OcrJpegQualityValue" Grid.Column="1" Opacity="0.65" /></Grid>
-                    <Slider x:Name="OcrJpegQualitySlider" Minimum="50" Maximum="100" StepFrequency="5" Value="85" ValueChanged="OcrJpegQualitySlider_ValueChanged" />
+                    <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions><TextBlock Text="Jakość JPEG" FontWeight="SemiBold" /><TextBlock Text="{Binding OcrJpegQualityDisplay}" Grid.Column="1" Opacity="0.65" /></Grid>
+                    <Slider Minimum="50" Maximum="100" StepFrequency="5" Value="{Binding OcrJpegQuality, Mode=TwoWay}" IsEnabled="{Binding IsOcrJpegQualityEnabled}" />
                   </StackPanel>
                 </Grid>
                 <Border Height="1" Margin="16,0" Background="{ThemeResource AppBorderBrush}" />
@@ -288,8 +288,8 @@
                   <Grid.ColumnDefinitions><ColumnDefinition Width="32" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
                   <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE8C8;" FontSize="20" VerticalAlignment="Center" />
                   <StackPanel Grid.Column="1" Spacing="8">
-                    <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions><TextBlock Text="Siła łączenia tekstu" FontWeight="SemiBold" /><TextBlock x:Name="GroupingPowerValue" Grid.Column="1" Opacity="0.65" /></Grid>
-                    <Slider x:Name="GroupingPowerSlider" Minimum="0.25" Maximum="1" StepFrequency="0.05" Value="0.25" ValueChanged="GroupingPowerSlider_ValueChanged" />
+                    <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions><TextBlock Text="Siła łączenia tekstu" FontWeight="SemiBold" /><TextBlock Text="{Binding GroupingPowerDisplay}" Grid.Column="1" Opacity="0.65" /></Grid>
+                    <Slider Minimum="0.25" Maximum="1" StepFrequency="0.05" Value="{Binding GroupingPower, Mode=TwoWay}" />
                   </StackPanel>
                 </Grid>
                 <Border Height="1" Margin="16,0" Background="{ThemeResource AppBorderBrush}" />
@@ -297,8 +297,8 @@
                   <Grid.ColumnDefinitions><ColumnDefinition Width="32" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
                   <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE8D2;" FontSize="20" VerticalAlignment="Center" />
                   <StackPanel Grid.Column="1" Spacing="8">
-                    <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions><TextBlock Text="Skalowanie czcionki" FontWeight="SemiBold" /><TextBlock x:Name="FontScaleValue" Grid.Column="1" Opacity="0.65" /></Grid>
-                    <Slider x:Name="FontScaleSlider" Minimum="1" Maximum="3" StepFrequency="0.1" Value="1" ValueChanged="FontScaleSlider_ValueChanged" />
+                    <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions><TextBlock Text="Skalowanie czcionki" FontWeight="SemiBold" /><TextBlock Text="{Binding FontScaleDisplay}" Grid.Column="1" Opacity="0.65" /></Grid>
+                    <Slider Minimum="1" Maximum="3" StepFrequency="0.1" Value="{Binding FontScale, Mode=TwoWay}" />
                   </StackPanel>
                 </Grid>
                 <Border Height="1" Margin="16,0" Background="{ThemeResource AppBorderBrush}" />
@@ -306,7 +306,7 @@
                   <Button Style="{StaticResource SettingsListItemButton}" IsHitTestVisible="False" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch" Padding="16,14">
                     <Grid ColumnSpacing="16"><Grid.ColumnDefinitions><ColumnDefinition Width="32" /><ColumnDefinition Width="*" /><ColumnDefinition Width="52" /></Grid.ColumnDefinitions><FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE8A1;" FontSize="20" VerticalAlignment="Center" /><StackPanel Grid.Column="1" Spacing="3"><TextBlock Text="Ukrywaj identyczne tłumaczenia" FontWeight="SemiBold" /><TextBlock Text="Nie pokazuj tekstu, gdy tłumaczenie jest takie samo." Opacity="0.65" TextWrapping="Wrap" /></StackPanel></Grid>
                   </Button>
-                  <ToggleSwitch x:Name="HideIdenticalTranslationsToggle" HorizontalAlignment="Right" Margin="0,0,16,0" Toggled="Setting_Changed" VerticalAlignment="Center" />
+                  <ToggleSwitch HorizontalAlignment="Right" Margin="0,0,16,0" IsOn="{Binding HideIdenticalTranslations, Mode=TwoWay}" VerticalAlignment="Center" />
                 </Grid>
               </StackPanel>
             </Border>
@@ -317,9 +317,9 @@
               <StackPanel>
             <Button Style="{StaticResource SettingsListItemButton}" Click="OpenAccessibilitySettings_Click" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch" Padding="16,14"><Grid ColumnSpacing="16"><Grid.ColumnDefinitions><ColumnDefinition Width="32" /><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions><FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE72E;" FontSize="20" VerticalAlignment="Center" /><StackPanel Grid.Column="1" Spacing="3"><TextBlock Text="Ustawienia dostępności" FontWeight="SemiBold" /><TextBlock Text="Włącz usługę systemową dla globalnego hotkeya." Opacity="0.65" TextWrapping="Wrap" /></StackPanel><FontIcon Grid.Column="2" FontFamily="Segoe MDL2 Assets" Glyph="&#xE76C;" FontSize="16" VerticalAlignment="Center" /></Grid></Button>
             <Border Height="1" Margin="16,0" Background="{ThemeResource AppBorderBrush}" />
-            <Grid><Button Style="{StaticResource SettingsListItemButton}" IsHitTestVisible="False" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch" Padding="16,14"><Grid ColumnSpacing="16"><Grid.ColumnDefinitions><ColumnDefinition Width="32" /><ColumnDefinition Width="*" /><ColumnDefinition Width="52" /></Grid.ColumnDefinitions><FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE765;" FontSize="20" VerticalAlignment="Center" /><StackPanel Grid.Column="1" Spacing="3"><TextBlock Text="Włącz globalny hotkey" FontWeight="SemiBold" /><TextBlock Text="Pozwala wywołać tłumaczenie poza aplikacją." Opacity="0.65" TextWrapping="Wrap" /></StackPanel></Grid></Button><ToggleSwitch x:Name="GlobalHotkeyToggle" HorizontalAlignment="Right" Margin="0,0,16,0" Toggled="Setting_Changed" VerticalAlignment="Center" /></Grid>
+            <Grid><Button Style="{StaticResource SettingsListItemButton}" IsHitTestVisible="False" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch" Padding="16,14"><Grid ColumnSpacing="16"><Grid.ColumnDefinitions><ColumnDefinition Width="32" /><ColumnDefinition Width="*" /><ColumnDefinition Width="52" /></Grid.ColumnDefinitions><FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE765;" FontSize="20" VerticalAlignment="Center" /><StackPanel Grid.Column="1" Spacing="3"><TextBlock Text="Włącz globalny hotkey" FontWeight="SemiBold" /><TextBlock Text="Pozwala wywołać tłumaczenie poza aplikacją." Opacity="0.65" TextWrapping="Wrap" /></StackPanel></Grid></Button><ToggleSwitch x:Name="GlobalHotkeyToggle" HorizontalAlignment="Right" Margin="0,0,16,0" IsOn="{Binding GlobalHotkeyEnabled, Mode=TwoWay}" VerticalAlignment="Center" /></Grid>
             <Border Height="1" Margin="16,0" Background="{ThemeResource AppBorderBrush}" />
-            <Button Style="{StaticResource SettingsListItemButton}" Click="EditHotkeyCode_Click" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch" Padding="16,14"><Grid ColumnSpacing="16"><Grid.ColumnDefinitions><ColumnDefinition Width="32" /><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions><FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE765;" FontSize="20" VerticalAlignment="Center" /><StackPanel Grid.Column="1" Spacing="3"><TextBlock Text="Klawisz skrótu" FontWeight="SemiBold" /><TextBlock x:Name="HotkeyCodeValue" Opacity="0.65" TextWrapping="Wrap" /></StackPanel><FontIcon Grid.Column="2" FontFamily="Segoe MDL2 Assets" Glyph="&#xE76C;" FontSize="16" VerticalAlignment="Center" /></Grid></Button>
+            <Button Style="{StaticResource SettingsListItemButton}" Click="EditHotkeyCode_Click" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch" Padding="16,14"><Grid ColumnSpacing="16"><Grid.ColumnDefinitions><ColumnDefinition Width="32" /><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions><FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE765;" FontSize="20" VerticalAlignment="Center" /><StackPanel Grid.Column="1" Spacing="3"><TextBlock Text="Klawisz skrótu" FontWeight="SemiBold" /><TextBlock Text="{Binding HotkeyCodesSummary}" Opacity="0.65" TextWrapping="Wrap" /></StackPanel><FontIcon Grid.Column="2" FontFamily="Segoe MDL2 Assets" Glyph="&#xE76C;" FontSize="16" VerticalAlignment="Center" /></Grid></Button>
               </StackPanel>
             </Border>
           </StackPanel>
@@ -327,13 +327,13 @@
           <StackPanel x:Name="FloatingButtonSection" Visibility="Collapsed" Spacing="8">
             <Border Style="{StaticResource SettingsGroupBorder}">
               <StackPanel>
-                <Grid><Button Style="{StaticResource SettingsListItemButton}" IsHitTestVisible="False" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch" Padding="16,14"><Grid ColumnSpacing="16"><Grid.ColumnDefinitions><ColumnDefinition Width="32" /><ColumnDefinition Width="*" /><ColumnDefinition Width="52" /></Grid.ColumnDefinitions><FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE890;" FontSize="20" VerticalAlignment="Center" /><StackPanel Grid.Column="1" Spacing="3"><TextBlock Text="Zawsze pokazuj przycisk" FontWeight="SemiBold" /><TextBlock x:Name="FloatingButtonVisibilityDescription" Opacity="0.65" TextWrapping="Wrap" /></StackPanel></Grid></Button><ToggleSwitch x:Name="FloatingButtonAlwaysVisibleToggle" HorizontalAlignment="Right" Margin="0,0,16,0" Toggled="FloatingButtonSetting_Changed" VerticalAlignment="Center" /></Grid>
+                <Grid><Button Style="{StaticResource SettingsListItemButton}" IsHitTestVisible="False" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch" Padding="16,14"><Grid ColumnSpacing="16"><Grid.ColumnDefinitions><ColumnDefinition Width="32" /><ColumnDefinition Width="*" /><ColumnDefinition Width="52" /></Grid.ColumnDefinitions><FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE890;" FontSize="20" VerticalAlignment="Center" /><StackPanel Grid.Column="1" Spacing="3"><TextBlock Text="Zawsze pokazuj przycisk" FontWeight="SemiBold" /><TextBlock Text="{Binding FloatingButtonVisibilityDescription}" Opacity="0.65" TextWrapping="Wrap" /></StackPanel></Grid></Button><ToggleSwitch HorizontalAlignment="Right" Margin="0,0,16,0" IsOn="{Binding FloatingButtonAlwaysVisible, Mode=TwoWay}" VerticalAlignment="Center" /></Grid>
                 <Border Height="1" Margin="16,0" Background="{ThemeResource AppBorderBrush}" />
-                <Grid Margin="16,14" ColumnSpacing="16"><Grid.ColumnDefinitions><ColumnDefinition Width="32" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions><FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE740;" FontSize="20" VerticalAlignment="Center" /><StackPanel Grid.Column="1" Spacing="8"><Grid><Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions><TextBlock Text="Rozmiar przycisku" FontWeight="SemiBold" /><TextBlock x:Name="FloatingButtonScaleValue" Grid.Column="1" Opacity="0.65" /></Grid><Slider x:Name="FloatingButtonScaleSlider" Minimum="0.5" Maximum="2" StepFrequency="0.1" Value="1" ValueChanged="FloatingButtonScaleSlider_ValueChanged" /></StackPanel></Grid>
+                <Grid Margin="16,14" ColumnSpacing="16"><Grid.ColumnDefinitions><ColumnDefinition Width="32" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions><FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE740;" FontSize="20" VerticalAlignment="Center" /><StackPanel Grid.Column="1" Spacing="8"><Grid><Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions><TextBlock Text="Rozmiar przycisku" FontWeight="SemiBold" /><TextBlock Text="{Binding FloatingButtonScaleDisplay}" Grid.Column="1" Opacity="0.65" /></Grid><Slider Minimum="0.5" Maximum="2" StepFrequency="0.1" Value="{Binding FloatingButtonScale, Mode=TwoWay}" /></StackPanel></Grid>
                 <Border Height="1" Margin="16,0" Background="{ThemeResource AppBorderBrush}" />
-                <Grid Margin="16,14" ColumnSpacing="16"><Grid.ColumnDefinitions><ColumnDefinition Width="32" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions><FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE745;" FontSize="20" VerticalAlignment="Center" /><StackPanel Grid.Column="1" Spacing="8"><Grid><Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions><TextBlock Text="Pozycja pozioma" FontWeight="SemiBold" /><TextBlock x:Name="FloatingButtonHorizontalPositionValue" Grid.Column="1" Opacity="0.65" /></Grid><Slider x:Name="FloatingButtonHorizontalPositionSlider" Minimum="0" Maximum="1" StepFrequency="0.01" Value="1" ValueChanged="FloatingButtonHorizontalPositionSlider_ValueChanged" /></StackPanel></Grid>
+                <Grid Margin="16,14" ColumnSpacing="16"><Grid.ColumnDefinitions><ColumnDefinition Width="32" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions><FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE745;" FontSize="20" VerticalAlignment="Center" /><StackPanel Grid.Column="1" Spacing="8"><Grid><Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions><TextBlock Text="Pozycja pozioma" FontWeight="SemiBold" /><TextBlock Text="{Binding FloatingButtonHorizontalPositionDisplay}" Grid.Column="1" Opacity="0.65" /></Grid><Slider Minimum="0" Maximum="1" StepFrequency="0.01" Value="{Binding FloatingButtonHorizontalPosition, Mode=TwoWay}" /></StackPanel></Grid>
                 <Border Height="1" Margin="16,0" Background="{ThemeResource AppBorderBrush}" />
-                <Grid Margin="16,14" ColumnSpacing="16"><Grid.ColumnDefinitions><ColumnDefinition Width="32" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions><FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE746;" FontSize="20" VerticalAlignment="Center" /><StackPanel Grid.Column="1" Spacing="8"><Grid><Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions><TextBlock Text="Pozycja pionowa" FontWeight="SemiBold" /><TextBlock x:Name="FloatingButtonVerticalPositionValue" Grid.Column="1" Opacity="0.65" /></Grid><Slider x:Name="FloatingButtonVerticalPositionSlider" Minimum="0" Maximum="1" StepFrequency="0.01" Value="0.1" ValueChanged="FloatingButtonVerticalPositionSlider_ValueChanged" /></StackPanel></Grid>
+                <Grid Margin="16,14" ColumnSpacing="16"><Grid.ColumnDefinitions><ColumnDefinition Width="32" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions><FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE746;" FontSize="20" VerticalAlignment="Center" /><StackPanel Grid.Column="1" Spacing="8"><Grid><Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions><TextBlock Text="Pozycja pionowa" FontWeight="SemiBold" /><TextBlock Text="{Binding FloatingButtonVerticalPositionDisplay}" Grid.Column="1" Opacity="0.65" /></Grid><Slider Minimum="0" Maximum="1" StepFrequency="0.01" Value="{Binding FloatingButtonVerticalPosition, Mode=TwoWay}" /></StackPanel></Grid>
               </StackPanel>
             </Border>
           </StackPanel>
@@ -360,15 +360,15 @@
                   </StackPanel>
                 </Grid>
                 <Border Height="1" Margin="16,0" Background="{ThemeResource AppBorderBrush}" />
-                <Grid Margin="16,14"><Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions><TextBlock Text="Przechwycenie + kodowanie" /><TextBlock x:Name="CaptureAndImageEncodingDurationValue" Grid.Column="1" FontWeight="SemiBold" /></Grid>
+                <Grid Margin="16,14"><Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions><TextBlock Text="Przechwycenie + kodowanie" /><TextBlock Text="{Binding CaptureAndImageEncodingDuration}" Grid.Column="1" FontWeight="SemiBold" /></Grid>
                 <Border Height="1" Margin="16,0" Background="{ThemeResource AppBorderBrush}" />
-                <Grid Margin="16,14"><Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions><TextBlock Text="Kodowanie obrazu OCR" /><TextBlock x:Name="OcrImageEncodingDurationValue" Grid.Column="1" FontWeight="SemiBold" /></Grid>
+                <Grid Margin="16,14"><Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions><TextBlock Text="Kodowanie obrazu OCR" /><TextBlock Text="{Binding OcrImageEncodingDuration}" Grid.Column="1" FontWeight="SemiBold" /></Grid>
                 <Border Height="1" Margin="16,0" Background="{ThemeResource AppBorderBrush}" />
-                <Grid Margin="16,14"><Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions><TextBlock Text="Cloud Vision OCR" /><TextBlock x:Name="CloudVisionOcrDurationValue" Grid.Column="1" FontWeight="SemiBold" /></Grid>
+                <Grid Margin="16,14"><Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions><TextBlock Text="Cloud Vision OCR" /><TextBlock Text="{Binding CloudVisionOcrDuration}" Grid.Column="1" FontWeight="SemiBold" /></Grid>
                 <Border Height="1" Margin="16,0" Background="{ThemeResource AppBorderBrush}" />
-                <Grid Margin="16,14"><Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions><TextBlock Text="Cloud Translation" /><TextBlock x:Name="CloudTranslationDurationValue" Grid.Column="1" FontWeight="SemiBold" /></Grid>
+                <Grid Margin="16,14"><Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions><TextBlock Text="Cloud Translation" /><TextBlock Text="{Binding CloudTranslationDuration}" Grid.Column="1" FontWeight="SemiBold" /></Grid>
                 <Border Height="1" Margin="16,0" Background="{ThemeResource AppBorderBrush}" />
-                <Grid Margin="16,14"><Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions><TextBlock Text="Całość" FontWeight="SemiBold" /><TextBlock x:Name="TranslationTotalDurationValue" Grid.Column="1" FontWeight="SemiBold" /></Grid>
+                <Grid Margin="16,14"><Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions><TextBlock Text="Całość" FontWeight="SemiBold" /><TextBlock Text="{Binding TranslationTotalDuration}" Grid.Column="1" FontWeight="SemiBold" /></Grid>
               </StackPanel>
             </Border>
             <Border Style="{StaticResource SettingsGroupBorder}">
@@ -377,7 +377,7 @@
                 <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE72E;" FontSize="20" VerticalAlignment="Center" />
                 <StackPanel Grid.Column="1" Spacing="3">
                   <TextBlock Text="Ostatnie sprawdzenie klucza API" FontWeight="SemiBold" />
-                  <TextBlock x:Name="ApiKeyValidationDurationValue" Opacity="0.65" />
+                  <TextBlock Text="{Binding ApiKeyValidationDuration}" Opacity="0.65" />
                 </StackPanel>
               </Grid>
             </Border>
@@ -460,11 +460,11 @@
             <Border Style="{StaticResource SettingsGroupBorder}">
               <StackPanel>
                 <Button Style="{StaticResource SettingsListItemButton}" Click="EditOnboardingSourceLanguage_Click" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch" Padding="16,14">
-                  <Grid ColumnSpacing="16"><Grid.ColumnDefinitions><ColumnDefinition Width="32" /><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions><FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE774;" FontSize="20" VerticalAlignment="Center" /><StackPanel Grid.Column="1" Spacing="3"><TextBlock Text="Język źródłowy" FontWeight="SemiBold" /><TextBlock x:Name="OnboardingSourceLanguageValue" Opacity="0.65" /></StackPanel><FontIcon Grid.Column="2" FontFamily="Segoe MDL2 Assets" Glyph="&#xE76C;" FontSize="16" VerticalAlignment="Center" /></Grid>
+                  <Grid ColumnSpacing="16"><Grid.ColumnDefinitions><ColumnDefinition Width="32" /><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions><FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE774;" FontSize="20" VerticalAlignment="Center" /><StackPanel Grid.Column="1" Spacing="3"><TextBlock Text="Język źródłowy" FontWeight="SemiBold" /><TextBlock Text="{Binding OnboardingSourceLanguageLabel}" Opacity="0.65" /></StackPanel><FontIcon Grid.Column="2" FontFamily="Segoe MDL2 Assets" Glyph="&#xE76C;" FontSize="16" VerticalAlignment="Center" /></Grid>
                 </Button>
                 <Border Height="1" Margin="16,0" Background="{ThemeResource AppBorderBrush}" />
                 <Button Style="{StaticResource SettingsListItemButton}" Click="EditOnboardingTargetLanguage_Click" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch" Padding="16,14">
-                  <Grid ColumnSpacing="16"><Grid.ColumnDefinitions><ColumnDefinition Width="32" /><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions><FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE774;" FontSize="20" VerticalAlignment="Center" /><StackPanel Grid.Column="1" Spacing="3"><TextBlock Text="Język docelowy" FontWeight="SemiBold" /><TextBlock x:Name="OnboardingTargetLanguageValue" Opacity="0.65" /></StackPanel><FontIcon Grid.Column="2" FontFamily="Segoe MDL2 Assets" Glyph="&#xE76C;" FontSize="16" VerticalAlignment="Center" /></Grid>
+                  <Grid ColumnSpacing="16"><Grid.ColumnDefinitions><ColumnDefinition Width="32" /><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions><FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE774;" FontSize="20" VerticalAlignment="Center" /><StackPanel Grid.Column="1" Spacing="3"><TextBlock Text="Język docelowy" FontWeight="SemiBold" /><TextBlock Text="{Binding OnboardingTargetLanguageLabel}" Opacity="0.65" /></StackPanel><FontIcon Grid.Column="2" FontFamily="Segoe MDL2 Assets" Glyph="&#xE76C;" FontSize="16" VerticalAlignment="Center" /></Grid>
                 </Button>
               </StackPanel>
             </Border>

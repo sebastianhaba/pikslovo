@@ -28,12 +28,6 @@ public sealed partial class MainPage
 
     private void UpdateDiagnostics()
     {
-        var diagnostics = _diagnosticsService.Snapshot;
-        CaptureAndImageEncodingDurationValue.Text = FormatDuration(diagnostics.CaptureAndImageEncodingMilliseconds);
-        OcrImageEncodingDurationValue.Text = FormatDuration(diagnostics.OcrImageEncodingMilliseconds);
-        CloudVisionOcrDurationValue.Text = FormatDuration(diagnostics.CloudVisionOcrMilliseconds);
-        CloudTranslationDurationValue.Text = FormatDuration(diagnostics.CloudTranslationMilliseconds);
-        TranslationTotalDurationValue.Text = FormatDuration(diagnostics.TranslationTotalMilliseconds);
-        ApiKeyValidationDurationValue.Text = FormatDuration(diagnostics.ApiKeyValidationMilliseconds);
+        _viewModel.UpdateDiagnostics(_diagnosticsService.Snapshot);
     }
 }
