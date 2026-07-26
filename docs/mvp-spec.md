@@ -91,8 +91,12 @@ je wywolac; dokumentacja musi to wyraznie zaznaczac.
 
 ## Wymagania niefunkcjonalne
 
-- Klucz API jest przechowywany lokalnie w Android Keystore / EncryptedSharedPreferences
-  i nigdy nie trafia do logow ani analityki.
+- Klucz API jest przechowywany lokalnie jako zaszyfrowana wartosc w
+  `SharedPreferences`; klucz szyfrujacy jest generowany i trzymany w Android
+  Keystore. Sekret nigdy nie trafia do logow ani analityki.
+- Backup danych aplikacji jest wylaczony. Konfiguracja zalezy od materialu
+  klucza w Android Keystore, ktory nie jest traktowany jako przenaszalny stan
+  aplikacji przy restore lub migracji urzadzenia.
 - Klucz nalezy ograniczyc w Google Cloud do Cloud Vision API i Cloud Translation
   API oraz, gdy obsluga danego API na to pozwala, do podpisanego pakietu Android.
 - Zrzut i wynik OCR sa trzymane w pamieci tylko do zamkniecia nakladki lub

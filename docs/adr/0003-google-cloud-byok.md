@@ -22,5 +22,8 @@ instruuje uzytkownika, aby wlaczyl obie uslugi i ograniczyl klucz.
 - Nie przechowujemy sekretow po stronie projektu ani nie potrzebujemy konta.
 - API key w aplikacji nie jest absolutnym sekretem; klucz musi byc prywatny,
   ograniczony do wymaganych API i nie moze trafic do zrodla ani logow.
+- Zaszyfrowana wartosc klucza moze byc trzymana w lokalnym storage, ale material
+  klucza pozostaje zwiazany z Android Keystore danego urzadzenia; systemowy
+  backup aplikacji musi pozostac wylaczony, zeby uniknac niespojnego restore.
 - V2 jest proste dla MVP, ale interfejs `ITranslationProvider` pozwoli pozniej
   dodac Translation v3 lub innego dostawce.

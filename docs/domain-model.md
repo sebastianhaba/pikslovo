@@ -16,13 +16,16 @@
 ## Agregaty i wlasciciele stanu
 
 - `Configuration` jest trwala konfiguracja urzadzenia. Jej sekret jest
-  przechowywany szyfrowanie; pozostale ustawienia zwykle. Prog pewnosci OCR
-  ma zakres od `0` do `1` i domyslnie wynosi `0.6`; regiony ponizej progu nie
-  sa wysylane do tlumaczenia. Skala czcionki nakladki ma zakres od `1.0` do
-  `3.0` i domyslnie wynosi `1.0`. Opcja ukrywania identycznych tlumaczen jest
-  domyslnie wylaczona; po wlaczeniu nie rysujemy regionu, gdy tekst OCR i
-  tlumaczenie sa rowne po usunieciu bialych znakow na brzegach i bez rozrozniania
-  wielkosci liter.
+  przechowywany jako zaszyfrowana wartosc w `SharedPreferences`, a klucz
+  szyfrujacy pochodzi z Android Keystore; pozostale ustawienia sa trzymane
+  zwykle. Zaleznie od platformowego Keystore konfiguracja nie jest
+  przenoszalna przez systemowy restore, dlatego backup danych aplikacji jest
+  wylaczony. Prog pewnosci OCR ma zakres od `0` do `1` i domyslnie wynosi
+  `0.6`; regiony ponizej progu nie sa wysylane do tlumaczenia. Skala czcionki
+  nakladki ma zakres od `1.0` do `3.0` i domyslnie wynosi `1.0`. Opcja
+  ukrywania identycznych tlumaczen jest domyslnie wylaczona; po wlaczeniu nie
+  rysujemy regionu, gdy tekst OCR i tlumaczenie sa rowne po usunieciu bialych
+  znakow na brzegach i bez rozrozniania wielkosci liter.
 - `TranslationSession` jest jedynym wlascicielem MediaProjection, uslugi
   pierwszoplanowej, uchwytu VirtualDisplay, nakladki i anulowania biezacej
   operacji.
