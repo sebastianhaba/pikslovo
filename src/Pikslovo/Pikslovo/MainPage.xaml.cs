@@ -3,9 +3,9 @@ using Pikslovo.Services;
 using Microsoft.UI.Xaml.Controls.Primitives;
 using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
+using System.Diagnostics;
 using System.Globalization;
 using System.Net;
-using System.Diagnostics;
 using System.Threading.Tasks;
 
 #if __ANDROID__
@@ -21,17 +21,17 @@ public sealed partial class MainPage : Page
 {
     private static string ApiKeyTestButtonText => AppStrings.Get("Sprawdź klucz");
     private static string ApiKeyValidationInProgressButtonText => AppStrings.Get("Sprawdzanie...");
+
+    private readonly MainPageViewModel _viewModel = new();
+    private readonly MainPageSettingsPersistenceService _settingsPersistence = new();
+    private readonly MainPageOnboardingService _onboardingService = new();
+    private readonly MainPagePermissionsService _permissionsService = new();
+    private readonly MainPageDiagnosticsService _diagnosticsService = new();
     private bool _isLoading;
-    private bool _updatingSessionToggle;
     private bool _isApiKeyVisible;
-    private int[] _hotkeyCodes = [];
-    private AppThemeMode _themeMode = AppThemeMode.System;
-    private AppAccent _accent = AppAccent.Lavender;
-    private AppLanguageMode _languageMode = AppLanguageMode.System;
-    private string _onboardingSourceLanguage = "ja";
-    private string _onboardingTargetLanguage = "pl";
-    private bool _awaitingOnboardingNotificationPermission;
 #if __ANDROID__
+    private bool _updatingSessionToggle;
+    private bool _awaitingOnboardingNotificationPermission;
     private FloatingTranslationTrigger? _floatingButtonPreview;
 #endif
 
@@ -61,58 +61,6 @@ public sealed partial class MainPage : Page
 
         InitializeOnboarding();
         LocalizeXamlStrings(this);
-    }
-
-    private void LoadSettings()
-    {
-#if __ANDROID__
-        var settings = AndroidSettingsStore.Load(global::Android.App.Application.Context!);
-        ApiKeyBox.Password = settings.Translation.ApiKey;
-        SelectLanguage(SourceLanguageBox, settings.Translation.SourceLanguage);
-        SelectLanguage(TargetLanguageBox, settings.Translation.TargetLanguage);
-        FontScaleSlider.Value = settings.Translation.FontScale;
-        RecognitionConfidenceSlider.Value = settings.Translation.RecognitionConfidence;
-        OcrImageScaleSlider.Value = settings.Translation.OcrImageScale;
-        UseJpegForOcrToggle.IsOn = settings.Translation.UseJpegForOcr;
-        OcrJpegQualitySlider.Value = settings.Translation.OcrJpegQuality;
-        GroupingPowerSlider.Value = settings.Translation.GroupingPower;
-        HideIdenticalTranslationsToggle.IsOn = settings.Translation.HideIdenticalTranslations;
-        _hotkeyCodes = settings.HotkeyCodes;
-        GlobalHotkeyToggle.IsOn = settings.GlobalHotkeyEnabled;
-        SetThemeMode(settings.ThemeMode);
-        SetAccent(settings.Accent);
-        SetApplicationLanguage(settings.LanguageMode);
-        FloatingButtonAlwaysVisibleToggle.IsOn = settings.FloatingButton.AlwaysVisible;
-        FloatingButtonScaleSlider.Value = settings.FloatingButton.Scale;
-        FloatingButtonHorizontalPositionSlider.Value = settings.FloatingButton.HorizontalPosition;
-        FloatingButtonVerticalPositionSlider.Value = settings.FloatingButton.VerticalPosition;
-#else
-        SelectLanguage(SourceLanguageBox, "ja");
-        SelectLanguage(TargetLanguageBox, "pl");
-        FontScaleSlider.Value = TranslationSettings.DefaultFontScale;
-        RecognitionConfidenceSlider.Value = TranslationSettings.DefaultRecognitionConfidence;
-        OcrImageScaleSlider.Value = TranslationSettings.DefaultOcrImageScale;
-        UseJpegForOcrToggle.IsOn = TranslationSettings.DefaultUseJpegForOcr;
-        OcrJpegQualitySlider.Value = TranslationSettings.DefaultOcrJpegQuality;
-        GroupingPowerSlider.Value = TranslationSettings.DefaultGroupingPower;
-        HideIdenticalTranslationsToggle.IsOn = false;
-        SetThemeMode(AppThemeMode.System);
-        SetAccent(AppAccent.Lavender);
-        SetApplicationLanguage(AppLanguageMode.System);
-        FloatingButtonAlwaysVisibleToggle.IsOn = true;
-        FloatingButtonScaleSlider.Value = 1;
-        FloatingButtonHorizontalPositionSlider.Value = 1;
-        FloatingButtonVerticalPositionSlider.Value = 0.1;
-#endif
-        UpdateFontScaleValue();
-        UpdateRecognitionConfidenceValue();
-        UpdateOcrImageScaleValue();
-        UpdateOcrJpegQualityValue();
-        UpdateOcrJpegQualityControl();
-        UpdateGroupingPowerValue();
-        UpdateFloatingButtonValues();
-        UpdateSettingSummaries();
-        UpdateSessionToggle();
     }
 
     private void OpenSection_Click(object sender, RoutedEventArgs e)
@@ -213,6 +161,7 @@ public sealed partial class MainPage : Page
             UpdateFloatingButtonPreview();
 #endif
         }
+
         UpdateSettingSummaries();
     }
 
@@ -237,9 +186,11 @@ public sealed partial class MainPage : Page
         (global::Microsoft.UI.Xaml.Application.Current as App)?.ReloadMainPage();
     }
 
-    private async void EditSourceLanguage_Click(object sender, RoutedEventArgs e) => await EditLanguageAsync(SourceLanguageBox, AppStrings.Get("Język źródłowy"));
+    private async void EditSourceLanguage_Click(object sender, RoutedEventArgs e) =>
+        await EditLanguageAsync(SourceLanguageBox, AppStrings.Get("Język źródłowy"));
 
-    private async void EditTargetLanguage_Click(object sender, RoutedEventArgs e) => await EditLanguageAsync(TargetLanguageBox, AppStrings.Get("Język docelowy"));
+    private async void EditTargetLanguage_Click(object sender, RoutedEventArgs e) =>
+        await EditLanguageAsync(TargetLanguageBox, AppStrings.Get("Język docelowy"));
 
     private async Task EditLanguageAsync(ComboBox source, string title)
     {
@@ -259,146 +210,6 @@ public sealed partial class MainPage : Page
             UpdateSettingSummaries();
         }
     }
-
-    private void InitializeOnboarding()
-    {
-#if __ANDROID__
-        if (AndroidSettingsStore.HasCompletedOnboarding(global::Android.App.Application.Context!))
-        {
-            return;
-        }
-
-        _onboardingSourceLanguage = "ja";
-        _onboardingTargetLanguage = GetSystemTargetLanguage();
-        UpdateOnboardingLanguageLabels();
-        OnboardingLayout.Visibility = Visibility.Visible;
-#endif
-    }
-
-    private async void EditOnboardingSourceLanguage_Click(object sender, RoutedEventArgs e) =>
-        await EditOnboardingLanguageAsync(isSource: true);
-
-    private async void EditOnboardingTargetLanguage_Click(object sender, RoutedEventArgs e) =>
-        await EditOnboardingLanguageAsync(isSource: false);
-
-    private async Task EditOnboardingLanguageAsync(bool isSource)
-    {
-        var picker = new ComboBox { HorizontalAlignment = HorizontalAlignment.Stretch };
-        var languages = isSource
-            ? new (string Code, string Label)[] { ("ja", "Japoński"), ("en", "Angielski"), ("ko", "Koreański"), ("zh", "Chiński (uproszczony)"), ("de", "Niemiecki") }
-            : new (string Code, string Label)[] { ("pl", "Polski"), ("en", "Angielski"), ("de", "Niemiecki"), ("es", "Hiszpański") };
-        var selectedLanguage = isSource ? _onboardingSourceLanguage : _onboardingTargetLanguage;
-
-        foreach (var language in languages)
-        {
-            picker.Items.Add(new ComboBoxItem { Tag = language.Code, Content = language.Label });
-        }
-
-        SelectLanguage(picker, selectedLanguage);
-        if (!await ShowEditorAsync(AppStrings.Get(isSource ? "Język źródłowy" : "Język docelowy"), picker))
-        {
-            return;
-        }
-
-        if (isSource)
-        {
-            _onboardingSourceLanguage = GetLanguage(picker);
-        }
-        else
-        {
-            _onboardingTargetLanguage = GetLanguage(picker);
-        }
-
-        UpdateOnboardingLanguageLabels();
-    }
-
-    private void ContinueOnboardingLanguage_Click(object sender, RoutedEventArgs e)
-    {
-        SelectLanguage(SourceLanguageBox, _onboardingSourceLanguage);
-        SelectLanguage(TargetLanguageBox, _onboardingTargetLanguage);
-        SaveSettings(requireValidTranslationSettings: false);
-        UpdateSettingSummaries();
-        ShowOnboardingStep(OnboardingNotificationStep);
-    }
-
-    private void RequestOnboardingNotificationPermission_Click(object sender, RoutedEventArgs e)
-    {
-#if __ANDROID__
-        if (MainActivity.CurrentActivity is { } activity)
-        {
-            _awaitingOnboardingNotificationPermission = true;
-            if (AndroidTranslationHost.RequestNotificationPermission(activity))
-            {
-                _awaitingOnboardingNotificationPermission = false;
-                ShowOnboardingStep(OnboardingOverlayStep);
-                return;
-            }
-
-            OnboardingNotificationPermissionButton.IsEnabled = false;
-            return;
-        }
-#endif
-        ShowStatus("Aktywność Androida nie jest gotowa. Zamknij i otwórz aplikację ponownie.");
-    }
-
-    private void RequestOnboardingOverlayPermission_Click(object sender, RoutedEventArgs e)
-    {
-#if __ANDROID__
-        if (MainActivity.CurrentActivity is { } activity)
-        {
-            AndroidTranslationHost.RequestOverlayPermission(activity);
-        }
-#endif
-        ShowOnboardingStep(OnboardingApiKeyStep);
-    }
-
-    private async void TestOnboardingApiKey_Click(object sender, RoutedEventArgs e) =>
-        await TestApiKeyAsync(OnboardingApiKeyBox, OnboardingApiKeyTestButton);
-
-    private void FinishOnboarding_Click(object sender, RoutedEventArgs e)
-    {
-        ApiKeyBox.Password = OnboardingApiKeyBox.Password.Trim();
-        SaveSettings(requireValidTranslationSettings: false);
-#if __ANDROID__
-        AndroidSettingsStore.CompleteOnboarding(global::Android.App.Application.Context!);
-#endif
-        OnboardingLayout.Visibility = Visibility.Collapsed;
-    }
-
-    private void ShowOnboardingStep(UIElement activeStep)
-    {
-        OnboardingLanguageStep.Visibility = ReferenceEquals(activeStep, OnboardingLanguageStep) ? Visibility.Visible : Visibility.Collapsed;
-        OnboardingNotificationStep.Visibility = ReferenceEquals(activeStep, OnboardingNotificationStep) ? Visibility.Visible : Visibility.Collapsed;
-        OnboardingOverlayStep.Visibility = ReferenceEquals(activeStep, OnboardingOverlayStep) ? Visibility.Visible : Visibility.Collapsed;
-        OnboardingApiKeyStep.Visibility = ReferenceEquals(activeStep, OnboardingApiKeyStep) ? Visibility.Visible : Visibility.Collapsed;
-        OnboardingLanguageFooter.Visibility = ReferenceEquals(activeStep, OnboardingLanguageStep) ? Visibility.Visible : Visibility.Collapsed;
-        OnboardingNotificationFooter.Visibility = ReferenceEquals(activeStep, OnboardingNotificationStep) ? Visibility.Visible : Visibility.Collapsed;
-        OnboardingOverlayFooter.Visibility = ReferenceEquals(activeStep, OnboardingOverlayStep) ? Visibility.Visible : Visibility.Collapsed;
-        OnboardingApiKeyFooter.Visibility = ReferenceEquals(activeStep, OnboardingApiKeyStep) ? Visibility.Visible : Visibility.Collapsed;
-    }
-
-    private void UpdateOnboardingLanguageLabels()
-    {
-        OnboardingSourceLanguageValue.Text = GetLanguageName(_onboardingSourceLanguage);
-        OnboardingTargetLanguageValue.Text = GetLanguageName(_onboardingTargetLanguage);
-    }
-
-    private static string GetSystemTargetLanguage()
-    {
-        var language = CultureInfo.CurrentUICulture.TwoLetterISOLanguageName;
-        return language is "pl" or "en" or "de" or "es" ? language : "pl";
-    }
-
-    private static string GetLanguageName(string language) => AppStrings.Get(language switch
-    {
-        "ja" => "Japoński",
-        "en" => "Angielski",
-        "ko" => "Koreański",
-        "zh" => "Chiński (uproszczony)",
-        "de" => "Niemiecki",
-        "es" => "Hiszpański",
-        _ => "Polski"
-    });
 
     private void OpenGoogleCloudCredentials_Click(object sender, RoutedEventArgs e)
     {
@@ -557,7 +368,7 @@ public sealed partial class MainPage : Page
         var hotkeyCodes = await HotkeyCaptureDialog.ShowAsync(activity);
         if (hotkeyCodes is { Length: > 0 })
         {
-            _hotkeyCodes = hotkeyCodes;
+            _viewModel.HotkeyCodes = hotkeyCodes;
             SaveSettings(requireValidTranslationSettings: false);
             UpdateSettingSummaries();
         }
@@ -575,6 +386,7 @@ public sealed partial class MainPage : Page
             CloseButtonText = AppStrings.Get("Anuluj"),
             DefaultButton = ContentDialogButton.Primary
         };
+
         return await dialog.ShowAsync() == ContentDialogResult.Primary;
     }
 
@@ -587,6 +399,7 @@ public sealed partial class MainPage : Page
             Content = new TextBlock { Text = AppStrings.Get(message), TextWrapping = TextWrapping.Wrap },
             CloseButtonText = AppStrings.Get("Zamknij")
         };
+
         await dialog.ShowAsync();
     }
 
@@ -601,167 +414,13 @@ public sealed partial class MainPage : Page
             CloseButtonText = AppStrings.Get("Anuluj"),
             DefaultButton = ContentDialogButton.Close
         };
+
         return await dialog.ShowAsync() == ContentDialogResult.Primary;
-    }
-
-    private void ExportSettings_Click(object sender, RoutedEventArgs e)
-    {
-#if __ANDROID__
-        if (MainActivity.CurrentActivity is not { } activity)
-        {
-            ShowStatus("Aktywność Androida nie jest gotowa. Zamknij i otwórz aplikację ponownie.");
-            return;
-        }
-
-        try
-        {
-            AndroidTranslationHost.CreateSettingsExportFile(activity);
-        }
-        catch (Exception exception)
-        {
-            ShowStatus(AppStrings.Format("Nie można otworzyć wyboru pliku: {0}", exception.Message));
-        }
-#endif
-    }
-
-    private void ImportSettings_Click(object sender, RoutedEventArgs e)
-    {
-#if __ANDROID__
-        if (MainActivity.CurrentActivity is not { } activity)
-        {
-            ShowStatus("Aktywność Androida nie jest gotowa. Zamknij i otwórz aplikację ponownie.");
-            return;
-        }
-
-        try
-        {
-            AndroidTranslationHost.OpenSettingsImportFile(activity);
-        }
-        catch (Exception exception)
-        {
-            ShowStatus(AppStrings.Format("Nie można otworzyć wyboru pliku: {0}", exception.Message));
-        }
-#endif
-    }
-
-    private async void ExportDiagnostics_Click(object sender, RoutedEventArgs e)
-    {
-#if __ANDROID__
-        if (MainActivity.CurrentActivity is not { } activity)
-        {
-            ShowStatus("Aktywność Androida nie jest gotowa. Zamknij i otwórz aplikację ponownie.");
-            return;
-        }
-
-        try
-        {
-            await DiagnosticsReportWriter.ExportAndShareAsync(
-                activity,
-                AppServices.Diagnostics.Snapshot,
-                CancellationToken.None);
-        }
-        catch (Exception exception)
-        {
-            ShowStatus(AppStrings.Format("Nie można wyeksportować dziennika diagnostycznego: {0}", exception.Message));
-        }
-#endif
-    }
-
-    private async void RestoreDefaultSettings_Click(object sender, RoutedEventArgs e)
-    {
-        if (!await ShowConfirmationAsync(
-                "Przywrócić ustawienia domyślne?",
-                "Zostaną zresetowane ustawienia OCR, w tym kompresja JPEG i jakość obrazu, nakładka, obszar przechwytywania oraz przycisk pływający. Klucz API, języki, hotkey i wygląd aplikacji pozostaną bez zmian."))
-        {
-            return;
-        }
-
-#if __ANDROID__
-        try
-        {
-            ApplySettingsProfile(SettingsProfile.Defaults);
-            ShowStatus("Przywrócono domyślne ustawienia konfiguracji.");
-        }
-        catch (Exception exception)
-        {
-            ShowStatus(AppStrings.Format("Nie można przywrócić ustawień: {0}", exception.Message));
-        }
-#endif
-    }
-
-    private void RequestOverlayPermission_Click(object sender, RoutedEventArgs e)
-    {
-#if __ANDROID__
-        if (MainActivity.CurrentActivity is { } activity)
-        {
-            try
-            {
-                var alreadyAllowed = AndroidTranslationHost.RequestOverlayPermission(activity);
-                ShowStatus(alreadyAllowed
-                    ? "Uprawnienie nakładki jest już przyznane."
-                    : "Otwieram ustawienia nakładki Androida.");
-            }
-            catch (Exception exception)
-            {
-                ShowStatus(AppStrings.Format("Nie można otworzyć ustawień nakładki: {0}", exception.Message));
-            }
-        }
-        else
-        {
-            ShowStatus("Aktywność Androida nie jest gotowa. Zamknij i otwórz aplikację ponownie.");
-        }
-#endif
-    }
-
-    private void RequestNotificationPermission_Click(object sender, RoutedEventArgs e)
-    {
-#if __ANDROID__
-        if (MainActivity.CurrentActivity is { } activity)
-        {
-            try
-            {
-                var alreadyAllowed = AndroidTranslationHost.RequestNotificationPermission(activity);
-                ShowStatus(alreadyAllowed
-                    ? "Uprawnienie powiadomień jest już przyznane."
-                    : "Wyświetlam prośbę Androida o zgodę na powiadomienia.");
-            }
-            catch (Exception exception)
-            {
-                ShowStatus(AppStrings.Format("Nie można poprosić o uprawnienie powiadomień: {0}", exception.Message));
-            }
-        }
-        else
-        {
-            ShowStatus("Aktywność Androida nie jest gotowa. Zamknij i otwórz aplikację ponownie.");
-        }
-#endif
-    }
-
-    private void OpenAccessibilitySettings_Click(object sender, RoutedEventArgs e)
-    {
-#if __ANDROID__
-        if (MainActivity.CurrentActivity is { } activity)
-        {
-            try
-            {
-                ShowStatus("Otwieram ustawienia dostępności Androida.");
-                AndroidTranslationHost.OpenAccessibilitySettings(activity);
-            }
-            catch (Exception exception)
-            {
-                ShowStatus(AppStrings.Format("Nie można otworzyć ustawień dostępności: {0}", exception.Message));
-            }
-        }
-        else
-        {
-            ShowStatus("Aktywność Androida nie jest gotowa. Zamknij i otwórz aplikację ponownie.");
-        }
-#endif
     }
 
     private void SessionToggle_Toggled(object sender, RoutedEventArgs e)
     {
-        if (_isLoading || _updatingSessionToggle)
+        if (_isLoading || IsSessionToggleUpdating())
         {
             return;
         }
@@ -801,176 +460,21 @@ public sealed partial class MainPage : Page
 #endif
     }
 
-#if __ANDROID__
-    private void MainPage_Loaded(object sender, RoutedEventArgs e)
-    {
-        AndroidTranslationHost.SessionStateChanged += OnSessionStateChanged;
-        AndroidTranslationHost.SettingsExportFileCreated += OnSettingsExportFileCreated;
-        AndroidTranslationHost.SettingsImportFileSelected += OnSettingsImportFileSelected;
-        AndroidTranslationHost.NotificationPermissionResult += OnNotificationPermissionResult;
-        UpdateSessionToggle();
-    }
-
-    private void MainPage_Unloaded(object sender, RoutedEventArgs e)
-    {
-        AndroidTranslationHost.SessionStateChanged -= OnSessionStateChanged;
-        AndroidTranslationHost.SettingsExportFileCreated -= OnSettingsExportFileCreated;
-        AndroidTranslationHost.SettingsImportFileSelected -= OnSettingsImportFileSelected;
-        AndroidTranslationHost.NotificationPermissionResult -= OnNotificationPermissionResult;
-        DismissFloatingButtonPreview();
-    }
-
-    private void OnNotificationPermissionResult(bool granted) => _ = DispatcherQueue.TryEnqueue(() =>
-    {
-        if (!_awaitingOnboardingNotificationPermission)
-        {
-            return;
-        }
-
-        _awaitingOnboardingNotificationPermission = false;
-        OnboardingNotificationPermissionButton.IsEnabled = true;
-        if (granted)
-        {
-            ShowOnboardingStep(OnboardingOverlayStep);
-            return;
-        }
-
-        ShowStatus("Uprawnienie nie zostało przyznane. Możesz spróbować ponownie.");
-    });
-
-    private void OnSessionStateChanged() => _ = DispatcherQueue.TryEnqueue(() =>
-    {
-        UpdateSessionToggle();
-        if (TranslationForegroundService.IsSessionActive)
-        {
-            DismissFloatingButtonPreview();
-        }
-    });
-
-    private async void OnSettingsExportFileCreated(global::Android.App.Result resultCode, global::Android.Content.Intent? data)
-    {
-        if (resultCode != global::Android.App.Result.Ok || data?.Data is not { } uri)
-        {
-            return;
-        }
-
-        try
-        {
-            var context = global::Android.App.Application.Context!;
-            using var stream = context.ContentResolver?.OpenOutputStream(uri)
-                ?? throw new InvalidOperationException(AppStrings.Get("Nie można zapisać wybranego pliku."));
-            await SettingsProfile.WriteAsync(
-                stream,
-                SettingsProfile.FromSettings(AndroidSettingsStore.Load(context)),
-                CancellationToken.None);
-            ShowStatus("Ustawienia wyeksportowano do pliku JSON.");
-        }
-        catch (Exception exception)
-        {
-            ShowStatus(AppStrings.Format("Nie można wyeksportować ustawień: {0}", exception.Message));
-        }
-    }
-
-    private async void OnSettingsImportFileSelected(global::Android.App.Result resultCode, global::Android.Content.Intent? data)
-    {
-        if (resultCode != global::Android.App.Result.Ok || data?.Data is not { } uri)
-        {
-            return;
-        }
-
-        try
-        {
-            var context = global::Android.App.Application.Context!;
-            using var stream = context.ContentResolver?.OpenInputStream(uri)
-                ?? throw new InvalidOperationException(AppStrings.Get("Nie można odczytać wybranego pliku."));
-            var profile = await SettingsProfile.ReadAsync(stream, CancellationToken.None);
-            ApplySettingsProfile(profile);
-            ShowStatus("Ustawienia zaimportowano z pliku JSON.");
-        }
-        catch (Exception exception)
-        {
-            ShowStatus(AppStrings.Format("Nie można zaimportować ustawień: {0}", exception.Message));
-        }
-    }
-
-    private void ApplySettingsProfile(SettingsProfile profile)
-    {
-        var context = global::Android.App.Application.Context!;
-        AndroidSettingsStore.Save(context, profile.ApplyTo(AndroidSettingsStore.Load(context)));
-
-        var wasLoading = _isLoading;
-        _isLoading = true;
-        try
-        {
-            LoadSettings();
-        }
-        finally
-        {
-            _isLoading = wasLoading;
-        }
-
-        // One refresh updates the live trigger after the atomic preference write.
-        RefreshFloatingButtonConfiguration();
-    }
-#endif
-
-    private bool SaveSettings(bool requireValidTranslationSettings)
-    {
-        if (_isLoading)
-        {
-            return true;
-        }
-
-        if (requireValidTranslationSettings && GlobalHotkeyToggle.IsOn && _hotkeyCodes.Length == 0)
-        {
-            ShowStatus("Ustaw skrót albo wyłącz globalny hotkey.");
-            return false;
-        }
-
-        var settings = new TranslationSettings(
-            ApiKeyBox.Password.Trim(),
-            GetLanguage(SourceLanguageBox),
-            GetLanguage(TargetLanguageBox),
-            (float)RecognitionConfidenceSlider.Value,
-            (float)GroupingPowerSlider.Value,
-            (float)FontScaleSlider.Value,
-            HideIdenticalTranslationsToggle.IsOn,
-            (float)OcrImageScaleSlider.Value,
-            UseJpegForOcrToggle.IsOn,
-            (int)Math.Round(OcrJpegQualitySlider.Value));
-        if (requireValidTranslationSettings && !settings.IsValid)
-        {
-            ShowStatus("Wpisz klucz API i wybierz oba języki.");
-            return false;
-        }
-
-#if __ANDROID__
-        var existingSettings = AndroidSettingsStore.Load(global::Android.App.Application.Context!);
-        AndroidSettingsStore.Save(
-            global::Android.App.Application.Context!,
-            new AndroidAppSettings(
-                settings,
-                _hotkeyCodes,
-                GlobalHotkeyToggle.IsOn,
-                _themeMode,
-                _accent,
-                _languageMode,
-                new FloatingButtonSettings(
-                    FloatingButtonAlwaysVisibleToggle.IsOn,
-                    (float)FloatingButtonScaleSlider.Value,
-                    (float)FloatingButtonHorizontalPositionSlider.Value,
-                    (float)FloatingButtonVerticalPositionSlider.Value),
-                existingSettings.CaptureRegion));
-#endif
-        return true;
-    }
-
     private void UpdateSessionToggle()
     {
 #if __ANDROID__
         _updatingSessionToggle = true;
         SessionToggle.IsOn = TranslationForegroundService.IsSessionActive;
         _updatingSessionToggle = false;
+#endif
+    }
+
+    private bool IsSessionToggleUpdating()
+    {
+#if __ANDROID__
+        return _updatingSessionToggle;
+#else
+        return false;
 #endif
     }
 
@@ -981,9 +485,11 @@ public sealed partial class MainPage : Page
 #endif
     }
 
-    private static string GetLanguage(ComboBox box) => (box.SelectedItem as ComboBoxItem)?.Tag?.ToString() ?? string.Empty;
+    private static string GetLanguage(ComboBox box) =>
+        (box.SelectedItem as ComboBoxItem)?.Tag?.ToString() ?? string.Empty;
 
-    private static string GetLanguageLabel(ComboBox box) => (box.SelectedItem as ComboBoxItem)?.Content?.ToString() ?? AppStrings.Get("Nie wybrano");
+    private static string GetLanguageLabel(ComboBox box) =>
+        (box.SelectedItem as ComboBoxItem)?.Content?.ToString() ?? AppStrings.Get("Nie wybrano");
 
     private static void SelectLanguage(ComboBox box, string language)
     {
@@ -1141,17 +647,6 @@ public sealed partial class MainPage : Page
                 : "W aktywnej sesji jest widoczny, ponieważ globalny hotkey jest wyłączony.";
     }
 
-    private void UpdateDiagnostics()
-    {
-        var diagnostics = AppServices.Diagnostics.Snapshot;
-        CaptureAndImageEncodingDurationValue.Text = FormatDuration(diagnostics.CaptureAndImageEncodingMilliseconds);
-        OcrImageEncodingDurationValue.Text = FormatDuration(diagnostics.OcrImageEncodingMilliseconds);
-        CloudVisionOcrDurationValue.Text = FormatDuration(diagnostics.CloudVisionOcrMilliseconds);
-        CloudTranslationDurationValue.Text = FormatDuration(diagnostics.CloudTranslationMilliseconds);
-        TranslationTotalDurationValue.Text = FormatDuration(diagnostics.TranslationTotalMilliseconds);
-        ApiKeyValidationDurationValue.Text = FormatDuration(diagnostics.ApiKeyValidationMilliseconds);
-    }
-
     private void RefreshFloatingButtonConfiguration()
     {
 #if __ANDROID__
@@ -1169,13 +664,13 @@ public sealed partial class MainPage : Page
             return;
         }
 
-        var context = global::Android.App.Application.Context!;
-        if (!global::Android.Provider.Settings.CanDrawOverlays(context))
+        if (!_permissionsService.CanDrawOverlays())
         {
             DismissFloatingButtonPreview();
             return;
         }
 
+        var context = global::Android.App.Application.Context!;
         if (_floatingButtonPreview is null)
         {
             _floatingButtonPreview = new FloatingTranslationTrigger(context);
@@ -1200,22 +695,22 @@ public sealed partial class MainPage : Page
         SourceLanguageValue.Text = GetLanguageLabel(SourceLanguageBox);
         TargetLanguageValue.Text = GetLanguageLabel(TargetLanguageBox);
 #if __ANDROID__
-        HotkeyCodeValue.Text = HotkeyCaptureDialog.Format(_hotkeyCodes);
+        HotkeyCodeValue.Text = HotkeyCaptureDialog.Format(_viewModel.HotkeyCodes);
 #else
         HotkeyCodeValue.Text = AppStrings.Get("Nie ustawiono");
 #endif
-        var themeMode = _themeMode switch
+        var themeMode = _viewModel.ThemeMode switch
         {
             AppThemeMode.Dark => AppStrings.Get("Ciemny"),
             AppThemeMode.Light => AppStrings.Get("Jasny"),
             _ => AppStrings.Get("System")
         };
-        ThemeModeValue.Text = $"{themeMode} · {GetAccentLabel(_accent)}";
+        ThemeModeValue.Text = $"{themeMode} · {GetAccentLabel(_viewModel.Accent)}";
     }
 
     private void SetThemeMode(AppThemeMode mode)
     {
-        _themeMode = mode;
+        _viewModel.ThemeMode = mode;
         SetThemeModeOptionStyle(SystemThemeOption, mode == AppThemeMode.System);
         SetThemeModeOptionStyle(DarkThemeOption, mode == AppThemeMode.Dark);
         SetThemeModeOptionStyle(LightThemeOption, mode == AppThemeMode.Light);
@@ -1224,17 +719,17 @@ public sealed partial class MainPage : Page
 
     private void SetAccent(AppAccent accent)
     {
-        _accent = accent;
+        _viewModel.Accent = accent;
         UpdateAccentOptionSelection();
-        SetThemeModeOptionStyle(SystemThemeOption, _themeMode == AppThemeMode.System);
-        SetThemeModeOptionStyle(DarkThemeOption, _themeMode == AppThemeMode.Dark);
-        SetThemeModeOptionStyle(LightThemeOption, _themeMode == AppThemeMode.Light);
+        SetThemeModeOptionStyle(SystemThemeOption, _viewModel.ThemeMode == AppThemeMode.System);
+        SetThemeModeOptionStyle(DarkThemeOption, _viewModel.ThemeMode == AppThemeMode.Dark);
+        SetThemeModeOptionStyle(LightThemeOption, _viewModel.ThemeMode == AppThemeMode.Light);
         (global::Microsoft.UI.Xaml.Application.Current as App)?.SetAccent(accent);
     }
 
     private void SetApplicationLanguage(AppLanguageMode mode)
     {
-        _languageMode = mode;
+        _viewModel.LanguageMode = mode;
         SetThemeModeOptionStyle(SystemLanguageOption, mode == AppLanguageMode.System);
         SetThemeModeOptionStyle(EnglishLanguageOption, mode == AppLanguageMode.English);
         SetThemeModeOptionStyle(PolishLanguageOption, mode == AppLanguageMode.Polish);
@@ -1245,7 +740,7 @@ public sealed partial class MainPage : Page
         option.Style = (Style)Resources[selected ? "SelectedThemeModeOptionBorder" : "ThemeModeOptionBorder"];
         if (selected)
         {
-            option.BorderBrush = new SolidColorBrush(App.GetAccentColor(_accent));
+            option.BorderBrush = new SolidColorBrush(App.GetAccentColor(_viewModel.Accent));
             return;
         }
 
@@ -1254,8 +749,8 @@ public sealed partial class MainPage : Page
 
     private global::Windows.UI.Color GetThemeOptionBorderColor()
     {
-        var isDark = _themeMode == AppThemeMode.Dark ||
-            (_themeMode == AppThemeMode.System && ActualTheme == ElementTheme.Dark);
+        var isDark = _viewModel.ThemeMode == AppThemeMode.Dark ||
+            (_viewModel.ThemeMode == AppThemeMode.System && ActualTheme == ElementTheme.Dark);
         return isDark
             ? global::Windows.UI.Color.FromArgb(255, 73, 69, 79)
             : global::Windows.UI.Color.FromArgb(255, 228, 225, 230);
@@ -1277,7 +772,7 @@ public sealed partial class MainPage : Page
     }
 
     private void SetAccentOptionSelection(Border option, AppAccent accent) =>
-        option.BorderThickness = accent == _accent ? new Thickness(2) : new Thickness(0);
+        option.BorderThickness = accent == _viewModel.Accent ? new Thickness(2) : new Thickness(0);
 
     private static string GetAccentLabel(AppAccent accent) => AppStrings.Get(accent switch
     {
