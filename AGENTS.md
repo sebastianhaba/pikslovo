@@ -57,3 +57,31 @@ Install the output on the connected device:
 
 Keep `EmbedAssembliesIntoApk` enabled for debug packages. The target LineageOS/GammaOS
 device does not support .NET for Android Fast Deployment reliably.
+
+## Versioning
+
+Use semantic versioning with three numeric components: `major.minor.patch`
+(for example `1.0.0`).
+
+Change the version in exactly one place:
+
+- `src/Pikslovo/Pikslovo/Pikslovo.csproj` -> `<Version>`
+
+Do not edit `ApplicationDisplayVersion` or `ApplicationVersion` manually unless the
+versioning scheme itself changes:
+
+- `ApplicationDisplayVersion` is derived from `<Version>` and is shown in Android app
+  information as the user-facing version string, e.g. `1.0.0`.
+- `ApplicationVersion` is derived automatically from semantic version components and is
+  used as the Android internal version code.
+
+The home screen footer version label (`Pikslovo v1.0.0`) also reads from the same
+version metadata, so bumping `<Version>` updates both the in-app label and Android app
+info together.
+
+Examples:
+
+- `1.0.0` -> first stable release
+- `1.0.1` -> patch release
+- `1.1.0` -> backward-compatible feature release
+- `2.0.0` -> breaking change / major release

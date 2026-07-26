@@ -190,6 +190,13 @@
               </Button>
             </StackPanel>
           </Border>
+
+          <TextBlock x:Name="AppVersionText"
+                     Text=""
+                     FontSize="12"
+                     Opacity="0.65"
+                     HorizontalAlignment="Center"
+                     Margin="0,16,0,8" />
         </StackPanel>
       </ScrollViewer>
 

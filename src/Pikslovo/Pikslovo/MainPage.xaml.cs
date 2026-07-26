@@ -39,6 +39,7 @@ public sealed partial class MainPage : Page
     {
         _isLoading = true;
         InitializeComponent();
+        AppVersionText.Text = AppMetadata.DisplayVersionLabel;
 #if __ANDROID__
         Loaded += MainPage_Loaded;
         Unloaded += MainPage_Unloaded;

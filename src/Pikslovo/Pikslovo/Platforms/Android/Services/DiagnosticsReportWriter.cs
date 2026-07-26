@@ -52,7 +52,7 @@ internal static class DiagnosticsReportWriter
         TranslationDiagnosticsSnapshot diagnostics,
         CancellationToken cancellationToken)
     {
-        var applicationVersion = typeof(DiagnosticsReportWriter).Assembly.GetName().Version?.ToString() ?? AppStrings.Get("nieznana");
+        var applicationVersion = AppMetadata.DisplayVersion;
         var notificationPermissionGranted = !OperatingSystem.IsAndroidVersionAtLeast(33) ||
             context.CheckSelfPermission(Android.Manifest.Permission.PostNotifications) == Permission.Granted;
         var metadata = new DiagnosticsReportMetadata(
