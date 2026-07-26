@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-	<string name="Hello">Hello World, Click Me!</string>
 	<string name="ApplicationName">Pikslovo</string>
-	<string name="hotkey_accessibility_description">Obsługa globalnego skrótu do pokazania tłumaczenia ekranu podczas aktywnej sesji.</string>
+	<string name="hotkey_accessibility_label">Pikslovo shortcut</string>
+	<string name="hotkey_accessibility_description">Handles the global shortcut to show the screen translation during an active session.</string>
 </resources>

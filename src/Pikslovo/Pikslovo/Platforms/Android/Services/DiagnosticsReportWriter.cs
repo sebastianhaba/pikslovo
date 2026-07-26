@@ -40,8 +40,8 @@ internal static class DiagnosticsReportWriter
         intent.SetType("text/plain");
         intent.PutExtra(Intent.ExtraStream, reportUri);
         intent.AddFlags(ActivityFlags.GrantReadUriPermission);
-        var chooser = Intent.CreateChooser(intent, "Udostępnij dziennik diagnostyczny")
-            ?? throw new InvalidOperationException("Nie można otworzyć panelu udostępniania.");
+        var chooser = Intent.CreateChooser(intent, AppStrings.Get("Udostępnij dziennik diagnostyczny"))
+            ?? throw new InvalidOperationException(AppStrings.Get("Nie można otworzyć panelu udostępniania."));
         chooser.AddFlags(ActivityFlags.GrantReadUriPermission);
         activity.StartActivity(chooser);
     }
@@ -52,7 +52,7 @@ internal static class DiagnosticsReportWriter
         TranslationDiagnosticsSnapshot diagnostics,
         CancellationToken cancellationToken)
     {
-        var applicationVersion = typeof(DiagnosticsReportWriter).Assembly.GetName().Version?.ToString() ?? "nieznana";
+        var applicationVersion = typeof(DiagnosticsReportWriter).Assembly.GetName().Version?.ToString() ?? AppStrings.Get("nieznana");
         var notificationPermissionGranted = !OperatingSystem.IsAndroidVersionAtLeast(33) ||
             context.CheckSelfPermission(Android.Manifest.Permission.PostNotifications) == Permission.Granted;
         var metadata = new DiagnosticsReportMetadata(

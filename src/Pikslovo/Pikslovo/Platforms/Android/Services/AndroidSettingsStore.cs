@@ -14,6 +14,7 @@ internal sealed record AndroidAppSettings(
     bool GlobalHotkeyEnabled,
     AppThemeMode ThemeMode,
     AppAccent Accent,
+    AppLanguageMode LanguageMode,
     FloatingButtonSettings FloatingButton,
     CaptureRegionSettings CaptureRegion);
 
@@ -85,6 +86,7 @@ internal static class AndroidSettingsStore
     private const string GlobalHotkeyEnabledName = "global_hotkey_enabled";
     private const string ThemeModeName = "theme_mode";
     private const string AccentName = "accent";
+    private const string LanguageModeName = "language_mode";
     private const string FloatingButtonAlwaysVisibleName = "floating_button_always_visible";
     private const string FloatingButtonScaleName = "floating_button_scale";
     private const string FloatingButtonHorizontalPositionName = "floating_button_horizontal_position";
@@ -102,7 +104,7 @@ internal static class AndroidSettingsStore
 
     public static void CompleteOnboarding(Context context)
     {
-        using var editor = GetPreferences(context).Edit() ?? throw new InvalidOperationException("Nie można zapisać stanu konfiguracji aplikacji.");
+        using var editor = GetPreferences(context).Edit() ?? throw new InvalidOperationException(AppStrings.Get("Nie można zapisać stanu konfiguracji aplikacji."));
         editor.PutBoolean(OnboardingCompletedName, true);
         editor.Apply();
     }
@@ -126,6 +128,7 @@ internal static class AndroidSettingsStore
             preferences.GetBoolean(GlobalHotkeyEnabledName, false),
             ReadThemeMode(preferences.GetString(ThemeModeName, null)),
             ReadAccent(preferences.GetString(AccentName, null)),
+            ReadLanguageMode(preferences.GetString(LanguageModeName, null)),
             new FloatingButtonSettings(
                 preferences.GetBoolean(FloatingButtonAlwaysVisibleName, true),
                 Clamp(preferences.GetFloat(FloatingButtonScaleName, FloatingButtonSettings.DefaultScale), 0.5f, 2f),
@@ -141,7 +144,7 @@ internal static class AndroidSettingsStore
 
     public static void Save(Context context, AndroidAppSettings settings)
     {
-        using var editor = GetPreferences(context).Edit() ?? throw new InvalidOperationException("Nie można zapisać ustawień aplikacji.");
+        using var editor = GetPreferences(context).Edit() ?? throw new InvalidOperationException(AppStrings.Get("Nie można zapisać ustawień aplikacji."));
         editor.PutString(ApiKeyName, Encrypt(settings.Translation.ApiKey));
         editor.PutString(SourceLanguageName, settings.Translation.SourceLanguage);
         editor.PutString(TargetLanguageName, settings.Translation.TargetLanguage);
@@ -158,6 +161,7 @@ internal static class AndroidSettingsStore
         editor.PutBoolean(GlobalHotkeyEnabledName, settings.GlobalHotkeyEnabled);
         editor.PutString(ThemeModeName, settings.ThemeMode.ToString());
         editor.PutString(AccentName, settings.Accent.ToString());
+        editor.PutString(LanguageModeName, settings.LanguageMode.ToString());
         editor.PutBoolean(FloatingButtonAlwaysVisibleName, settings.FloatingButton.AlwaysVisible);
         editor.PutFloat(FloatingButtonScaleName, Clamp(settings.FloatingButton.Scale, 0.5f, 2f));
         editor.PutFloat(FloatingButtonHorizontalPositionName, Clamp(settings.FloatingButton.HorizontalPosition, 0f, 1f));
@@ -191,6 +195,9 @@ internal static class AndroidSettingsStore
     private static AppAccent ReadAccent(string? value) =>
         Enum.TryParse<AppAccent>(value, ignoreCase: true, out var accent) ? accent : AppAccent.Lavender;
 
+    private static AppLanguageMode ReadLanguageMode(string? value) =>
+        Enum.TryParse<AppLanguageMode>(value, ignoreCase: true, out var mode) ? mode : AppLanguageMode.System;
+
     private static int[] ReadHotkeyCodes(ISharedPreferences preferences)
     {
         var savedCodes = preferences.GetString(HotkeyCodesName, null);
@@ -221,8 +228,8 @@ internal static class AndroidSettingsStore
         var key = GetOrCreateKey();
         using var cipher = Cipher.GetInstance("AES/GCM/NoPadding")!;
         cipher.Init(CipherMode.EncryptMode, key);
-        var iv = cipher.GetIV() ?? throw new InvalidOperationException("Android Keystore nie zwrócił wektora inicjalizacyjnego.");
-        var encrypted = cipher.DoFinal(Encoding.UTF8.GetBytes(plaintext)) ?? throw new InvalidOperationException("Android Keystore nie zaszyfrował klucza API.");
+        var iv = cipher.GetIV() ?? throw new InvalidOperationException(AppStrings.Get("Android Keystore nie zwrócił wektora inicjalizacyjnego."));
+        var encrypted = cipher.DoFinal(Encoding.UTF8.GetBytes(plaintext)) ?? throw new InvalidOperationException(AppStrings.Get("Android Keystore nie zaszyfrował klucza API."));
         return $"{Convert.ToBase64String(iv)}:{Convert.ToBase64String(encrypted)}";
     }
 
@@ -263,7 +270,7 @@ internal static class AndroidSettingsStore
         if (keyStore.ContainsAlias(KeyAlias))
         {
             var entry = keyStore.GetEntry(KeyAlias, null) as KeyStore.SecretKeyEntry;
-            return entry?.SecretKey ?? throw new InvalidOperationException("Nie można odczytać klucza Android Keystore.");
+            return entry?.SecretKey ?? throw new InvalidOperationException(AppStrings.Get("Nie można odczytać klucza Android Keystore."));
         }
 
         using var keyGenerator = KeyGenerator.GetInstance(KeyProperties.KeyAlgorithmAes, "AndroidKeyStore")!;

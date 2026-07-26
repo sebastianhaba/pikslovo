@@ -68,7 +68,7 @@ internal sealed partial class FloatingTranslationTrigger
         var size = GetButtonSize(settings.Scale);
         _button = new ImageButton(_context)
         {
-            ContentDescription = "Tłumacz ekran",
+            ContentDescription = AppStrings.Get("Tłumacz ekran"),
         };
         var iconPadding = ToPixels(12f * settings.Scale);
         _button.SetPadding(iconPadding, iconPadding, iconPadding, iconPadding);
@@ -133,6 +133,7 @@ internal sealed partial class FloatingTranslationTrigger
                 _layout.Width = size;
                 _layout.Height = size;
                 ApplyPosition(settings, size);
+                ApplyState(_state, Interlocked.Increment(ref _stateRevision));
                 if (_isAttached)
                 {
                     _windowManager.UpdateViewLayout(_button, _layout);
@@ -256,7 +257,7 @@ internal sealed partial class FloatingTranslationTrigger
         menu.AddView(
             CreateMenuActionButton(
                 Resource.Drawable.ic_edit,
-                "Edytuj obszar przechwytywania",
+                AppStrings.Get("Edytuj obszar przechwytywania"),
                 actionSize,
                 CreateBackground(),
                 () =>
@@ -271,7 +272,7 @@ internal sealed partial class FloatingTranslationTrigger
         menu.AddView(
             CreateMenuActionButton(
                 Resource.Drawable.ic_stop,
-                "Zatrzymaj tłumacza",
+                AppStrings.Get("Zatrzymaj tłumacza"),
                 actionSize,
                 CreateBackground(Color.Rgb(183, 28, 28)),
                 () =>
@@ -562,9 +563,9 @@ internal sealed partial class FloatingTranslationTrigger
         });
         _button.ContentDescription = state switch
         {
-            FloatingTranslationTriggerState.Processing => "Tłumaczenie w toku",
-            FloatingTranslationTriggerState.ResultVisible => "Wróć do gry",
-            _ => "Tłumacz ekran",
+            FloatingTranslationTriggerState.Processing => AppStrings.Get("Tłumaczenie w toku"),
+            FloatingTranslationTriggerState.ResultVisible => AppStrings.Get("Wróć do gry"),
+            _ => AppStrings.Get("Tłumacz ekran"),
         };
     }
 

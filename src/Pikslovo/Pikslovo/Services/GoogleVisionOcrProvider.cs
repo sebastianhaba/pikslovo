@@ -28,7 +28,7 @@ public sealed class GoogleVisionOcrProvider(HttpClient httpClient) : IOcrProvide
         if (!response.IsSuccessStatusCode)
         {
             var details = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
-            throw new TranslationException($"Cloud Vision API odrzuciło zrzut ({(int)response.StatusCode} {response.StatusCode}): {details}");
+            throw new TranslationException(AppStrings.Format("Cloud Vision API odrzuciło zrzut ({0} {1}): {2}", (int)response.StatusCode, response.StatusCode, details));
         }
 
         var payload = await response.Content
@@ -38,7 +38,7 @@ public sealed class GoogleVisionOcrProvider(HttpClient httpClient) : IOcrProvide
 
         if (annotation?.Error is not null)
         {
-            throw new TranslationException($"Cloud Vision API: {annotation.Error.Message}");
+            throw new TranslationException(AppStrings.Format("Cloud Vision API: {0}", annotation.Error.Message));
         }
 
         var regions = annotation?.FullTextAnnotation?.Pages?
@@ -236,6 +236,6 @@ public sealed class GoogleVisionOcrProvider(HttpClient httpClient) : IOcrProvide
     private sealed class VisionError
     {
         [JsonPropertyName("message")]
-        public string Message { get; init; } = "Nieznany błąd OCR.";
+        public string Message { get; init; } = AppStrings.Get("Nieznany błąd OCR.");
     }
 }

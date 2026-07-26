@@ -4,6 +4,12 @@ namespace Pikslovo.Tests;
 
 public sealed class DiagnosticsReportFormatterTests
 {
+    [SetUp]
+    public void SetUp() => AppStrings.SetLanguageMode(AppLanguageMode.English);
+
+    [TearDown]
+    public void TearDown() => AppStrings.SetLanguageMode(AppLanguageMode.System);
+
     [Test]
     public void Format_includes_diagnostic_measurements_without_sensitive_translation_data()
     {
@@ -20,8 +26,8 @@ public sealed class DiagnosticsReportFormatterTests
         var report = DiagnosticsReportFormatter.Format(metadata, diagnostics);
 
         report.Should().Contain("Cloud Translation: 78 ms");
-        report.Should().Contain("Sprawdzenie klucza API: 123 ms");
-        report.Should().Contain("klucz API, treść ekranu, wynik OCR i tekst tłumaczenia");
+        report.Should().Contain("API key validation: 123 ms");
+        report.Should().Contain("API key, screen content, OCR result and translated text");
         report.Should().NotContain("AIza");
     }
 
@@ -41,7 +47,7 @@ public sealed class DiagnosticsReportFormatterTests
             metadata,
             new TranslationDiagnosticsSnapshot(null, null, null, null, null, null));
 
-        report.Should().Contain("Całość tłumaczenia: brak danych");
-        report.Should().Contain("Sprawdzenie klucza API: brak danych");
+        report.Should().Contain("Total translation: no data");
+        report.Should().Contain("API key validation: no data");
     }
 }

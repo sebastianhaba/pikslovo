@@ -17,24 +17,24 @@ public static class DiagnosticsReportFormatter
     public static string Format(DiagnosticsReportMetadata metadata, TranslationDiagnosticsSnapshot diagnostics)
     {
         var report = new StringBuilder();
-        report.AppendLine("Pikslovo - raport diagnostyczny");
-        report.AppendLine($"Wygenerowano (UTC): {metadata.GeneratedAtUtc:O}");
-        report.AppendLine($"Aplikacja: {metadata.ApplicationVersion}");
-        report.AppendLine($"Urządzenie: {metadata.Device}");
+        report.AppendLine(AppStrings.Get("Pikslovo - raport diagnostyczny"));
+        report.AppendLine(AppStrings.Format("Wygenerowano (UTC): {0}", metadata.GeneratedAtUtc.ToString("O", CultureInfo.InvariantCulture)));
+        report.AppendLine(AppStrings.Format("Aplikacja: {0}", metadata.ApplicationVersion));
+        report.AppendLine(AppStrings.Format("Urządzenie: {0}", metadata.Device));
         report.AppendLine($"Android: {metadata.AndroidVersion}");
-        report.AppendLine($"Aktywna sesja tłumacza: {FormatBoolean(metadata.IsSessionActive)}");
-        report.AppendLine($"Uprawnienie nakładki: {FormatBoolean(metadata.IsOverlayPermissionGranted)}");
-        report.AppendLine($"Uprawnienie powiadomień: {FormatBoolean(metadata.IsNotificationPermissionGranted)}");
+        report.AppendLine(AppStrings.Format("Aktywna sesja tłumacza: {0}", FormatBoolean(metadata.IsSessionActive)));
+        report.AppendLine(AppStrings.Format("Uprawnienie nakładki: {0}", FormatBoolean(metadata.IsOverlayPermissionGranted)));
+        report.AppendLine(AppStrings.Format("Uprawnienie powiadomień: {0}", FormatBoolean(metadata.IsNotificationPermissionGranted)));
         report.AppendLine();
-        report.AppendLine("Ostatnie pomiary:");
-        AppendDuration(report, "Przechwycenie + kodowanie", diagnostics.CaptureAndImageEncodingMilliseconds);
-        AppendDuration(report, "Kodowanie obrazu OCR", diagnostics.OcrImageEncodingMilliseconds);
+        report.AppendLine(AppStrings.Get("Ostatnie pomiary:"));
+        AppendDuration(report, AppStrings.Get("Przechwycenie + kodowanie"), diagnostics.CaptureAndImageEncodingMilliseconds);
+        AppendDuration(report, AppStrings.Get("Kodowanie obrazu OCR"), diagnostics.OcrImageEncodingMilliseconds);
         AppendDuration(report, "Cloud Vision OCR", diagnostics.CloudVisionOcrMilliseconds);
         AppendDuration(report, "Cloud Translation", diagnostics.CloudTranslationMilliseconds);
-        AppendDuration(report, "Całość tłumaczenia", diagnostics.TranslationTotalMilliseconds);
-        AppendDuration(report, "Sprawdzenie klucza API", diagnostics.ApiKeyValidationMilliseconds);
+        AppendDuration(report, AppStrings.Get("Całość tłumaczenia"), diagnostics.TranslationTotalMilliseconds);
+        AppendDuration(report, AppStrings.Get("Sprawdzenie klucza API"), diagnostics.ApiKeyValidationMilliseconds);
         report.AppendLine();
-        report.AppendLine("Wykluczone dane: klucz API, treść ekranu, wynik OCR i tekst tłumaczenia.");
+        report.AppendLine(AppStrings.Get("Wykluczone dane: klucz API, treść ekranu, wynik OCR i tekst tłumaczenia."));
         return report.ToString();
     }
 
@@ -43,8 +43,8 @@ public static class DiagnosticsReportFormatter
             .Append(": ")
             .Append(milliseconds is { } value
                 ? string.Format(CultureInfo.InvariantCulture, "{0} ms", value)
-                : "brak danych")
+                : AppStrings.Get("brak danych"))
             .AppendLine();
 
-    private static string FormatBoolean(bool value) => value ? "tak" : "nie";
+    private static string FormatBoolean(bool value) => AppStrings.Get(value ? "tak" : "nie");
 }

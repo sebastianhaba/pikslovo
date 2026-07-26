@@ -65,6 +65,7 @@ public sealed class TranslationForegroundService : Service
                     break;
                 case RefreshAppearanceAction:
                     UpdateFloatingTriggerVisibility();
+                    RefreshNotification();
                     break;
             }
         }
@@ -76,7 +77,7 @@ public sealed class TranslationForegroundService : Service
         catch (Exception exception)
         {
             Android.Util.Log.Error("Pikslovo", exception.ToString());
-            ShowMessage($"Nie udało się uruchomić sesji: {exception.Message}");
+            ShowMessage(AppStrings.Format("Nie udało się uruchomić sesji: {0}", exception.Message));
             StopSession();
         }
 
@@ -148,7 +149,7 @@ public sealed class TranslationForegroundService : Service
         var density = Resources?.Configuration?.DensityDpi ?? 0;
         if (width <= 0 || height <= 0 || density <= 0 || _mediaProjection is null)
         {
-            throw new InvalidOperationException("Nie można odczytać rozmiaru ekranu.");
+            throw new InvalidOperationException(AppStrings.Get("Nie można odczytać rozmiaru ekranu."));
         }
 
         // ImageFormat.RGBA_8888 is represented as value 1 by the Android API.
@@ -288,7 +289,7 @@ public sealed class TranslationForegroundService : Service
                 var imageQuality = settings.UseJpegForOcr ? settings.OcrJpegQuality : 100;
                 if (!bitmapForVision.Compress(imageFormat, imageQuality, stream))
                 {
-                    throw new InvalidOperationException("Nie udało się zakodować obrazu OCR.");
+                    throw new InvalidOperationException(AppStrings.Get("Nie udało się zakodować obrazu OCR."));
                 }
 
                 var imageBytes = stream.ToArray();
@@ -527,7 +528,7 @@ public sealed class TranslationForegroundService : Service
 
         var channel = new NotificationChannel(
             NotificationChannelId,
-            "Aktywna sesja tłumacza",
+            AppStrings.Get("Aktywna sesja tłumacza"),
             NotificationImportance.Low);
         var notificationManager = (NotificationManager?)GetSystemService(NotificationService);
         notificationManager?.CreateNotificationChannel(channel);
@@ -544,17 +545,28 @@ public sealed class TranslationForegroundService : Service
             PendingIntentFlags.Immutable | PendingIntentFlags.UpdateCurrent);
 
         return new Notification.Builder(this, NotificationChannelId)
-            .SetContentTitle("Pikslovo jest aktywne")
-            .SetContentText("Hotkey i przycisk pływający są gotowe.")
+            .SetContentTitle(AppStrings.Get("Pikslovo jest aktywne"))
+            .SetContentText(AppStrings.Get("Hotkey i przycisk pływający są gotowe."))
             .SetSmallIcon(Resource.Mipmap.icon)
             .SetOngoing(true)
-            .AddAction(new Notification.Action.Builder(null, "Zatrzymaj", pendingIntent).Build())
+            .AddAction(new Notification.Action.Builder(null, AppStrings.Get("Zatrzymaj"), pendingIntent).Build())
             .Build();
+    }
+
+    private void RefreshNotification()
+    {
+        if (!IsSessionActive)
+        {
+            return;
+        }
+
+        var notificationManager = (NotificationManager?)GetSystemService(NotificationService);
+        notificationManager?.Notify(NotificationId, BuildNotification());
     }
 
     private void ShowMessage(string message)
     {
-        new Handler(Looper.MainLooper!).Post(() => Toast.MakeText(this, message, ToastLength.Long)?.Show());
+        new Handler(Looper.MainLooper!).Post(() => Toast.MakeText(this, AppStrings.Get(message), ToastLength.Long)?.Show());
     }
 
     private sealed class ProjectionCallback(TranslationForegroundService service) : MediaProjection.Callback

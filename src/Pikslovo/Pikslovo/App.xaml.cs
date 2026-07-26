@@ -21,6 +21,7 @@ public partial class App : Application
     /// </summary>
     public App()
     {
+        AppStrings.SetLanguageMode(LoadLanguageMode());
         this.InitializeComponent();
         _accentResources.ThemeDictionaries["Light"] = new ResourceDictionary();
         _accentResources.ThemeDictionaries["Dark"] = new ResourceDictionary();
@@ -86,6 +87,17 @@ public partial class App : Application
         }
     }
 
+    public void ReloadMainPage()
+    {
+        if (MainWindow?.Content is not Frame rootFrame)
+        {
+            return;
+        }
+
+        rootFrame.BackStack.Clear();
+        rootFrame.Navigate(typeof(MainPage));
+    }
+
     private AppThemeMode LoadThemeMode()
     {
 #if __ANDROID__
@@ -115,6 +127,22 @@ public partial class App : Application
         }
 #else
         return AppAccent.Lavender;
+#endif
+    }
+
+    private AppLanguageMode LoadLanguageMode()
+    {
+#if __ANDROID__
+        try
+        {
+            return AndroidSettingsStore.Load(global::Android.App.Application.Context!).LanguageMode;
+        }
+        catch
+        {
+            return AppLanguageMode.System;
+        }
+#else
+        return AppLanguageMode.System;
 #endif
     }
 

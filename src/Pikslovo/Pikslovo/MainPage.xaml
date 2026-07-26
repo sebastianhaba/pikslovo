@@ -401,6 +401,14 @@
                     <Border x:Name="RoseAccentOption" Tag="Rose" Width="48" Height="48" Padding="8" BorderBrush="#EC7A9E" CornerRadius="24" Tapped="AccentOption_Tapped"><Border Background="#EC7A9E" CornerRadius="16" /></Border>
                   </StackPanel>
                 </ScrollViewer>
+                <Border Height="1" Background="{ThemeResource AppBorderBrush}" />
+                <TextBlock Text="Język aplikacji" FontSize="16" FontWeight="SemiBold" />
+                <Grid ColumnSpacing="10">
+                  <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="*" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+                  <Border x:Name="SystemLanguageOption" Tag="System" Style="{StaticResource ThemeModeOptionBorder}" Tapped="ApplicationLanguageOption_Tapped" Padding="8"><TextBlock Text="System" HorizontalAlignment="Center" /></Border>
+                  <Border x:Name="EnglishLanguageOption" Grid.Column="1" Tag="English" Style="{StaticResource ThemeModeOptionBorder}" Tapped="ApplicationLanguageOption_Tapped" Padding="8"><TextBlock Text="English" HorizontalAlignment="Center" /></Border>
+                  <Border x:Name="PolishLanguageOption" Grid.Column="2" Tag="Polish" Style="{StaticResource ThemeModeOptionBorder}" Tapped="ApplicationLanguageOption_Tapped" Padding="8"><TextBlock Text="Polski" HorizontalAlignment="Center" /></Border>
+                </Grid>
               </StackPanel>
             </Border>
           </StackPanel>

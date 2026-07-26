@@ -9,7 +9,7 @@ namespace Pikslovo.Droid.Services;
 [Service(
     Permission = "android.permission.BIND_ACCESSIBILITY_SERVICE",
     Exported = true,
-    Label = "Skrót Pikslovo")]
+    Label = "@string/hotkey_accessibility_label")]
 [IntentFilter(["android.accessibilityservice.AccessibilityService"])]
 [MetaData("android.accessibilityservice", Resource = "@xml/global_hotkey_accessibility_service")]
 public sealed class GlobalHotkeyAccessibilityService : AccessibilityService

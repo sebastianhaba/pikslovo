@@ -1,6 +1,7 @@
 using Android.App;
 using Android.Content;
 using Android.Content.PM;
+using Android.Content.Res;
 using Android.OS;
 using Android.Views;
 using Android.Widget;
@@ -41,6 +42,18 @@ public class MainActivity : Microsoft.UI.Xaml.ApplicationActivity
     {
         base.OnRequestPermissionsResult(requestCode, permissions, grantResults);
         AndroidTranslationHost.HandlePermissionRequestResult(requestCode, this);
+    }
+
+    public override void OnConfigurationChanged(Configuration newConfig)
+    {
+        base.OnConfigurationChanged(newConfig);
+        if (AppStrings.LanguageMode != global::Pikslovo.Core.AppLanguageMode.System)
+        {
+            return;
+        }
+
+        AndroidTranslationHost.RefreshFloatingTriggerConfiguration(this);
+        (global::Microsoft.UI.Xaml.Application.Current as App)?.ReloadMainPage();
     }
 
     protected override void OnDestroy()

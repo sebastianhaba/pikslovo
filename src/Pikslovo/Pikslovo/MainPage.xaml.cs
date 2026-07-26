@@ -2,6 +2,7 @@ using Pikslovo.Core;
 using Pikslovo.Services;
 using Microsoft.UI.Xaml.Controls.Primitives;
 using Microsoft.UI.Xaml.Input;
+using Microsoft.UI.Xaml.Media;
 using System.Globalization;
 using System.Net;
 using System.Diagnostics;
@@ -18,14 +19,15 @@ namespace Pikslovo;
 
 public sealed partial class MainPage : Page
 {
-    private const string ApiKeyTestButtonText = "Sprawdź klucz";
-    private const string ApiKeyValidationInProgressButtonText = "Sprawdzanie...";
+    private static string ApiKeyTestButtonText => AppStrings.Get("Sprawdź klucz");
+    private static string ApiKeyValidationInProgressButtonText => AppStrings.Get("Sprawdzanie...");
     private bool _isLoading;
     private bool _updatingSessionToggle;
     private bool _isApiKeyVisible;
     private int[] _hotkeyCodes = [];
     private AppThemeMode _themeMode = AppThemeMode.System;
     private AppAccent _accent = AppAccent.Lavender;
+    private AppLanguageMode _languageMode = AppLanguageMode.System;
     private string _onboardingSourceLanguage = "ja";
     private string _onboardingTargetLanguage = "pl";
     private bool _awaitingOnboardingNotificationPermission;
@@ -49,7 +51,7 @@ public sealed partial class MainPage : Page
         {
             SelectLanguage(SourceLanguageBox, "ja");
             SelectLanguage(TargetLanguageBox, "pl");
-            ShowStatus($"Nie można jeszcze odczytać ustawień: {exception.Message}");
+            ShowStatus(AppStrings.Format("Nie można jeszcze odczytać ustawień: {0}", exception.Message));
         }
         finally
         {
@@ -57,6 +59,7 @@ public sealed partial class MainPage : Page
         }
 
         InitializeOnboarding();
+        LocalizeXamlStrings(this);
     }
 
     private void LoadSettings()
@@ -77,6 +80,7 @@ public sealed partial class MainPage : Page
         GlobalHotkeyToggle.IsOn = settings.GlobalHotkeyEnabled;
         SetThemeMode(settings.ThemeMode);
         SetAccent(settings.Accent);
+        SetApplicationLanguage(settings.LanguageMode);
         FloatingButtonAlwaysVisibleToggle.IsOn = settings.FloatingButton.AlwaysVisible;
         FloatingButtonScaleSlider.Value = settings.FloatingButton.Scale;
         FloatingButtonHorizontalPositionSlider.Value = settings.FloatingButton.HorizontalPosition;
@@ -93,6 +97,7 @@ public sealed partial class MainPage : Page
         HideIdenticalTranslationsToggle.IsOn = false;
         SetThemeMode(AppThemeMode.System);
         SetAccent(AppAccent.Lavender);
+        SetApplicationLanguage(AppLanguageMode.System);
         FloatingButtonAlwaysVisibleToggle.IsOn = true;
         FloatingButtonScaleSlider.Value = 1;
         FloatingButtonHorizontalPositionSlider.Value = 1;
@@ -116,7 +121,7 @@ public sealed partial class MainPage : Page
             return;
         }
 
-        DetailTitle.Text = section switch
+        DetailTitle.Text = AppStrings.Get(section switch
         {
             "translation" => "Tłumaczenie",
             "api" => "Google Cloud API",
@@ -127,7 +132,7 @@ public sealed partial class MainPage : Page
             "permissions" => "Uprawnienia",
             "diagnostics" => "Diagnostyka",
             _ => string.Empty
-        };
+        });
 
         TranslationSection.Visibility = section == "translation" ? Visibility.Visible : Visibility.Collapsed;
         ApiSection.Visibility = section == "api" ? Visibility.Visible : Visibility.Collapsed;
@@ -210,9 +215,30 @@ public sealed partial class MainPage : Page
         UpdateSettingSummaries();
     }
 
-    private async void EditSourceLanguage_Click(object sender, RoutedEventArgs e) => await EditLanguageAsync(SourceLanguageBox, "Język źródłowy");
+    private void ApplicationLanguageOption_Tapped(object sender, TappedRoutedEventArgs e)
+    {
+        if (_isLoading || sender is not Border { Tag: string value } ||
+            !Enum.TryParse<AppLanguageMode>(value, out var languageMode))
+        {
+            return;
+        }
 
-    private async void EditTargetLanguage_Click(object sender, RoutedEventArgs e) => await EditLanguageAsync(TargetLanguageBox, "Język docelowy");
+        SetApplicationLanguage(languageMode);
+        if (!SaveSettings(requireValidTranslationSettings: false))
+        {
+            return;
+        }
+
+        AppStrings.SetLanguageMode(languageMode);
+#if __ANDROID__
+        AndroidTranslationHost.RefreshFloatingTriggerConfiguration(global::Android.App.Application.Context!);
+#endif
+        (global::Microsoft.UI.Xaml.Application.Current as App)?.ReloadMainPage();
+    }
+
+    private async void EditSourceLanguage_Click(object sender, RoutedEventArgs e) => await EditLanguageAsync(SourceLanguageBox, AppStrings.Get("Język źródłowy"));
+
+    private async void EditTargetLanguage_Click(object sender, RoutedEventArgs e) => await EditLanguageAsync(TargetLanguageBox, AppStrings.Get("Język docelowy"));
 
     private async Task EditLanguageAsync(ComboBox source, string title)
     {
@@ -268,7 +294,7 @@ public sealed partial class MainPage : Page
         }
 
         SelectLanguage(picker, selectedLanguage);
-        if (!await ShowEditorAsync(isSource ? "Język źródłowy" : "Język docelowy", picker))
+        if (!await ShowEditorAsync(AppStrings.Get(isSource ? "Język źródłowy" : "Język docelowy"), picker))
         {
             return;
         }
@@ -362,7 +388,7 @@ public sealed partial class MainPage : Page
         return language is "pl" or "en" or "de" or "es" ? language : "pl";
     }
 
-    private static string GetLanguageName(string language) => language switch
+    private static string GetLanguageName(string language) => AppStrings.Get(language switch
     {
         "ja" => "Japoński",
         "en" => "Angielski",
@@ -371,7 +397,7 @@ public sealed partial class MainPage : Page
         "de" => "Niemiecki",
         "es" => "Hiszpański",
         _ => "Polski"
-    };
+    });
 
     private void OpenGoogleCloudCredentials_Click(object sender, RoutedEventArgs e)
     {
@@ -388,7 +414,7 @@ public sealed partial class MainPage : Page
         }
         catch (Exception exception)
         {
-            ShowStatus($"Nie można otworzyć strony Google Cloud: {exception.Message}");
+            ShowStatus(AppStrings.Format("Nie można otworzyć strony Google Cloud: {0}", exception.Message));
         }
 #endif
     }
@@ -461,8 +487,8 @@ public sealed partial class MainPage : Page
         {
             errorTitle = "Klucz nie działa";
             errorMessage = exception.StatusCode is HttpStatusCode.Unauthorized or HttpStatusCode.Forbidden
-                ? $"Klucz nie ma dostępu do {exception.ServiceName}. Sprawdź poprawność klucza oraz czy to API jest włączone w projekcie Google Cloud."
-                : $"Nie udało się sprawdzić dostępu do {exception.ServiceName}. Usługa Google zwróciła błąd {(int)exception.StatusCode}.";
+                ? AppStrings.Format("Klucz nie ma dostępu do {0}. Sprawdź poprawność klucza oraz czy to API jest włączone w projekcie Google Cloud.", exception.ServiceName)
+                : AppStrings.Format("Nie udało się sprawdzić dostępu do {0}. Usługa Google zwróciła błąd {1}.", exception.ServiceName, (int)exception.StatusCode);
         }
         catch (HttpRequestException)
         {
@@ -518,8 +544,8 @@ public sealed partial class MainPage : Page
             XamlRoot = XamlRoot,
             Title = title,
             Content = content,
-            PrimaryButtonText = "Zapisz",
-            CloseButtonText = "Anuluj",
+            PrimaryButtonText = AppStrings.Get("Zapisz"),
+            CloseButtonText = AppStrings.Get("Anuluj"),
             DefaultButton = ContentDialogButton.Primary
         };
         return await dialog.ShowAsync() == ContentDialogResult.Primary;
@@ -530,9 +556,9 @@ public sealed partial class MainPage : Page
         var dialog = new ContentDialog
         {
             XamlRoot = XamlRoot,
-            Title = title,
-            Content = new TextBlock { Text = message, TextWrapping = TextWrapping.Wrap },
-            CloseButtonText = "Zamknij"
+            Title = AppStrings.Get(title),
+            Content = new TextBlock { Text = AppStrings.Get(message), TextWrapping = TextWrapping.Wrap },
+            CloseButtonText = AppStrings.Get("Zamknij")
         };
         await dialog.ShowAsync();
     }
@@ -542,10 +568,10 @@ public sealed partial class MainPage : Page
         var dialog = new ContentDialog
         {
             XamlRoot = XamlRoot,
-            Title = title,
-            Content = new TextBlock { Text = message, TextWrapping = TextWrapping.Wrap },
-            PrimaryButtonText = "Przywróć",
-            CloseButtonText = "Anuluj",
+            Title = AppStrings.Get(title),
+            Content = new TextBlock { Text = AppStrings.Get(message), TextWrapping = TextWrapping.Wrap },
+            PrimaryButtonText = AppStrings.Get("Przywróć"),
+            CloseButtonText = AppStrings.Get("Anuluj"),
             DefaultButton = ContentDialogButton.Close
         };
         return await dialog.ShowAsync() == ContentDialogResult.Primary;
@@ -566,7 +592,7 @@ public sealed partial class MainPage : Page
         }
         catch (Exception exception)
         {
-            ShowStatus($"Nie można otworzyć wyboru pliku: {exception.Message}");
+            ShowStatus(AppStrings.Format("Nie można otworzyć wyboru pliku: {0}", exception.Message));
         }
 #endif
     }
@@ -586,7 +612,7 @@ public sealed partial class MainPage : Page
         }
         catch (Exception exception)
         {
-            ShowStatus($"Nie można otworzyć wyboru pliku: {exception.Message}");
+            ShowStatus(AppStrings.Format("Nie można otworzyć wyboru pliku: {0}", exception.Message));
         }
 #endif
     }
@@ -609,7 +635,7 @@ public sealed partial class MainPage : Page
         }
         catch (Exception exception)
         {
-            ShowStatus($"Nie można wyeksportować dziennika diagnostycznego: {exception.Message}");
+            ShowStatus(AppStrings.Format("Nie można wyeksportować dziennika diagnostycznego: {0}", exception.Message));
         }
 #endif
     }
@@ -631,7 +657,7 @@ public sealed partial class MainPage : Page
         }
         catch (Exception exception)
         {
-            ShowStatus($"Nie można przywrócić ustawień: {exception.Message}");
+            ShowStatus(AppStrings.Format("Nie można przywrócić ustawień: {0}", exception.Message));
         }
 #endif
     }
@@ -650,7 +676,7 @@ public sealed partial class MainPage : Page
             }
             catch (Exception exception)
             {
-                ShowStatus($"Nie można otworzyć ustawień nakładki: {exception.Message}");
+                ShowStatus(AppStrings.Format("Nie można otworzyć ustawień nakładki: {0}", exception.Message));
             }
         }
         else
@@ -674,7 +700,7 @@ public sealed partial class MainPage : Page
             }
             catch (Exception exception)
             {
-                ShowStatus($"Nie można poprosić o uprawnienie powiadomień: {exception.Message}");
+                ShowStatus(AppStrings.Format("Nie można poprosić o uprawnienie powiadomień: {0}", exception.Message));
             }
         }
         else
@@ -696,7 +722,7 @@ public sealed partial class MainPage : Page
             }
             catch (Exception exception)
             {
-                ShowStatus($"Nie można otworzyć ustawień dostępności: {exception.Message}");
+                ShowStatus(AppStrings.Format("Nie można otworzyć ustawień dostępności: {0}", exception.Message));
             }
         }
         else
@@ -742,7 +768,7 @@ public sealed partial class MainPage : Page
         }
         catch (Exception exception)
         {
-            ShowStatus($"Nie można uruchomić przechwytywania ekranu: {exception.Message}");
+            ShowStatus(AppStrings.Format("Nie można uruchomić przechwytywania ekranu: {0}", exception.Message));
             UpdateSessionToggle();
         }
 #endif
@@ -805,7 +831,7 @@ public sealed partial class MainPage : Page
         {
             var context = global::Android.App.Application.Context!;
             using var stream = context.ContentResolver?.OpenOutputStream(uri)
-                ?? throw new InvalidOperationException("Nie można zapisać wybranego pliku.");
+                ?? throw new InvalidOperationException(AppStrings.Get("Nie można zapisać wybranego pliku."));
             await SettingsProfile.WriteAsync(
                 stream,
                 SettingsProfile.FromSettings(AndroidSettingsStore.Load(context)),
@@ -814,7 +840,7 @@ public sealed partial class MainPage : Page
         }
         catch (Exception exception)
         {
-            ShowStatus($"Nie można wyeksportować ustawień: {exception.Message}");
+            ShowStatus(AppStrings.Format("Nie można wyeksportować ustawień: {0}", exception.Message));
         }
     }
 
@@ -829,14 +855,14 @@ public sealed partial class MainPage : Page
         {
             var context = global::Android.App.Application.Context!;
             using var stream = context.ContentResolver?.OpenInputStream(uri)
-                ?? throw new InvalidOperationException("Nie można odczytać wybranego pliku.");
+                ?? throw new InvalidOperationException(AppStrings.Get("Nie można odczytać wybranego pliku."));
             var profile = await SettingsProfile.ReadAsync(stream, CancellationToken.None);
             ApplySettingsProfile(profile);
             ShowStatus("Ustawienia zaimportowano z pliku JSON.");
         }
         catch (Exception exception)
         {
-            ShowStatus($"Nie można zaimportować ustawień: {exception.Message}");
+            ShowStatus(AppStrings.Format("Nie można zaimportować ustawień: {0}", exception.Message));
         }
     }
 
@@ -901,6 +927,7 @@ public sealed partial class MainPage : Page
                 GlobalHotkeyToggle.IsOn,
                 _themeMode,
                 _accent,
+                _languageMode,
                 new FloatingButtonSettings(
                     FloatingButtonAlwaysVisibleToggle.IsOn,
                     (float)FloatingButtonScaleSlider.Value,
@@ -923,13 +950,13 @@ public sealed partial class MainPage : Page
     private void ShowStatus(string message)
     {
 #if __ANDROID__
-        AndroidToast.MakeText(global::Android.App.Application.Context!, message, AndroidToastLength.Short)?.Show();
+        AndroidToast.MakeText(global::Android.App.Application.Context!, AppStrings.Get(message), AndroidToastLength.Short)?.Show();
 #endif
     }
 
     private static string GetLanguage(ComboBox box) => (box.SelectedItem as ComboBoxItem)?.Tag?.ToString() ?? string.Empty;
 
-    private static string GetLanguageLabel(ComboBox box) => (box.SelectedItem as ComboBoxItem)?.Content?.ToString() ?? "Nie wybrano";
+    private static string GetLanguageLabel(ComboBox box) => (box.SelectedItem as ComboBoxItem)?.Content?.ToString() ?? AppStrings.Get("Nie wybrano");
 
     private static void SelectLanguage(ComboBox box, string language)
     {
@@ -1148,13 +1175,13 @@ public sealed partial class MainPage : Page
 #if __ANDROID__
         HotkeyCodeValue.Text = HotkeyCaptureDialog.Format(_hotkeyCodes);
 #else
-        HotkeyCodeValue.Text = "Nie ustawiono";
+        HotkeyCodeValue.Text = AppStrings.Get("Nie ustawiono");
 #endif
         var themeMode = _themeMode switch
         {
-            AppThemeMode.Dark => "Ciemny",
-            AppThemeMode.Light => "Jasny",
-            _ => "Systemowy"
+            AppThemeMode.Dark => AppStrings.Get("Ciemny"),
+            AppThemeMode.Light => AppStrings.Get("Jasny"),
+            _ => AppStrings.Get("System")
         };
         ThemeModeValue.Text = $"{themeMode} · {GetAccentLabel(_accent)}";
     }
@@ -1176,6 +1203,14 @@ public sealed partial class MainPage : Page
         SetThemeModeOptionStyle(DarkThemeOption, _themeMode == AppThemeMode.Dark);
         SetThemeModeOptionStyle(LightThemeOption, _themeMode == AppThemeMode.Light);
         (global::Microsoft.UI.Xaml.Application.Current as App)?.SetAccent(accent);
+    }
+
+    private void SetApplicationLanguage(AppLanguageMode mode)
+    {
+        _languageMode = mode;
+        SetThemeModeOptionStyle(SystemLanguageOption, mode == AppLanguageMode.System);
+        SetThemeModeOptionStyle(EnglishLanguageOption, mode == AppLanguageMode.English);
+        SetThemeModeOptionStyle(PolishLanguageOption, mode == AppLanguageMode.Polish);
     }
 
     private void SetThemeModeOptionStyle(Border option, bool selected)
@@ -1217,7 +1252,7 @@ public sealed partial class MainPage : Page
     private void SetAccentOptionSelection(Border option, AppAccent accent) =>
         option.BorderThickness = accent == _accent ? new Thickness(2) : new Thickness(0);
 
-    private static string GetAccentLabel(AppAccent accent) => accent switch
+    private static string GetAccentLabel(AppAccent accent) => AppStrings.Get(accent switch
     {
         AppAccent.Coral => "Koralowy",
         AppAccent.Amber => "Bursztynowy",
@@ -1230,7 +1265,7 @@ public sealed partial class MainPage : Page
         AppAccent.Orchid => "Orchidea",
         AppAccent.Rose => "Różowy",
         _ => "Lawendowy"
-    };
+    });
 
     private static string FormatFontScale(double value) => $"{value.ToString("0.0", CultureInfo.CurrentCulture)}x";
 
@@ -1238,9 +1273,38 @@ public sealed partial class MainPage : Page
 
     private static string FormatDuration(long? milliseconds) => milliseconds is { } value
         ? $"{value} ms"
-        : "Brak pomiaru";
+        : AppStrings.Get("Brak pomiaru");
 
     private static string FormatPosition(double value) => value.ToString("0.00", CultureInfo.CurrentCulture);
 
     private static string FormatRecognitionConfidence(double value) => value.ToString("0.0", CultureInfo.CurrentCulture);
+
+    private static void LocalizeXamlStrings(DependencyObject element)
+    {
+        switch (element)
+        {
+            case TextBlock textBlock:
+                textBlock.Text = AppStrings.Get(textBlock.Text ?? string.Empty);
+                break;
+            case Button { Content: string content } button:
+                button.Content = AppStrings.Get(content);
+                break;
+            case ComboBoxItem { Content: string content } item:
+                item.Content = AppStrings.Get(content);
+                break;
+            case PasswordBox passwordBox:
+                passwordBox.PlaceholderText = AppStrings.Get(passwordBox.PlaceholderText ?? string.Empty);
+                break;
+        }
+
+        if (ToolTipService.GetToolTip(element) is string toolTip)
+        {
+            ToolTipService.SetToolTip(element, AppStrings.Get(toolTip));
+        }
+
+        for (var index = 0; index < VisualTreeHelper.GetChildrenCount(element); index++)
+        {
+            LocalizeXamlStrings(VisualTreeHelper.GetChild(element, index));
+        }
+    }
 }
