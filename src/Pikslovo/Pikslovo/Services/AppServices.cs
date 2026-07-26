@@ -20,8 +20,10 @@ public static class AppServices
 
     private static HttpClient CreateHttpClient()
     {
-        var httpClient = new HttpClient(new SocketsHttpHandler());
 #if __ANDROID__
+        // Use Android's HTTPS implementation. It handles the device's network and
+        // certificate configuration more reliably than the managed socket handler.
+        var httpClient = new HttpClient(new global::Xamarin.Android.Net.AndroidMessageHandler());
         var context = global::Android.App.Application.Context;
         var packageName = context?.PackageName;
         if (string.IsNullOrWhiteSpace(packageName))
@@ -57,6 +59,8 @@ public static class AppServices
 
         httpClient.DefaultRequestHeaders.Add("X-Android-Package", packageName);
         httpClient.DefaultRequestHeaders.Add("X-Android-Cert", Convert.ToHexString(SHA1.HashData(certificate)));
+#else
+        var httpClient = new HttpClient(new SocketsHttpHandler());
 #endif
         return httpClient;
     }

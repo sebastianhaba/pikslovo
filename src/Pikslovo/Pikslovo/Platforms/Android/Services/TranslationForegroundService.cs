@@ -284,19 +284,27 @@ public sealed class TranslationForegroundService : Service
                 using var scaledBitmap = CreateScaledOcrBitmap(bitmapForOcr, settings.OcrImageScale);
                 var bitmapForVision = scaledBitmap ?? bitmapForOcr;
                 var encodingStopwatch = Stopwatch.StartNew();
-                bitmapForVision.Compress(Bitmap.CompressFormat.Png!, 100, stream);
+                var imageFormat = settings.UseJpegForOcr ? Bitmap.CompressFormat.Jpeg! : Bitmap.CompressFormat.Png!;
+                var imageQuality = settings.UseJpegForOcr ? settings.OcrJpegQuality : 100;
+                if (!bitmapForVision.Compress(imageFormat, imageQuality, stream))
+                {
+                    throw new InvalidOperationException("Nie udało się zakodować obrazu OCR.");
+                }
+
                 var imageBytes = stream.ToArray();
                 var encodingMilliseconds = encodingStopwatch.ElapsedMilliseconds;
-                var captureAndPngMilliseconds = operationStopwatch.ElapsedMilliseconds;
+                var captureAndImageEncodingMilliseconds = operationStopwatch.ElapsedMilliseconds;
+                var imageFormatName = settings.UseJpegForOcr ? $"JPEG {imageQuality}%" : "PNG";
                 Android.Util.Log.Debug(
                     "Pikslovo",
-                    $"Capture + PNG: {captureAndPngMilliseconds} ms; PNG encode: {encodingMilliseconds} ms; {bitmapForVision.Width}x{bitmapForVision.Height}; png={imageBytes.Length / 1024d:0.0} KiB");
+                    $"Capture + encode: {captureAndImageEncodingMilliseconds} ms; {imageFormatName} encode: {encodingMilliseconds} ms; {bitmapForVision.Width}x{bitmapForVision.Height}; image={imageBytes.Length / 1024d:0.0} KiB");
                 var execution = await AppServices.TranslationOrchestrator
                     .TranslateWithTimingsAsync(imageBytes, settings, cancellationToken)
                     .ConfigureAwait(false);
                 var result = execution.Result;
                 AppServices.Diagnostics.RecordTranslation(
-                    captureAndPngMilliseconds,
+                    captureAndImageEncodingMilliseconds,
+                    encodingMilliseconds,
                     execution.CloudVisionOcrMilliseconds,
                     execution.CloudTranslationMilliseconds,
                     operationStopwatch.ElapsedMilliseconds);
@@ -354,7 +362,10 @@ public sealed class TranslationForegroundService : Service
         }
         catch (Exception exception)
         {
-            ShowMessage(exception.Message);
+            Android.Util.Log.Error("Pikslovo", exception.ToString());
+            ShowMessage(exception is HttpRequestException
+                ? "Nie udało się połączyć z Google Cloud. Sprawdź połączenie z Internetem i spróbuj ponownie."
+                : exception.Message);
         }
         finally
         {

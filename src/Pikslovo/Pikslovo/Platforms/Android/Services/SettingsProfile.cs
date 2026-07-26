@@ -25,7 +25,11 @@ internal sealed record SettingsProfile(
             settings.Translation.OcrImageScale,
             settings.Translation.GroupingPower,
             settings.Translation.FontScale,
-            settings.Translation.HideIdenticalTranslations),
+            settings.Translation.HideIdenticalTranslations)
+        {
+            UseJpeg = settings.Translation.UseJpegForOcr,
+            JpegQuality = settings.Translation.OcrJpegQuality,
+        },
         new CaptureRegionProfile(
             settings.CaptureRegion.IsEnabled,
             settings.CaptureRegion.Left,
@@ -45,7 +49,11 @@ internal sealed record SettingsProfile(
             TranslationSettings.DefaultOcrImageScale,
             TranslationSettings.DefaultGroupingPower,
             TranslationSettings.DefaultFontScale,
-            false),
+            false)
+        {
+            UseJpeg = TranslationSettings.DefaultUseJpegForOcr,
+            JpegQuality = TranslationSettings.DefaultOcrJpegQuality,
+        },
         new CaptureRegionProfile(false, 0f, 0f, 1f, 1f),
         new FloatingButtonProfile(
             true,
@@ -76,7 +84,9 @@ internal sealed record SettingsProfile(
             OcrImageScale = Ocr.ImageScale,
             GroupingPower = Ocr.GroupingPower,
             FontScale = Ocr.FontScale,
-            HideIdenticalTranslations = Ocr.HideIdenticalTranslations
+            HideIdenticalTranslations = Ocr.HideIdenticalTranslations,
+            UseJpegForOcr = Ocr.UseJpeg,
+            OcrJpegQuality = Ocr.JpegQuality,
         },
         CaptureRegion = new CaptureRegionSettings(
             CaptureRegion.IsEnabled,
@@ -106,7 +116,8 @@ internal sealed record SettingsProfile(
         if (!IsInRange(Ocr.RecognitionConfidence, 0f, 1f) ||
             !IsInRange(Ocr.ImageScale, 0.25f, 1f) ||
             !IsInRange(Ocr.GroupingPower, TranslationSettings.DefaultGroupingPower, 1f) ||
-            !IsInRange(Ocr.FontScale, 1f, 3f))
+            !IsInRange(Ocr.FontScale, 1f, 3f) ||
+            Ocr.JpegQuality is < TranslationSettings.MinimumOcrJpegQuality or > TranslationSettings.MaximumOcrJpegQuality)
         {
             throw new InvalidDataException("Plik zawiera nieprawidłowe ustawienia OCR lub nakładki.");
         }
@@ -139,7 +150,12 @@ internal sealed record OcrProfile(
     float ImageScale,
     float GroupingPower,
     float FontScale,
-    bool HideIdenticalTranslations);
+    bool HideIdenticalTranslations)
+{
+    public bool UseJpeg { get; init; } = TranslationSettings.DefaultUseJpegForOcr;
+
+    public int JpegQuality { get; init; } = TranslationSettings.DefaultOcrJpegQuality;
+}
 
 internal sealed record CaptureRegionProfile(
     bool IsEnabled,

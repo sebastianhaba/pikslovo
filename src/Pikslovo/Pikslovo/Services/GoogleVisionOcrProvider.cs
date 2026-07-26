@@ -21,8 +21,8 @@ public sealed class GoogleVisionOcrProvider(HttpClient httpClient) : IOcrProvide
                 new VisionImage(Convert.ToBase64String(imageBytes.Span)),
                 [new VisionFeature("DOCUMENT_TEXT_DETECTION")])]);
 
-        using var response = await httpClient
-            .PostAsJsonAsync($"{Endpoint}?key={Uri.EscapeDataString(settings.ApiKey)}", request, cancellationToken)
+        using var response = await GoogleCloudJsonRequest
+            .PostAsync(httpClient, $"{Endpoint}?key={Uri.EscapeDataString(settings.ApiKey)}", request, cancellationToken)
             .ConfigureAwait(false);
 
         if (!response.IsSuccessStatusCode)

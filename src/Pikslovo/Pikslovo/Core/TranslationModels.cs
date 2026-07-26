@@ -8,12 +8,18 @@ public sealed record TranslationSettings(
     float GroupingPower = TextRegionGrouper.DefaultGroupingPower,
     float FontScale = 1f,
     bool HideIdenticalTranslations = false,
-    float OcrImageScale = 1f)
+    float OcrImageScale = 1f,
+    bool UseJpegForOcr = true,
+    int OcrJpegQuality = 85)
 {
     public const float DefaultRecognitionConfidence = 0.6f;
     public const float DefaultGroupingPower = TextRegionGrouper.DefaultGroupingPower;
     public const float DefaultFontScale = 1f;
     public const float DefaultOcrImageScale = 1f;
+    public const bool DefaultUseJpegForOcr = true;
+    public const int DefaultOcrJpegQuality = 85;
+    public const int MinimumOcrJpegQuality = 50;
+    public const int MaximumOcrJpegQuality = 100;
 
     public bool IsValid =>
         !string.IsNullOrWhiteSpace(ApiKey) &&
@@ -26,7 +32,8 @@ public sealed record TranslationSettings(
         float.IsFinite(FontScale) &&
         FontScale is >= 1f and <= 3f &&
         float.IsFinite(OcrImageScale) &&
-        OcrImageScale is >= 0.25f and <= 1f;
+        OcrImageScale is >= 0.25f and <= 1f &&
+        OcrJpegQuality is >= MinimumOcrJpegQuality and <= MaximumOcrJpegQuality;
 }
 
 public readonly record struct PixelRect(int Left, int Top, int Right, int Bottom)

@@ -22,8 +22,8 @@ public sealed class GoogleTranslationProvider(HttpClient httpClient) : ITranslat
 
         var stopwatch = Stopwatch.StartNew();
         var request = new TranslationRequest(sourceTexts, settings.SourceLanguage, settings.TargetLanguage, "text");
-        using var response = await httpClient
-            .PostAsJsonAsync($"{Endpoint}?key={Uri.EscapeDataString(settings.ApiKey)}", request, cancellationToken)
+        using var response = await GoogleCloudJsonRequest
+            .PostAsync(httpClient, $"{Endpoint}?key={Uri.EscapeDataString(settings.ApiKey)}", request, cancellationToken)
             .ConfigureAwait(false);
 
         if (!response.IsSuccessStatusCode)

@@ -64,6 +64,8 @@ public sealed partial class MainPage : Page
         FontScaleSlider.Value = settings.Translation.FontScale;
         RecognitionConfidenceSlider.Value = settings.Translation.RecognitionConfidence;
         OcrImageScaleSlider.Value = settings.Translation.OcrImageScale;
+        UseJpegForOcrToggle.IsOn = settings.Translation.UseJpegForOcr;
+        OcrJpegQualitySlider.Value = settings.Translation.OcrJpegQuality;
         GroupingPowerSlider.Value = settings.Translation.GroupingPower;
         HideIdenticalTranslationsToggle.IsOn = settings.Translation.HideIdenticalTranslations;
         _hotkeyCodes = settings.HotkeyCodes;
@@ -80,6 +82,8 @@ public sealed partial class MainPage : Page
         FontScaleSlider.Value = TranslationSettings.DefaultFontScale;
         RecognitionConfidenceSlider.Value = TranslationSettings.DefaultRecognitionConfidence;
         OcrImageScaleSlider.Value = TranslationSettings.DefaultOcrImageScale;
+        UseJpegForOcrToggle.IsOn = TranslationSettings.DefaultUseJpegForOcr;
+        OcrJpegQualitySlider.Value = TranslationSettings.DefaultOcrJpegQuality;
         GroupingPowerSlider.Value = TranslationSettings.DefaultGroupingPower;
         HideIdenticalTranslationsToggle.IsOn = false;
         SetThemeMode(AppThemeMode.System);
@@ -92,6 +96,8 @@ public sealed partial class MainPage : Page
         UpdateFontScaleValue();
         UpdateRecognitionConfidenceValue();
         UpdateOcrImageScaleValue();
+        UpdateOcrJpegQualityValue();
+        UpdateOcrJpegQualityControl();
         UpdateGroupingPowerValue();
         UpdateFloatingButtonValues();
         UpdateSettingSummaries();
@@ -644,7 +650,9 @@ public sealed partial class MainPage : Page
             (float)GroupingPowerSlider.Value,
             (float)FontScaleSlider.Value,
             HideIdenticalTranslationsToggle.IsOn,
-            (float)OcrImageScaleSlider.Value);
+            (float)OcrImageScaleSlider.Value,
+            UseJpegForOcrToggle.IsOn,
+            (int)Math.Round(OcrJpegQualitySlider.Value));
         if (requireValidTranslationSettings && !settings.IsValid)
         {
             ShowStatus("Wpisz klucz API i wybierz oba języki.");
@@ -749,6 +757,28 @@ public sealed partial class MainPage : Page
         SaveSettings(requireValidTranslationSettings: false);
     }
 
+    private void UseJpegForOcrToggle_Toggled(object sender, RoutedEventArgs e)
+    {
+        if (_isLoading)
+        {
+            return;
+        }
+
+        UpdateOcrJpegQualityControl();
+        SaveSettings(requireValidTranslationSettings: false);
+    }
+
+    private void OcrJpegQualitySlider_ValueChanged(object sender, RangeBaseValueChangedEventArgs e)
+    {
+        if (_isLoading)
+        {
+            return;
+        }
+
+        UpdateOcrJpegQualityValue();
+        SaveSettings(requireValidTranslationSettings: false);
+    }
+
     private void FloatingButtonSetting_Changed(object sender, RoutedEventArgs e)
     {
         if (_isLoading)
@@ -803,6 +833,14 @@ public sealed partial class MainPage : Page
 
     private void UpdateOcrImageScaleValue() => OcrImageScaleValue.Text = FormatOcrImageScale(OcrImageScaleSlider.Value);
 
+    private void UpdateOcrJpegQualityValue() => OcrJpegQualityValue.Text = $"{Math.Round(OcrJpegQualitySlider.Value):0}%";
+
+    private void UpdateOcrJpegQualityControl()
+    {
+        OcrJpegQualitySlider.IsEnabled = UseJpegForOcrToggle.IsOn;
+        OcrJpegQualityPanel.Opacity = UseJpegForOcrToggle.IsOn ? 1d : 0.45d;
+    }
+
     private void UpdateGroupingPowerValue() => GroupingPowerValue.Text = GroupingPowerSlider.Value.ToString("0.00", CultureInfo.CurrentCulture);
 
     private void UpdateFloatingButtonValues()
@@ -820,7 +858,8 @@ public sealed partial class MainPage : Page
     private void UpdateDiagnostics()
     {
         var diagnostics = AppServices.Diagnostics.Snapshot;
-        CaptureAndPngDurationValue.Text = FormatDuration(diagnostics.CaptureAndPngMilliseconds);
+        CaptureAndImageEncodingDurationValue.Text = FormatDuration(diagnostics.CaptureAndImageEncodingMilliseconds);
+        OcrImageEncodingDurationValue.Text = FormatDuration(diagnostics.OcrImageEncodingMilliseconds);
         CloudVisionOcrDurationValue.Text = FormatDuration(diagnostics.CloudVisionOcrMilliseconds);
         CloudTranslationDurationValue.Text = FormatDuration(diagnostics.CloudTranslationMilliseconds);
         TranslationTotalDurationValue.Text = FormatDuration(diagnostics.TranslationTotalMilliseconds);

@@ -176,6 +176,18 @@ public sealed class TranslationOrchestratorTests
         settings.IsValid.Should().Be(isValid);
     }
 
+    [TestCase(50, true)]
+    [TestCase(85, true)]
+    [TestCase(100, true)]
+    [TestCase(49, false)]
+    [TestCase(101, false)]
+    public void TranslationSettings_validates_ocr_jpeg_quality_range(int jpegQuality, bool isValid)
+    {
+        var settings = new TranslationSettings("key", "en", "pl", OcrJpegQuality: jpegQuality);
+
+        settings.IsValid.Should().Be(isValid);
+    }
+
     [Test]
     public async Task GoogleVisionOcrProvider_filters_paragraphs_below_recognition_confidence()
     {
@@ -221,6 +233,7 @@ public sealed class TranslationOrchestratorTests
         document.Regions.Should().ContainSingle()
             .Which.Should().Be(new TextRegion("Keep", new PixelRect(1, 2, 30, 20)));
         handler.RequestBody.Should().Contain("DOCUMENT_TEXT_DETECTION");
+        handler.RequestContentLength.Should().BeGreaterThan(0);
     }
 
     [Test]
@@ -330,8 +343,11 @@ public sealed class TranslationOrchestratorTests
     {
         public string? RequestBody { get; private set; }
 
+        public long? RequestContentLength { get; private set; }
+
         protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
         {
+            RequestContentLength = request.Content!.Headers.ContentLength;
             RequestBody = await request.Content!.ReadAsStringAsync(cancellationToken);
             return new HttpResponseMessage(HttpStatusCode.OK)
             {

@@ -77,6 +77,8 @@ internal static class AndroidSettingsStore
     private const string FontScaleName = "font_scale";
     private const string HideIdenticalTranslationsName = "hide_identical_translations";
     private const string OcrImageScaleName = "ocr_image_scale";
+    private const string UseJpegForOcrName = "use_jpeg_for_ocr";
+    private const string OcrJpegQualityName = "ocr_jpeg_quality";
     private const string HotkeyCodeName = "hotkey_code";
     private const string HotkeyCodesName = "hotkey_codes";
     private const string HoldToPreviewName = "hold_to_preview";
@@ -106,7 +108,9 @@ internal static class AndroidSettingsStore
                 Clamp(preferences.GetFloat(GroupingPowerName, TranslationSettings.DefaultGroupingPower), TranslationSettings.DefaultGroupingPower, 1f),
                 preferences.GetFloat(FontScaleName, TranslationSettings.DefaultFontScale),
                 preferences.GetBoolean(HideIdenticalTranslationsName, false),
-                NormalizeOcrImageScale(preferences.GetFloat(OcrImageScaleName, TranslationSettings.DefaultOcrImageScale))),
+                NormalizeOcrImageScale(preferences.GetFloat(OcrImageScaleName, TranslationSettings.DefaultOcrImageScale)),
+                preferences.GetBoolean(UseJpegForOcrName, TranslationSettings.DefaultUseJpegForOcr),
+                NormalizeOcrJpegQuality(preferences.GetInt(OcrJpegQualityName, TranslationSettings.DefaultOcrJpegQuality))),
             ReadHotkeyCodes(preferences),
             preferences.GetBoolean(GlobalHotkeyEnabledName, false),
             ReadThemeMode(preferences.GetString(ThemeModeName, null)),
@@ -135,6 +139,8 @@ internal static class AndroidSettingsStore
         editor.PutFloat(FontScaleName, settings.Translation.FontScale);
         editor.PutBoolean(HideIdenticalTranslationsName, settings.Translation.HideIdenticalTranslations);
         editor.PutFloat(OcrImageScaleName, NormalizeOcrImageScale(settings.Translation.OcrImageScale));
+        editor.PutBoolean(UseJpegForOcrName, settings.Translation.UseJpegForOcr);
+        editor.PutInt(OcrJpegQualityName, NormalizeOcrJpegQuality(settings.Translation.OcrJpegQuality));
         editor.PutString(HotkeyCodesName, string.Join(',', settings.HotkeyCodes));
         editor.Remove(HotkeyCodeName);
         editor.Remove(HoldToPreviewName);
@@ -164,6 +170,9 @@ internal static class AndroidSettingsStore
             <= 0.875f => 0.75f,
             _ => 1f
         };
+
+    private static int NormalizeOcrJpegQuality(int value) =>
+        Math.Clamp(value, TranslationSettings.MinimumOcrJpegQuality, TranslationSettings.MaximumOcrJpegQuality);
 
     private static AppThemeMode ReadThemeMode(string? value) =>
         Enum.TryParse<AppThemeMode>(value, ignoreCase: true, out var mode) ? mode : AppThemeMode.System;

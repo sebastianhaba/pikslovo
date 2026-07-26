@@ -1,5 +1,4 @@
 using System.Net;
-using System.Net.Http.Json;
 using System.Text.Json.Serialization;
 
 namespace Pikslovo.Services;
@@ -14,16 +13,18 @@ public sealed class GoogleCloudApiKeyValidator(HttpClient httpClient)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(apiKey);
 
-        using var translationResponse = await httpClient
-            .PostAsJsonAsync(
+        using var translationResponse = await GoogleCloudJsonRequest
+            .PostAsync(
+                httpClient,
                 $"{TranslationEndpoint}?key={Uri.EscapeDataString(apiKey)}",
                 new TranslationRequest(["test"], "en", "pl", "text"),
                 cancellationToken)
             .ConfigureAwait(false);
         EnsureSuccess(translationResponse, "Cloud Translation API");
 
-        using var visionResponse = await httpClient
-            .PostAsJsonAsync(
+        using var visionResponse = await GoogleCloudJsonRequest
+            .PostAsync(
+                httpClient,
                 $"{VisionEndpoint}?key={Uri.EscapeDataString(apiKey)}",
                 new VisionRequest([new VisionImageRequest(new VisionImage(TestImage), [new VisionFeature("DOCUMENT_TEXT_DETECTION")])]),
                 cancellationToken)
