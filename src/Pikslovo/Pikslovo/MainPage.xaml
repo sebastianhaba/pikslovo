@@ -400,6 +400,24 @@
                   <Grid.ColumnDefinitions><ColumnDefinition Width="32" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
                   <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE9D9;" FontSize="20" VerticalAlignment="Top" Margin="0,2,0,0" />
                   <StackPanel Grid.Column="1" Spacing="3">
+                    <TextBlock Text="Ostatnie przechwycenie" FontWeight="SemiBold" />
+                    <TextBlock Text="Status ostatniej próby pobrania klatki z sesji MediaProjection." Opacity="0.65" TextWrapping="Wrap" />
+                  </StackPanel>
+                </Grid>
+                <Border Height="1" Margin="16,0" Background="{ThemeResource AppBorderBrush}" />
+                <Grid Margin="16,14"><Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions><TextBlock Text="Status" /><TextBlock Text="{Binding LastCaptureAttemptStatus}" Grid.Column="1" FontWeight="SemiBold" /></Grid>
+                <Border Height="1" Margin="16,0" Background="{ThemeResource AppBorderBrush}" />
+                <Grid Margin="16,14"><Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions><TextBlock Text="Próby" /><TextBlock Text="{Binding LastCaptureAttemptCount}" Grid.Column="1" FontWeight="SemiBold" /></Grid>
+                <Border Height="1" Margin="16,0" Background="{ThemeResource AppBorderBrush}" />
+                <Grid Margin="16,14"><Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions><TextBlock Text="Czas oczekiwania" /><TextBlock Text="{Binding LastCaptureAttemptElapsed}" Grid.Column="1" FontWeight="SemiBold" /></Grid>
+              </StackPanel>
+            </Border>
+            <Border Style="{StaticResource SettingsGroupBorder}">
+              <StackPanel>
+                <Grid Margin="16,14" ColumnSpacing="16">
+                  <Grid.ColumnDefinitions><ColumnDefinition Width="32" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+                  <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE9D9;" FontSize="20" VerticalAlignment="Top" Margin="0,2,0,0" />
+                  <StackPanel Grid.Column="1" Spacing="3">
                     <TextBlock Text="Ostatnie tłumaczenie" FontWeight="SemiBold" />
                     <TextBlock Text="Pomiar jest aktualizowany po zakończeniu tłumaczenia." Opacity="0.65" TextWrapping="Wrap" />
                   </StackPanel>

@@ -3,7 +3,7 @@ namespace Pikslovo.Core;
 public sealed class TranslationDiagnostics
 {
     private readonly object _lock = new();
-    private TranslationDiagnosticsSnapshot _snapshot = new(null, null, null, null, null, null);
+    private TranslationDiagnosticsSnapshot _snapshot = new(null, null, null, null, null, null, null, null, null);
 
     public TranslationDiagnosticsSnapshot Snapshot
     {
@@ -36,6 +36,22 @@ public sealed class TranslationDiagnostics
         }
     }
 
+    public void RecordCaptureAttempt(
+        CaptureAttemptStatus status,
+        int attempts,
+        long elapsedMilliseconds)
+    {
+        lock (_lock)
+        {
+            _snapshot = _snapshot with
+            {
+                LastCaptureAttemptStatus = status,
+                LastCaptureAttemptCount = attempts,
+                LastCaptureAttemptElapsedMilliseconds = elapsedMilliseconds,
+            };
+        }
+    }
+
     public void RecordApiKeyValidation(long milliseconds)
     {
         lock (_lock)
@@ -51,4 +67,14 @@ public sealed record TranslationDiagnosticsSnapshot(
     long? CloudVisionOcrMilliseconds,
     long? CloudTranslationMilliseconds,
     long? TranslationTotalMilliseconds,
-    long? ApiKeyValidationMilliseconds);
+    long? ApiKeyValidationMilliseconds,
+    CaptureAttemptStatus? LastCaptureAttemptStatus,
+    int? LastCaptureAttemptCount,
+    long? LastCaptureAttemptElapsedMilliseconds);
+
+public enum CaptureAttemptStatus
+{
+    Success,
+    NoFreshFrame,
+    Failed
+}

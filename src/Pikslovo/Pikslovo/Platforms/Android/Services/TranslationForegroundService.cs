@@ -28,7 +28,9 @@ public sealed class TranslationForegroundService : Service
     public const string ProjectionResultDataExtra = "projection_result_data";
 
     private const int NotificationId = 1001;
-    private const int CaptureSurfaceRefreshDelayMilliseconds = 200;
+    private const int CaptureSurfaceRefreshDelayMilliseconds = 75;
+    private const int CaptureRetryDelayMilliseconds = 50;
+    private const int CaptureRetryTimeoutMilliseconds = 400;
     private const string NotificationChannelId = "translation_session";
     private readonly object _stateLock = new();
     private MediaProjection? _mediaProjection;
@@ -260,12 +262,32 @@ public sealed class TranslationForegroundService : Service
                 return;
             }
 
-            var bitmap = await CaptureBitmapAsync(cancellationToken).ConfigureAwait(false);
-            if (bitmap is null)
+            var captureResult = await CaptureBitmapAsync(cancellationToken).ConfigureAwait(false);
+            AppServices.Diagnostics.RecordCaptureAttempt(
+                captureResult.Status switch
+                {
+                    CaptureStatus.Success => CaptureAttemptStatus.Success,
+                    CaptureStatus.NoFreshFrame => CaptureAttemptStatus.NoFreshFrame,
+                    _ => CaptureAttemptStatus.Failed,
+                },
+                captureResult.Attempts,
+                captureResult.ElapsedMilliseconds);
+            if (captureResult.Status == CaptureStatus.NoFreshFrame)
             {
+                Android.Util.Log.Warn(
+                    "Pikslovo",
+                    $"Screen capture timed out waiting for a fresh frame after {captureResult.Attempts} attempts and {captureResult.ElapsedMilliseconds} ms.");
                 ShowMessage(AppStrings.Keys.ScreenFrameCaptureFailed);
                 return;
             }
+            if (captureResult.Bitmap is null)
+            {
+                Android.Util.Log.Warn(
+                    "Pikslovo",
+                    $"Screen capture failed while reading the latest frame after {captureResult.Attempts} attempts and {captureResult.ElapsedMilliseconds} ms.");
+                throw new InvalidOperationException(AppStrings.Get(AppStrings.Keys.ScreenFrameCaptureFailed));
+            }
+            var bitmap = captureResult.Bitmap;
             var processingAccent = global::Pikslovo.App.GetAccentColor(AndroidSettingsStore.Load(this).Accent);
             new Handler(Looper.MainLooper!).Post(() =>
                 _overlayPresenter?.ShowProcessingFrame(Color.Rgb(processingAccent.R, processingAccent.G, processingAccent.B)));
@@ -414,7 +436,7 @@ public sealed class TranslationForegroundService : Service
                 Math.Max((int)Math.Round(region.Bounds.Left * scaleX) + 1, (int)Math.Round(region.Bounds.Right * scaleX)),
                 Math.Max((int)Math.Round(region.Bounds.Top * scaleY) + 1, (int)Math.Round(region.Bounds.Bottom * scaleY))))).ToArray());
 
-    private async Task<Bitmap?> CaptureBitmapAsync(CancellationToken cancellationToken)
+    private async Task<CaptureResult> CaptureBitmapAsync(CancellationToken cancellationToken)
     {
         if (_floatingTrigger is not null)
         {
@@ -425,24 +447,41 @@ public sealed class TranslationForegroundService : Service
         await Task.Delay(CaptureSurfaceRefreshDelayMilliseconds, cancellationToken).ConfigureAwait(false);
         cancellationToken.ThrowIfCancellationRequested();
 
-        var image = _imageReader?.AcquireLatestImage();
-        if (image is null)
+        var stopwatch = Stopwatch.StartNew();
+        var attempts = 0;
+        while (true)
         {
-            return null;
-        }
+            cancellationToken.ThrowIfCancellationRequested();
+            attempts++;
+            var image = _imageReader?.AcquireLatestImage();
+            if (image is not null)
+            {
+                return ExtractBitmap(image, attempts, stopwatch.ElapsedMilliseconds);
+            }
 
+            if (stopwatch.ElapsedMilliseconds >= CaptureRetryTimeoutMilliseconds)
+            {
+                return CaptureResult.NoFreshFrame(attempts, stopwatch.ElapsedMilliseconds);
+            }
+
+            await Task.Delay(CaptureRetryDelayMilliseconds, cancellationToken).ConfigureAwait(false);
+        }
+    }
+
+    private static CaptureResult ExtractBitmap(Android.Media.Image image, int attempts, long elapsedMilliseconds)
+    {
         try
         {
             var planes = image.GetPlanes();
             if (planes is null)
             {
-                return null;
+                return CaptureResult.Failed(attempts, elapsedMilliseconds);
             }
 
             var plane = planes.FirstOrDefault();
             if (plane is null)
             {
-                return null;
+                return CaptureResult.Failed(attempts, elapsedMilliseconds);
             }
 
             var rowPadding = plane.RowStride - (plane.PixelStride * image.Width);
@@ -453,11 +492,11 @@ public sealed class TranslationForegroundService : Service
             var buffer = plane.Buffer;
             if (buffer is null)
             {
-                return null;
+                return CaptureResult.Failed(attempts, elapsedMilliseconds);
             }
 
             paddedBitmap.CopyPixelsFromBuffer(buffer);
-            return Bitmap.CreateBitmap(paddedBitmap, 0, 0, image.Width, image.Height);
+            return CaptureResult.Success(Bitmap.CreateBitmap(paddedBitmap, 0, 0, image.Width, image.Height), attempts, elapsedMilliseconds);
         }
         finally
         {
@@ -575,5 +614,24 @@ public sealed class TranslationForegroundService : Service
         {
             service.StopSession();
         }
+    }
+
+    private enum CaptureStatus
+    {
+        Success,
+        NoFreshFrame,
+        Failed
+    }
+
+    private sealed record CaptureResult(CaptureStatus Status, Bitmap? Bitmap, int Attempts, long ElapsedMilliseconds)
+    {
+        public static CaptureResult Success(Bitmap bitmap, int attempts, long elapsedMilliseconds) =>
+            new(CaptureStatus.Success, bitmap, attempts, elapsedMilliseconds);
+
+        public static CaptureResult NoFreshFrame(int attempts, long elapsedMilliseconds) =>
+            new(CaptureStatus.NoFreshFrame, null, attempts, elapsedMilliseconds);
+
+        public static CaptureResult Failed(int attempts, long elapsedMilliseconds) =>
+            new(CaptureStatus.Failed, null, attempts, elapsedMilliseconds);
     }
 }

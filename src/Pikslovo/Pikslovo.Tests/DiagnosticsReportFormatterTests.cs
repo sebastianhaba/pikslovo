@@ -21,13 +21,14 @@ public sealed class DiagnosticsReportFormatterTests
             true,
             true,
             false);
-        var diagnostics = new TranslationDiagnosticsSnapshot(12, 34, 56, 78, 90, 123);
+        var diagnostics = new TranslationDiagnosticsSnapshot(12, 34, 56, 78, 90, 123, CaptureAttemptStatus.NoFreshFrame, 4, 225);
         var ocrSettings = new DiagnosticsReportOcrSettings(0.75f, 0.5f, 0.85f, 1.25f, true, true, 80);
 
         var report = DiagnosticsReportFormatter.Format(metadata, diagnostics, ocrSettings);
 
         report.Should().Contain("Cloud Translation: 78 ms");
         report.Should().Contain("API key validation: 123 ms");
+        report.Should().Contain("Last capture attempt: status=no fresh frame, attempts=4, elapsed=225 ms");
         report.Should().Contain("User OCR settings:");
         report.Should().Contain("OCR confidence: 0.75");
         report.Should().Contain("OCR image scale: 0.5x");
@@ -52,9 +53,10 @@ public sealed class DiagnosticsReportFormatterTests
 
         var report = DiagnosticsReportFormatter.Format(
             metadata,
-            new TranslationDiagnosticsSnapshot(null, null, null, null, null, null));
+            new TranslationDiagnosticsSnapshot(null, null, null, null, null, null, null, null, null));
 
         report.Should().Contain("Total translation: no data");
         report.Should().Contain("API key validation: no data");
+        report.Should().Contain("Last capture attempt: status=no data, attempts=no data, elapsed=no data");
     }
 }

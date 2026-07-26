@@ -43,6 +43,9 @@ public sealed class MainPageViewModel : INotifyPropertyChanged
     private string _cloudTranslationDuration = AppStrings.Get(AppStrings.Keys.NoMeasurement);
     private string _translationTotalDuration = AppStrings.Get(AppStrings.Keys.NoMeasurement);
     private string _apiKeyValidationDuration = AppStrings.Get(AppStrings.Keys.NoMeasurement);
+    private string _lastCaptureAttemptStatus = AppStrings.Get(AppStrings.Keys.NoMeasurement);
+    private string _lastCaptureAttemptCount = AppStrings.Get(AppStrings.Keys.NoMeasurement);
+    private string _lastCaptureAttemptElapsed = AppStrings.Get(AppStrings.Keys.NoMeasurement);
 
     public event PropertyChangedEventHandler? PropertyChanged;
 
@@ -442,6 +445,24 @@ public sealed class MainPageViewModel : INotifyPropertyChanged
         private set => SetProperty(ref _apiKeyValidationDuration, value);
     }
 
+    public string LastCaptureAttemptStatus
+    {
+        get => _lastCaptureAttemptStatus;
+        private set => SetProperty(ref _lastCaptureAttemptStatus, value);
+    }
+
+    public string LastCaptureAttemptCount
+    {
+        get => _lastCaptureAttemptCount;
+        private set => SetProperty(ref _lastCaptureAttemptCount, value);
+    }
+
+    public string LastCaptureAttemptElapsed
+    {
+        get => _lastCaptureAttemptElapsed;
+        private set => SetProperty(ref _lastCaptureAttemptElapsed, value);
+    }
+
     public void LoadDefaults()
     {
         ApiKey = string.Empty;
@@ -466,7 +487,7 @@ public sealed class MainPageViewModel : INotifyPropertyChanged
         FloatingButtonVerticalPosition = 0.1f;
         OnboardingSourceLanguage = "ja";
         OnboardingTargetLanguage = "pl";
-        UpdateDiagnostics(new TranslationDiagnosticsSnapshot(null, null, null, null, null, null));
+        UpdateDiagnostics(new TranslationDiagnosticsSnapshot(null, null, null, null, null, null, null, null, null));
     }
 
     public TranslationSettings CreateTranslationSettings() =>
@@ -492,6 +513,9 @@ public sealed class MainPageViewModel : INotifyPropertyChanged
         CloudTranslationDuration = FormatDuration(diagnostics.CloudTranslationMilliseconds);
         TranslationTotalDuration = FormatDuration(diagnostics.TranslationTotalMilliseconds);
         ApiKeyValidationDuration = FormatDuration(diagnostics.ApiKeyValidationMilliseconds);
+        LastCaptureAttemptStatus = FormatCaptureAttemptStatus(diagnostics.LastCaptureAttemptStatus);
+        LastCaptureAttemptCount = FormatCount(diagnostics.LastCaptureAttemptCount);
+        LastCaptureAttemptElapsed = FormatDuration(diagnostics.LastCaptureAttemptElapsedMilliseconds);
     }
 
     public static bool IsAutoPersistedProperty(string? propertyName) => propertyName is
@@ -560,6 +584,18 @@ public sealed class MainPageViewModel : INotifyPropertyChanged
     private static string FormatDuration(long? milliseconds) => milliseconds is { } value
         ? $"{value} ms"
         : AppStrings.Get(AppStrings.Keys.NoMeasurement);
+
+    private static string FormatCount(int? value) => value is { } count
+        ? count.ToString(CultureInfo.CurrentCulture)
+        : AppStrings.Get(AppStrings.Keys.NoMeasurement);
+
+    private static string FormatCaptureAttemptStatus(CaptureAttemptStatus? status) => status switch
+    {
+        CaptureAttemptStatus.Success => AppStrings.Get(AppStrings.Keys.DiagnosticsCaptureStatusSuccess),
+        CaptureAttemptStatus.NoFreshFrame => AppStrings.Get(AppStrings.Keys.DiagnosticsCaptureStatusNoFreshFrame),
+        CaptureAttemptStatus.Failed => AppStrings.Get(AppStrings.Keys.DiagnosticsCaptureStatusFailed),
+        _ => AppStrings.Get(AppStrings.Keys.NoMeasurement),
+    };
 
     private bool SetProperty<T>(ref T field, T value, [CallerMemberName] string? propertyName = null)
     {

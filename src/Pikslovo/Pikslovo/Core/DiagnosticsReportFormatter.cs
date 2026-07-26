@@ -37,6 +37,11 @@ public static class DiagnosticsReportFormatter
         report.AppendLine(AppStrings.Format(AppStrings.Keys.DiagnosticsActiveSession, FormatBoolean(metadata.IsSessionActive)));
         report.AppendLine(AppStrings.Format(AppStrings.Keys.DiagnosticsOverlayPermission, FormatBoolean(metadata.IsOverlayPermissionGranted)));
         report.AppendLine(AppStrings.Format(AppStrings.Keys.DiagnosticsNotificationPermission, FormatBoolean(metadata.IsNotificationPermissionGranted)));
+        report.AppendLine(AppStrings.Format(
+            AppStrings.Keys.DiagnosticsLastCaptureAttempt,
+            FormatCaptureAttemptStatus(diagnostics.LastCaptureAttemptStatus),
+            FormatCount(diagnostics.LastCaptureAttemptCount),
+            FormatDurationValue(diagnostics.LastCaptureAttemptElapsedMilliseconds)));
         report.AppendLine();
         report.AppendLine(AppStrings.Get(AppStrings.Keys.DiagnosticsLatestMeasurements));
         AppendDuration(report, AppStrings.Get(AppStrings.Keys.CapturePlusEncoding), diagnostics.CaptureAndImageEncodingMilliseconds);
@@ -63,19 +68,35 @@ public static class DiagnosticsReportFormatter
     private static void AppendDuration(StringBuilder report, string label, long? milliseconds) =>
         report.Append(label)
             .Append(": ")
-            .Append(milliseconds is { } value
-                ? string.Format(CultureInfo.InvariantCulture, "{0} ms", value)
-                : AppStrings.Get(AppStrings.Keys.NoData))
+            .Append(FormatDurationValue(milliseconds))
             .AppendLine();
 
     private static string FormatFloat(float value) => value.ToString("0.##", CultureInfo.InvariantCulture);
 
     private static string FormatScale(float value) => $"{value.ToString("0.##", CultureInfo.InvariantCulture)}x";
 
+    private static string FormatCount(int? value) =>
+        value is { } count
+            ? count.ToString(CultureInfo.InvariantCulture)
+            : AppStrings.Get(AppStrings.Keys.NoData);
+
+    private static string FormatDurationValue(long? milliseconds) =>
+        milliseconds is { } value
+            ? string.Format(CultureInfo.InvariantCulture, "{0} ms", value)
+            : AppStrings.Get(AppStrings.Keys.NoData);
+
     private static string FormatImageEncoding(DiagnosticsReportOcrSettings settings) =>
         settings.UseJpegForOcr
             ? string.Format(CultureInfo.InvariantCulture, "JPEG {0}%", settings.OcrJpegQuality)
             : "PNG";
+
+    private static string FormatCaptureAttemptStatus(CaptureAttemptStatus? status) => status switch
+    {
+        CaptureAttemptStatus.Success => AppStrings.Get(AppStrings.Keys.DiagnosticsCaptureStatusSuccess),
+        CaptureAttemptStatus.NoFreshFrame => AppStrings.Get(AppStrings.Keys.DiagnosticsCaptureStatusNoFreshFrame),
+        CaptureAttemptStatus.Failed => AppStrings.Get(AppStrings.Keys.DiagnosticsCaptureStatusFailed),
+        _ => AppStrings.Get(AppStrings.Keys.NoData),
+    };
 
     private static string FormatBoolean(bool value) => AppStrings.GetBooleanLabel(value);
 }

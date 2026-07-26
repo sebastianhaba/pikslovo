@@ -61,7 +61,16 @@ public static class AppStrings
         public const string DiagnosticsActiveSession = "Aktywna sesja tłumacza: {0}";
         public const string DiagnosticsOverlayPermission = "Uprawnienie nakładki: {0}";
         public const string DiagnosticsNotificationPermission = "Uprawnienie powiadomień: {0}";
+        public const string DiagnosticsLastCaptureAttempt = "Ostatnia próba przechwycenia: status={0}, próby={1}, czas={2}";
         public const string DiagnosticsLatestMeasurements = "Ostatnie pomiary:";
+        public const string DiagnosticsCaptureStatusSuccess = "sukces";
+        public const string DiagnosticsCaptureStatusNoFreshFrame = "brak świeżej klatki";
+        public const string DiagnosticsCaptureStatusFailed = "błąd odczytu";
+        public const string DiagnosticsLatestCapture = "Ostatnie przechwycenie";
+        public const string DiagnosticsLatestCaptureDescription = "Status ostatniej próby pobrania klatki z sesji MediaProjection.";
+        public const string DiagnosticsCaptureStatusLabel = "Status";
+        public const string DiagnosticsCaptureAttemptsLabel = "Próby";
+        public const string DiagnosticsCaptureElapsedLabel = "Czas oczekiwania";
         public const string CapturePlusEncoding = "Przechwycenie + kodowanie";
         public const string OcrImageEncoding = "Kodowanie obrazu OCR";
         public const string TotalTranslation = "Całość tłumaczenia";
@@ -331,8 +340,17 @@ public static class AppStrings
         ["Aktywna sesja tłumacza: {0}"] = "Active translator session: {0}",
         ["Uprawnienie nakładki: {0}"] = "Overlay permission: {0}",
         ["Uprawnienie powiadomień: {0}"] = "Notification permission: {0}",
+        ["Ostatnia próba przechwycenia: status={0}, próby={1}, czas={2}"] = "Last capture attempt: status={0}, attempts={1}, elapsed={2}",
         ["Ostatnie pomiary:"] = "Latest measurements:",
         ["Ustawienia OCR użytkownika:"] = "User OCR settings:",
+        ["sukces"] = "success",
+        ["brak świeżej klatki"] = "no fresh frame",
+        ["błąd odczytu"] = "read failure",
+        ["Ostatnie przechwycenie"] = "Latest capture",
+        ["Status ostatniej próby pobrania klatki z sesji MediaProjection."] = "Status of the most recent attempt to get a frame from the MediaProjection session.",
+        ["Status"] = "Status",
+        ["Próby"] = "Attempts",
+        ["Czas oczekiwania"] = "Wait time",
         ["Pewność OCR: {0}"] = "OCR confidence: {0}",
         ["Skala obrazu OCR: {0}"] = "OCR image scale: {0}",
         ["Siła łączenia dialogów: {0}"] = "Dialog grouping strength: {0}",
