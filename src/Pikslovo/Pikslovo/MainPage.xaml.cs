@@ -426,6 +426,29 @@ public sealed partial class MainPage : Page
 #endif
     }
 
+    private async void ExportDiagnostics_Click(object sender, RoutedEventArgs e)
+    {
+#if __ANDROID__
+        if (MainActivity.CurrentActivity is not { } activity)
+        {
+            ShowStatus("Aktywność Androida nie jest gotowa. Zamknij i otwórz aplikację ponownie.");
+            return;
+        }
+
+        try
+        {
+            await DiagnosticsReportWriter.ExportAndShareAsync(
+                activity,
+                AppServices.Diagnostics.Snapshot,
+                CancellationToken.None);
+        }
+        catch (Exception exception)
+        {
+            ShowStatus($"Nie można wyeksportować dziennika diagnostycznego: {exception.Message}");
+        }
+#endif
+    }
+
     private async void RestoreDefaultSettings_Click(object sender, RoutedEventArgs e)
     {
         if (!await ShowConfirmationAsync(
