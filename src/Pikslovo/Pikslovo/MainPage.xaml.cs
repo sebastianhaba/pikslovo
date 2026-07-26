@@ -26,6 +26,9 @@ public sealed partial class MainPage : Page
     private int[] _hotkeyCodes = [];
     private AppThemeMode _themeMode = AppThemeMode.System;
     private AppAccent _accent = AppAccent.Lavender;
+    private string _onboardingSourceLanguage = "ja";
+    private string _onboardingTargetLanguage = "pl";
+    private bool _awaitingOnboardingNotificationPermission;
 #if __ANDROID__
     private FloatingTranslationTrigger? _floatingButtonPreview;
 #endif
@@ -52,6 +55,8 @@ public sealed partial class MainPage : Page
         {
             _isLoading = false;
         }
+
+        InitializeOnboarding();
     }
 
     private void LoadSettings()
@@ -228,6 +233,146 @@ public sealed partial class MainPage : Page
         }
     }
 
+    private void InitializeOnboarding()
+    {
+#if __ANDROID__
+        if (AndroidSettingsStore.HasCompletedOnboarding(global::Android.App.Application.Context!))
+        {
+            return;
+        }
+
+        _onboardingSourceLanguage = "ja";
+        _onboardingTargetLanguage = GetSystemTargetLanguage();
+        UpdateOnboardingLanguageLabels();
+        OnboardingLayout.Visibility = Visibility.Visible;
+#endif
+    }
+
+    private async void EditOnboardingSourceLanguage_Click(object sender, RoutedEventArgs e) =>
+        await EditOnboardingLanguageAsync(isSource: true);
+
+    private async void EditOnboardingTargetLanguage_Click(object sender, RoutedEventArgs e) =>
+        await EditOnboardingLanguageAsync(isSource: false);
+
+    private async Task EditOnboardingLanguageAsync(bool isSource)
+    {
+        var picker = new ComboBox { HorizontalAlignment = HorizontalAlignment.Stretch };
+        var languages = isSource
+            ? new (string Code, string Label)[] { ("ja", "Japoński"), ("en", "Angielski"), ("ko", "Koreański"), ("zh", "Chiński (uproszczony)"), ("de", "Niemiecki") }
+            : new (string Code, string Label)[] { ("pl", "Polski"), ("en", "Angielski"), ("de", "Niemiecki"), ("es", "Hiszpański") };
+        var selectedLanguage = isSource ? _onboardingSourceLanguage : _onboardingTargetLanguage;
+
+        foreach (var language in languages)
+        {
+            picker.Items.Add(new ComboBoxItem { Tag = language.Code, Content = language.Label });
+        }
+
+        SelectLanguage(picker, selectedLanguage);
+        if (!await ShowEditorAsync(isSource ? "Język źródłowy" : "Język docelowy", picker))
+        {
+            return;
+        }
+
+        if (isSource)
+        {
+            _onboardingSourceLanguage = GetLanguage(picker);
+        }
+        else
+        {
+            _onboardingTargetLanguage = GetLanguage(picker);
+        }
+
+        UpdateOnboardingLanguageLabels();
+    }
+
+    private void ContinueOnboardingLanguage_Click(object sender, RoutedEventArgs e)
+    {
+        SelectLanguage(SourceLanguageBox, _onboardingSourceLanguage);
+        SelectLanguage(TargetLanguageBox, _onboardingTargetLanguage);
+        SaveSettings(requireValidTranslationSettings: false);
+        UpdateSettingSummaries();
+        ShowOnboardingStep(OnboardingNotificationStep);
+    }
+
+    private void RequestOnboardingNotificationPermission_Click(object sender, RoutedEventArgs e)
+    {
+#if __ANDROID__
+        if (MainActivity.CurrentActivity is { } activity)
+        {
+            _awaitingOnboardingNotificationPermission = true;
+            if (AndroidTranslationHost.RequestNotificationPermission(activity))
+            {
+                _awaitingOnboardingNotificationPermission = false;
+                ShowOnboardingStep(OnboardingOverlayStep);
+                return;
+            }
+
+            OnboardingNotificationPermissionButton.IsEnabled = false;
+            return;
+        }
+#endif
+        ShowStatus("Aktywność Androida nie jest gotowa. Zamknij i otwórz aplikację ponownie.");
+    }
+
+    private void RequestOnboardingOverlayPermission_Click(object sender, RoutedEventArgs e)
+    {
+#if __ANDROID__
+        if (MainActivity.CurrentActivity is { } activity)
+        {
+            AndroidTranslationHost.RequestOverlayPermission(activity);
+        }
+#endif
+        ShowOnboardingStep(OnboardingApiKeyStep);
+    }
+
+    private async void TestOnboardingApiKey_Click(object sender, RoutedEventArgs e) =>
+        await TestApiKeyAsync(OnboardingApiKeyBox, OnboardingApiKeyTestButton);
+
+    private void FinishOnboarding_Click(object sender, RoutedEventArgs e)
+    {
+        ApiKeyBox.Password = OnboardingApiKeyBox.Password.Trim();
+        SaveSettings(requireValidTranslationSettings: false);
+#if __ANDROID__
+        AndroidSettingsStore.CompleteOnboarding(global::Android.App.Application.Context!);
+#endif
+        OnboardingLayout.Visibility = Visibility.Collapsed;
+    }
+
+    private void ShowOnboardingStep(UIElement activeStep)
+    {
+        OnboardingLanguageStep.Visibility = ReferenceEquals(activeStep, OnboardingLanguageStep) ? Visibility.Visible : Visibility.Collapsed;
+        OnboardingNotificationStep.Visibility = ReferenceEquals(activeStep, OnboardingNotificationStep) ? Visibility.Visible : Visibility.Collapsed;
+        OnboardingOverlayStep.Visibility = ReferenceEquals(activeStep, OnboardingOverlayStep) ? Visibility.Visible : Visibility.Collapsed;
+        OnboardingApiKeyStep.Visibility = ReferenceEquals(activeStep, OnboardingApiKeyStep) ? Visibility.Visible : Visibility.Collapsed;
+        OnboardingLanguageFooter.Visibility = ReferenceEquals(activeStep, OnboardingLanguageStep) ? Visibility.Visible : Visibility.Collapsed;
+        OnboardingNotificationFooter.Visibility = ReferenceEquals(activeStep, OnboardingNotificationStep) ? Visibility.Visible : Visibility.Collapsed;
+        OnboardingOverlayFooter.Visibility = ReferenceEquals(activeStep, OnboardingOverlayStep) ? Visibility.Visible : Visibility.Collapsed;
+        OnboardingApiKeyFooter.Visibility = ReferenceEquals(activeStep, OnboardingApiKeyStep) ? Visibility.Visible : Visibility.Collapsed;
+    }
+
+    private void UpdateOnboardingLanguageLabels()
+    {
+        OnboardingSourceLanguageValue.Text = GetLanguageName(_onboardingSourceLanguage);
+        OnboardingTargetLanguageValue.Text = GetLanguageName(_onboardingTargetLanguage);
+    }
+
+    private static string GetSystemTargetLanguage()
+    {
+        var language = CultureInfo.CurrentUICulture.TwoLetterISOLanguageName;
+        return language is "pl" or "en" or "de" or "es" ? language : "pl";
+    }
+
+    private static string GetLanguageName(string language) => language switch
+    {
+        "ja" => "Japoński",
+        "en" => "Angielski",
+        "ko" => "Koreański",
+        "zh" => "Chiński (uproszczony)",
+        "de" => "Niemiecki",
+        "es" => "Hiszpański",
+        _ => "Polski"
+    };
+
     private void OpenGoogleCloudCredentials_Click(object sender, RoutedEventArgs e)
     {
 #if __ANDROID__
@@ -272,9 +417,29 @@ public sealed partial class MainPage : Page
 #endif
     }
 
-    private async void TestApiKey_Click(object sender, RoutedEventArgs e)
+    private void OnboardingApiKeyBox_KeyDown(object sender, KeyRoutedEventArgs e)
     {
-        var apiKey = ApiKeyBox.Password.Trim();
+        if (e.Key != global::Windows.System.VirtualKey.Enter)
+        {
+            return;
+        }
+
+        e.Handled = true;
+        OnboardingApiKeyTestButton.Focus(FocusState.Programmatic);
+#if __ANDROID__
+        if (MainActivity.CurrentActivity is { } activity)
+        {
+            AndroidTranslationHost.HideKeyboard(activity);
+        }
+#endif
+    }
+
+    private async void TestApiKey_Click(object sender, RoutedEventArgs e) =>
+        await TestApiKeyAsync(ApiKeyBox, ApiKeyTestButton);
+
+    private async Task TestApiKeyAsync(PasswordBox apiKeyBox, Button button)
+    {
+        var apiKey = apiKeyBox.Password.Trim();
         if (string.IsNullOrWhiteSpace(apiKey))
         {
             await ShowMessageAsync(
@@ -283,8 +448,8 @@ public sealed partial class MainPage : Page
             return;
         }
 
-        ApiKeyTestButton.IsEnabled = false;
-        ApiKeyTestButton.Content = ApiKeyValidationInProgressButtonText;
+        button.IsEnabled = false;
+        button.Content = ApiKeyValidationInProgressButtonText;
         var stopwatch = Stopwatch.StartNew();
         string? errorTitle = null;
         string? errorMessage = null;
@@ -312,8 +477,8 @@ public sealed partial class MainPage : Page
         finally
         {
             AppServices.Diagnostics.RecordApiKeyValidation(stopwatch.ElapsedMilliseconds);
-            ApiKeyTestButton.IsEnabled = true;
-            ApiKeyTestButton.Content = ApiKeyTestButtonText;
+            button.IsEnabled = true;
+            button.Content = ApiKeyTestButtonText;
         }
 
         if (errorTitle is not null)
@@ -589,6 +754,7 @@ public sealed partial class MainPage : Page
         AndroidTranslationHost.SessionStateChanged += OnSessionStateChanged;
         AndroidTranslationHost.SettingsExportFileCreated += OnSettingsExportFileCreated;
         AndroidTranslationHost.SettingsImportFileSelected += OnSettingsImportFileSelected;
+        AndroidTranslationHost.NotificationPermissionResult += OnNotificationPermissionResult;
         UpdateSessionToggle();
     }
 
@@ -597,8 +763,27 @@ public sealed partial class MainPage : Page
         AndroidTranslationHost.SessionStateChanged -= OnSessionStateChanged;
         AndroidTranslationHost.SettingsExportFileCreated -= OnSettingsExportFileCreated;
         AndroidTranslationHost.SettingsImportFileSelected -= OnSettingsImportFileSelected;
+        AndroidTranslationHost.NotificationPermissionResult -= OnNotificationPermissionResult;
         DismissFloatingButtonPreview();
     }
+
+    private void OnNotificationPermissionResult(bool granted) => _ = DispatcherQueue.TryEnqueue(() =>
+    {
+        if (!_awaitingOnboardingNotificationPermission)
+        {
+            return;
+        }
+
+        _awaitingOnboardingNotificationPermission = false;
+        OnboardingNotificationPermissionButton.IsEnabled = true;
+        if (granted)
+        {
+            ShowOnboardingStep(OnboardingOverlayStep);
+            return;
+        }
+
+        ShowStatus("Uprawnienie nie zostało przyznane. Możesz spróbować ponownie.");
+    });
 
     private void OnSessionStateChanged() => _ = DispatcherQueue.TryEnqueue(() =>
     {

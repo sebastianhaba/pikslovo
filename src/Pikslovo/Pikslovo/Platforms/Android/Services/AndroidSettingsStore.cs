@@ -94,7 +94,18 @@ internal static class AndroidSettingsStore
     private const string CaptureRegionTopName = "capture_region_top";
     private const string CaptureRegionRightName = "capture_region_right";
     private const string CaptureRegionBottomName = "capture_region_bottom";
+    private const string OnboardingCompletedName = "onboarding_completed";
     private const string KeyAlias = "game_translator_api_key";
+
+    public static bool HasCompletedOnboarding(Context context) =>
+        GetPreferences(context).GetBoolean(OnboardingCompletedName, false);
+
+    public static void CompleteOnboarding(Context context)
+    {
+        using var editor = GetPreferences(context).Edit() ?? throw new InvalidOperationException("Nie można zapisać stanu konfiguracji aplikacji.");
+        editor.PutBoolean(OnboardingCompletedName, true);
+        editor.Apply();
+    }
 
     public static AndroidAppSettings Load(Context context)
     {

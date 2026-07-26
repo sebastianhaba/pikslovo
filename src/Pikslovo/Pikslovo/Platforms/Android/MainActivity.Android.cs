@@ -37,6 +37,12 @@ public class MainActivity : Microsoft.UI.Xaml.ApplicationActivity
         AndroidTranslationHost.HandleSettingsFileResult(requestCode, resultCode, data);
     }
 
+    public override void OnRequestPermissionsResult(int requestCode, string[]? permissions, Permission[]? grantResults)
+    {
+        base.OnRequestPermissionsResult(requestCode, permissions, grantResults);
+        AndroidTranslationHost.HandlePermissionRequestResult(requestCode, this);
+    }
+
     protected override void OnDestroy()
     {
         if (ReferenceEquals(CurrentActivity, this))

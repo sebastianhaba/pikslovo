@@ -1,5 +1,6 @@
 using Android.App;
 using Android.Content;
+using Android.Content.PM;
 using Android.OS;
 using Android.Provider;
 using Android.Views.InputMethods;
@@ -16,6 +17,7 @@ internal static class AndroidTranslationHost
     public static event Action? SessionStateChanged;
     public static event Action<Result, Intent?>? SettingsExportFileCreated;
     public static event Action<Result, Intent?>? SettingsImportFileSelected;
+    public static event Action<bool>? NotificationPermissionResult;
 
     public static void RequestSession(MainActivity activity)
     {
@@ -96,6 +98,19 @@ internal static class AndroidTranslationHost
         }
 
         return false;
+    }
+
+    public static bool HandlePermissionRequestResult(int requestCode, Activity activity)
+    {
+        if (requestCode != NotificationRequestCode)
+        {
+            return false;
+        }
+
+        var granted = !OperatingSystem.IsAndroidVersionAtLeast(33) ||
+            activity.CheckSelfPermission(Android.Manifest.Permission.PostNotifications) == Permission.Granted;
+        NotificationPermissionResult?.Invoke(granted);
+        return true;
     }
 
     public static void NotifySessionStateChanged()

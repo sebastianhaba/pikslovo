@@ -60,6 +60,19 @@
         <Setter Property="FontWeight" Value="Bold" />
         <Setter Property="Padding" Value="16,0" />
       </Style>
+      <Style x:Key="OnboardingSecondaryButton" TargetType="Button">
+        <Setter Property="Background" Value="{ThemeResource AppSurfaceBrush}" />
+        <Setter Property="BorderBrush" Value="{ThemeResource AppBorderBrush}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="Foreground" Value="{ThemeResource AppTextBrush}" />
+        <Setter Property="HorizontalAlignment" Value="Stretch" />
+        <Setter Property="HorizontalContentAlignment" Value="Center" />
+        <Setter Property="Height" Value="56" />
+        <Setter Property="CornerRadius" Value="12" />
+        <Setter Property="FontSize" Value="16" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="Padding" Value="12,0" />
+      </Style>
       <Style x:Key="ThemeModeOptionBorder" TargetType="Border">
         <Setter Property="Background" Value="{ThemeResource AppSurfaceBrush}" />
         <Setter Property="BorderBrush" Value="{ThemeResource AppBorderBrush}" />
@@ -402,6 +415,81 @@
           <Button x:Name="ApiKeyTestButton" Style="{StaticResource ApiKeyTestButton}" Click="TestApiKey_Click">Sprawdź klucz</Button>
         </Border>
       </Grid>
+    </Grid>
+
+    <Grid x:Name="OnboardingLayout" Grid.RowSpan="2" Visibility="Collapsed" Background="{ThemeResource AppBackgroundBrush}" RowSpacing="12">
+      <Grid.RowDefinitions>
+        <RowDefinition Height="Auto" />
+        <RowDefinition Height="*" />
+        <RowDefinition Height="Auto" />
+      </Grid.RowDefinitions>
+
+      <TextBlock Text="Pikslovo" FontSize="24" FontWeight="SemiBold" VerticalAlignment="Center" />
+
+      <Grid Grid.Row="1">
+        <ScrollViewer x:Name="OnboardingLanguageStep" VerticalScrollBarVisibility="Hidden">
+          <StackPanel Spacing="16" Padding="0,24,0,0">
+            <StackPanel Spacing="8">
+              <TextBlock Text="Witaj w Pikslovo" FontSize="28" FontWeight="SemiBold" />
+              <TextBlock Text="Pikslovo rozpoznaje tekst na ekranie gry i tłumaczy go przez Google Cloud. Zrzut ekranu oraz rozpoznany tekst są wysyłane do usług Google tylko podczas tłumaczenia." Opacity="0.7" TextWrapping="Wrap" />
+            </StackPanel>
+            <TextBlock Text="Języki" FontSize="15" FontWeight="SemiBold" Opacity="0.65" Margin="16,8,0,0" />
+            <Border Style="{StaticResource SettingsGroupBorder}">
+              <StackPanel>
+                <Button Style="{StaticResource SettingsListItemButton}" Click="EditOnboardingSourceLanguage_Click" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch" Padding="16,14">
+                  <Grid ColumnSpacing="16"><Grid.ColumnDefinitions><ColumnDefinition Width="32" /><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions><FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE774;" FontSize="20" VerticalAlignment="Center" /><StackPanel Grid.Column="1" Spacing="3"><TextBlock Text="Język źródłowy" FontWeight="SemiBold" /><TextBlock x:Name="OnboardingSourceLanguageValue" Opacity="0.65" /></StackPanel><FontIcon Grid.Column="2" FontFamily="Segoe MDL2 Assets" Glyph="&#xE76C;" FontSize="16" VerticalAlignment="Center" /></Grid>
+                </Button>
+                <Border Height="1" Margin="16,0" Background="{ThemeResource AppBorderBrush}" />
+                <Button Style="{StaticResource SettingsListItemButton}" Click="EditOnboardingTargetLanguage_Click" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch" Padding="16,14">
+                  <Grid ColumnSpacing="16"><Grid.ColumnDefinitions><ColumnDefinition Width="32" /><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions><FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE774;" FontSize="20" VerticalAlignment="Center" /><StackPanel Grid.Column="1" Spacing="3"><TextBlock Text="Język docelowy" FontWeight="SemiBold" /><TextBlock x:Name="OnboardingTargetLanguageValue" Opacity="0.65" /></StackPanel><FontIcon Grid.Column="2" FontFamily="Segoe MDL2 Assets" Glyph="&#xE76C;" FontSize="16" VerticalAlignment="Center" /></Grid>
+                </Button>
+              </StackPanel>
+            </Border>
+          </StackPanel>
+        </ScrollViewer>
+
+        <ScrollViewer x:Name="OnboardingNotificationStep" Visibility="Collapsed" VerticalScrollBarVisibility="Hidden">
+          <StackPanel Spacing="16" Padding="0,24,0,0">
+            <StackPanel Spacing="8"><TextBlock Text="Powiadomienia" FontSize="28" FontWeight="SemiBold" /><TextBlock Text="Podczas aktywnej sesji Android wyświetla stałe powiadomienie. Informuje ono, że Pikslovo może przechwytywać ekran na potrzeby tłumaczenia." Opacity="0.7" TextWrapping="Wrap" /></StackPanel>
+            <Border Style="{StaticResource SettingsGroupBorder}"><StackPanel>
+              <Grid Margin="16,14" ColumnSpacing="16"><Grid.ColumnDefinitions><ColumnDefinition Width="32" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions><FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE7ED;" FontSize="20" VerticalAlignment="Top" /><StackPanel Grid.Column="1" Spacing="3"><TextBlock Text="Widoczna aktywna sesja" FontWeight="SemiBold" /><TextBlock Text="Powiadomienie pozostaje widoczne, gdy tłumacz działa w tle." Opacity="0.65" TextWrapping="Wrap" /></StackPanel></Grid>
+              <Border Height="1" Margin="16,0" Background="{ThemeResource AppBorderBrush}" />
+              <Grid Margin="16,14" ColumnSpacing="16"><Grid.ColumnDefinitions><ColumnDefinition Width="32" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions><FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE73E;" FontSize="20" VerticalAlignment="Top" /><StackPanel Grid.Column="1" Spacing="3"><TextBlock Text="Kontrola sesji" FontWeight="SemiBold" /><TextBlock Text="Z poziomu powiadomienia można zatrzymać aktywną sesję tłumacza." Opacity="0.65" TextWrapping="Wrap" /></StackPanel></Grid>
+            </StackPanel></Border>
+          </StackPanel>
+        </ScrollViewer>
+
+        <ScrollViewer x:Name="OnboardingOverlayStep" Visibility="Collapsed" VerticalScrollBarVisibility="Hidden">
+          <StackPanel Spacing="16" Padding="0,24,0,0">
+            <StackPanel Spacing="8"><TextBlock Text="Nakładka nad grą" FontSize="28" FontWeight="SemiBold" /><TextBlock Text="Pikslovo potrzebuje zgody na wyświetlanie nad innymi aplikacjami, aby pokazać przetłumaczony obraz bez wychodzenia z gry." Opacity="0.7" TextWrapping="Wrap" /></StackPanel>
+            <Border Style="{StaticResource SettingsGroupBorder}"><StackPanel>
+              <Grid Margin="16,14" ColumnSpacing="16"><Grid.ColumnDefinitions><ColumnDefinition Width="32" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions><FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE890;" FontSize="20" VerticalAlignment="Top" /><StackPanel Grid.Column="1" Spacing="3"><TextBlock Text="Tłumaczenie nad grą" FontWeight="SemiBold" /><TextBlock Text="Wynik pojawi się jako tymczasowa nakładka nad aktualnym ekranem." Opacity="0.65" TextWrapping="Wrap" /></StackPanel></Grid>
+              <Border Height="1" Margin="16,0" Background="{ThemeResource AppBorderBrush}" />
+              <Grid Margin="16,14" ColumnSpacing="16"><Grid.ColumnDefinitions><ColumnDefinition Width="32" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions><FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE8A1;" FontSize="20" VerticalAlignment="Top" /><StackPanel Grid.Column="1" Spacing="3"><TextBlock Text="Tylko na żądanie" FontWeight="SemiBold" /><TextBlock Text="Nakładka jest pokazywana wyłącznie po wywołaniu tłumaczenia." Opacity="0.65" TextWrapping="Wrap" /></StackPanel></Grid>
+            </StackPanel></Border>
+          </StackPanel>
+        </ScrollViewer>
+
+        <ScrollViewer x:Name="OnboardingApiKeyStep" Visibility="Collapsed" VerticalScrollBarVisibility="Hidden">
+          <StackPanel Spacing="16" Padding="0,24,0,0">
+            <StackPanel Spacing="8"><TextBlock Text="Google Cloud API" FontSize="28" FontWeight="SemiBold" /><TextBlock Text="Pikslovo wymaga własnego klucza Google Cloud API do rozpoznawania i tłumaczenia tekstu. Możesz skonfigurować go teraz albo później w ustawieniach. Bez klucza tłumaczenie nie będzie działać." Opacity="0.7" TextWrapping="Wrap" /></StackPanel>
+            <Border Style="{StaticResource SettingsGroupBorder}"><StackPanel>
+              <Grid Margin="16,14" ColumnSpacing="16"><Grid.ColumnDefinitions><ColumnDefinition Width="32" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions><FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE72E;" FontSize="20" VerticalAlignment="Top" Margin="0,8,0,0" /><StackPanel Grid.Column="1" Spacing="8"><TextBlock Text="Google Cloud API key" FontWeight="SemiBold" /><TextBlock Text="Klucz jest szyfrowany lokalnie w Android Keystore." Opacity="0.65" TextWrapping="Wrap" /><Grid><PasswordBox x:Name="OnboardingApiKeyBox" Height="48" Padding="12,0,12,0" KeyDown="OnboardingApiKeyBox_KeyDown" PlaceholderText="AIza..." /></Grid></StackPanel></Grid>
+              <Border Height="1" Margin="16,0" Background="{ThemeResource AppBorderBrush}" />
+              <Button Style="{StaticResource SettingsListItemButton}" Click="OpenGoogleCloudCredentials_Click" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch" Padding="16,14"><Grid ColumnSpacing="16"><Grid.ColumnDefinitions><ColumnDefinition Width="32" /><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions><FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE774;" FontSize="20" VerticalAlignment="Center" /><StackPanel Grid.Column="1" Spacing="3"><TextBlock Text="Uzyskaj klucz Google Cloud API" FontWeight="SemiBold" /><TextBlock Text="console.cloud.google.com/apis/credentials" Opacity="0.65" TextWrapping="Wrap" /></StackPanel><FontIcon Grid.Column="2" FontFamily="Segoe MDL2 Assets" Glyph="&#xE8A7;" FontSize="16" VerticalAlignment="Center" /></Grid></Button>
+            </StackPanel></Border>
+          </StackPanel>
+        </ScrollViewer>
+      </Grid>
+
+      <Border Grid.Row="2" Background="{ThemeResource AppBackgroundBrush}" BorderBrush="{ThemeResource AppBorderBrush}" BorderThickness="0,1,0,0" Padding="0,12,0,0">
+        <Grid>
+          <Grid x:Name="OnboardingLanguageFooter"><Button Style="{StaticResource ApiKeyTestButton}" Click="ContinueOnboardingLanguage_Click">Kontynuuj</Button></Grid>
+          <Grid x:Name="OnboardingNotificationFooter" Visibility="Collapsed"><Button x:Name="OnboardingNotificationPermissionButton" Style="{StaticResource ApiKeyTestButton}" Click="RequestOnboardingNotificationPermission_Click">Przyznaj uprawnienie</Button></Grid>
+          <Grid x:Name="OnboardingOverlayFooter" Visibility="Collapsed"><Button Style="{StaticResource ApiKeyTestButton}" Click="RequestOnboardingOverlayPermission_Click">Przyznaj uprawnienie</Button></Grid>
+          <Grid x:Name="OnboardingApiKeyFooter" Visibility="Collapsed" ColumnSpacing="12"><Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions><Button x:Name="OnboardingApiKeyTestButton" Style="{StaticResource OnboardingSecondaryButton}" Click="TestOnboardingApiKey_Click">Sprawdź klucz</Button><Button Grid.Column="1" Style="{StaticResource ApiKeyTestButton}" Click="FinishOnboarding_Click">Kontynuuj</Button></Grid>
+        </Grid>
+      </Border>
     </Grid>
   </Grid>
 </Page>
