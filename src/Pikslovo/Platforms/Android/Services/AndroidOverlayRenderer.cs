@@ -515,7 +515,9 @@ internal static class AndroidOverlayRenderer
             paint.TextSize,
             horizontalPadding,
             verticalPadding,
-            wrapped.BrokenWordCount);
+            wrapped.BrokenWordCount,
+            GetAspectPenalty(originalBounds, bounds),
+            Math.Max(0, originalBounds.Left - bounds.Left));
     }
 
     private static CandidateLayout? ChooseBetter(CandidateLayout? current, CandidateLayout candidate)
@@ -530,14 +532,24 @@ internal static class AndroidOverlayRenderer
             return candidate.BrokenWordCount < current.BrokenWordCount ? candidate : current;
         }
 
+        if (Math.Abs(candidate.TextSize - current.TextSize) > 0.01f)
+        {
+            return candidate.TextSize > current.TextSize ? candidate : current;
+        }
+
+        if (Math.Abs(candidate.AspectPenalty - current.AspectPenalty) > 0.01d)
+        {
+            return candidate.AspectPenalty < current.AspectPenalty ? candidate : current;
+        }
+
         if (candidate.Lines.Count != current.Lines.Count)
         {
             return candidate.Lines.Count < current.Lines.Count ? candidate : current;
         }
 
-        if (Math.Abs(candidate.TextSize - current.TextSize) > 0.01f)
+        if (candidate.LeftExpansion != current.LeftExpansion)
         {
-            return candidate.TextSize > current.TextSize ? candidate : current;
+            return candidate.LeftExpansion < current.LeftExpansion ? candidate : current;
         }
 
         if (candidate.Bounds.Width != current.Bounds.Width)
@@ -553,24 +565,22 @@ internal static class AndroidOverlayRenderer
         var extraWidth = Math.Max(0, width - originalBounds.Width);
         var leftCapacity = Math.Max(0, originalBounds.Left - leftLimit);
         var rightCapacity = Math.Max(0, rightLimit - originalBounds.Right);
-        var leftExpansion = Math.Min(leftCapacity, extraWidth / 2);
-        var rightExpansion = Math.Min(rightCapacity, extraWidth - leftExpansion);
-        var remaining = extraWidth - leftExpansion - rightExpansion;
-        if (remaining > 0)
-        {
-            var additionalLeft = Math.Min(leftCapacity - leftExpansion, remaining);
-            leftExpansion += additionalLeft;
-            remaining -= additionalLeft;
-        }
-
-        if (remaining > 0)
-        {
-            rightExpansion += Math.Min(rightCapacity - rightExpansion, remaining);
-        }
+        var rightExpansion = Math.Min(rightCapacity, extraWidth);
+        var remaining = extraWidth - rightExpansion;
+        var leftExpansion = remaining > 0
+            ? Math.Min(leftCapacity, remaining)
+            : 0;
 
         var left = originalBounds.Left - leftExpansion;
         var right = originalBounds.Right + rightExpansion;
         return new PixelRect(left, originalBounds.Top, Math.Max(left + 1, right), originalBounds.Bottom);
+    }
+
+    private static double GetAspectPenalty(PixelRect originalBounds, PixelRect candidateBounds)
+    {
+        var originalAspect = originalBounds.Width / (double)Math.Max(1, originalBounds.Height);
+        var candidateAspect = candidateBounds.Width / (double)Math.Max(1, candidateBounds.Height);
+        return Math.Abs(Math.Log(candidateAspect / originalAspect));
     }
 
     private static (int LeftLimit, int RightLimit) GetHorizontalLimits(
@@ -809,7 +819,9 @@ internal static class AndroidOverlayRenderer
         float TextSize,
         float HorizontalPadding,
         float VerticalPadding,
-        int BrokenWordCount);
+        int BrokenWordCount,
+        double AspectPenalty,
+        int LeftExpansion);
 
     private sealed record WrapResult(IReadOnlyList<string> Lines, int BrokenWordCount);
 }
