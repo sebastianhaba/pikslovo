@@ -1,9 +1,10 @@
-using CommunityToolkit.Mvvm.Input;
-using Pikslovo.Core;
-using Pikslovo.Services;
 using Microsoft.UI.Xaml.Controls.Primitives;
 using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
+using CommunityToolkit.Mvvm.Input;
+using Pikslovo.Controls;
+using Pikslovo.Core;
+using Pikslovo.Services;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Globalization;
@@ -30,7 +31,6 @@ public sealed partial class MainPage : Page
     private readonly MainPagePermissionsService _permissionsService = new();
     private readonly MainPageDiagnosticsService _diagnosticsService = new();
     private bool _isLoading;
-    private bool _isApiKeyVisible;
 #if __ANDROID__
     private bool _updatingSessionToggle;
     private bool _awaitingOnboardingNotificationPermission;
@@ -80,7 +80,6 @@ public sealed partial class MainPage : Page
         _viewModel.OpenSupportPageCommand = new RelayCommand(OpenSupportPage);
         _viewModel.EditSourceLanguageCommand = new RelayCommand(async () => await EditSourceLanguageAsync());
         _viewModel.EditTargetLanguageCommand = new RelayCommand(async () => await EditTargetLanguageAsync());
-        _viewModel.ToggleApiKeyVisibilityCommand = new RelayCommand(ToggleApiKeyVisibility);
         _viewModel.OpenGoogleCloudCredentialsCommand = new RelayCommand(OpenGoogleCloudCredentials);
         _viewModel.OpenAccessibilitySettingsCommand = new RelayCommand(OpenAccessibilitySettings);
         _viewModel.EditHotkeyCodeCommand = new RelayCommand(async () => await EditHotkeyCodeAsync());
@@ -299,14 +298,7 @@ public sealed partial class MainPage : Page
 #endif
     }
 
-    private void ToggleApiKeyVisibility()
-    {
-        _isApiKeyVisible = !_isApiKeyVisible;
-        ApiKeyBox.PasswordRevealMode = _isApiKeyVisible ? PasswordRevealMode.Visible : PasswordRevealMode.Hidden;
-        ApiKeyHideSlash.Visibility = _isApiKeyVisible ? Visibility.Visible : Visibility.Collapsed;
-    }
-
-    private void ApiKeyBox_KeyDown(object sender, KeyRoutedEventArgs e)
+    private void ApiKeyInput_PasswordSubmitted(object sender, KeyRoutedEventArgs e)
     {
         if (e.Key != global::Windows.System.VirtualKey.Enter)
         {
@@ -323,7 +315,7 @@ public sealed partial class MainPage : Page
 #endif
     }
 
-    private void OnboardingApiKeyBox_KeyDown(object sender, KeyRoutedEventArgs e)
+    private void OnboardingApiKeyInput_PasswordSubmitted(object sender, KeyRoutedEventArgs e)
     {
         if (e.Key != global::Windows.System.VirtualKey.Enter)
         {
@@ -340,11 +332,11 @@ public sealed partial class MainPage : Page
 #endif
     }
 
-    private async Task TestApiKeyMainAsync() => await TestApiKeyAsync(ApiKeyBox, ApiKeyTestButton);
+    private async Task TestApiKeyMainAsync() => await TestApiKeyAsync(ApiKeyInput, ApiKeyTestButton);
 
-    private async Task TestApiKeyAsync(PasswordBox apiKeyBox, Button button)
+    private async Task TestApiKeyAsync(ApiKeyInputControl apiKeyInput, Button button)
     {
-        var apiKey = apiKeyBox.Password.Trim();
+        var apiKey = apiKeyInput.Password.Trim();
         if (string.IsNullOrWhiteSpace(apiKey))
         {
             await ShowMessageAsync(

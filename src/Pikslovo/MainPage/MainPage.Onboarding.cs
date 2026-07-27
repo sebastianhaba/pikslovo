@@ -93,11 +93,11 @@ public sealed partial class MainPage
     }
 
     private async Task TestOnboardingApiKeyAsync() =>
-        await TestApiKeyAsync(OnboardingApiKeyBox, OnboardingApiKeyTestButton);
+        await TestApiKeyAsync(OnboardingApiKeyInput, OnboardingApiKeyTestButton);
 
     private void FinishOnboarding()
     {
-        ApiKeyBox.Password = OnboardingApiKeyBox.Password.Trim();
+        ApiKeyInput.Password = OnboardingApiKeyInput.Password.Trim();
         SaveSettings(requireValidTranslationSettings: false);
         _settingsPersistence.CompleteOnboarding();
         OnboardingLayout.Visibility = Visibility.Collapsed;

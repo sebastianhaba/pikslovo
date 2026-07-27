@@ -185,7 +185,7 @@ public sealed partial class MainPage
 
     private void ApplyViewModelToControls()
     {
-        ApiKeyBox.Password = _viewModel.ApiKey;
+        ApiKeyInput.Password = _viewModel.ApiKey;
         SelectLanguage(SourceLanguageBox, _viewModel.SourceLanguage);
         SelectLanguage(TargetLanguageBox, _viewModel.TargetLanguage);
         SetThemeMode(_viewModel.ThemeMode);
@@ -195,7 +195,7 @@ public sealed partial class MainPage
 
     private void UpdateViewModelFromControls()
     {
-        _viewModel.ApiKey = ApiKeyBox.Password.Trim();
+        _viewModel.ApiKey = ApiKeyInput.Password.Trim();
         _viewModel.SourceLanguage = GetLanguage(SourceLanguageBox);
         _viewModel.TargetLanguage = GetLanguage(TargetLanguageBox);
     }
