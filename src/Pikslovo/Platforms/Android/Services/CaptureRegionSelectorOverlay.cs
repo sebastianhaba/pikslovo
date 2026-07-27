@@ -1,6 +1,9 @@
 using Android.Content;
+using Android.Database;
 using Android.Graphics;
 using Android.Graphics.Drawables;
+using Android.OS;
+using Android.Provider;
 using Android.Views;
 using Android.Widget;
 using Java.Interop;
@@ -14,6 +17,11 @@ internal sealed partial class CaptureRegionSelectorOverlay
     private RegionSelectionView? _selectionView;
     private View? _actionBar;
     private View? _instruction;
+    private WindowManagerLayoutParams? _selectionLayout;
+    private WindowManagerLayoutParams? _actionBarLayout;
+    private WindowManagerLayoutParams? _instructionLayout;
+    private BrightnessObserver? _brightnessObserver;
+    private bool _isAttached;
 
     public CaptureRegionSelectorOverlay(Context context)
     {
@@ -38,6 +46,7 @@ internal sealed partial class CaptureRegionSelectorOverlay
         {
             Gravity = GravityFlags.Top | GravityFlags.Start,
         };
+        _selectionLayout = fullScreenLayout;
         _windowManager.AddView(selection, fullScreenLayout);
         _selectionView = selection;
 
@@ -65,6 +74,7 @@ internal sealed partial class CaptureRegionSelectorOverlay
             Gravity = GravityFlags.Bottom | GravityFlags.CenterHorizontal,
             Y = (int)(24f * density + 0.5f),
         };
+        _actionBarLayout = barLayout;
         _windowManager.AddView(bar, barLayout);
         _actionBar = bar;
 
@@ -87,18 +97,39 @@ internal sealed partial class CaptureRegionSelectorOverlay
             Gravity = GravityFlags.Top | GravityFlags.CenterHorizontal,
             Y = (int)(24f * density + 0.5f),
         };
+        _instructionLayout = instructionLayout;
         _windowManager.AddView(instruction, instructionLayout);
         _instruction = instruction;
+        _isAttached = true;
+        UpdateBrightness();
+
+        _brightnessObserver = new BrightnessObserver(this, new Handler(Looper.MainLooper!));
+        var brightnessUri = Settings.System.GetUriFor(Settings.System.ScreenBrightness);
+        if (brightnessUri is not null)
+        {
+            _context.ContentResolver?.RegisterContentObserver(brightnessUri, false, _brightnessObserver);
+        }
     }
 
     public void Dismiss()
     {
+        if (_brightnessObserver is not null)
+        {
+            _context.ContentResolver?.UnregisterContentObserver(_brightnessObserver);
+            _brightnessObserver.Dispose();
+            _brightnessObserver = null;
+        }
+
         Remove(_selectionView);
         Remove(_actionBar);
         Remove(_instruction);
         _selectionView = null;
         _actionBar = null;
         _instruction = null;
+        _selectionLayout = null;
+        _actionBarLayout = null;
+        _instructionLayout = null;
+        _isAttached = false;
     }
 
     private LinearLayout CreateActionBar(float density, Action onCancel, Action onConfirm)
@@ -157,6 +188,44 @@ internal sealed partial class CaptureRegionSelectorOverlay
 
         _windowManager.RemoveViewImmediate(view);
         view.Dispose();
+    }
+
+    private void UpdateBrightness()
+    {
+        if (!_isAttached)
+        {
+            return;
+        }
+
+        var brightness = Settings.System.GetInt(
+            _context.ContentResolver,
+            Settings.System.ScreenBrightness,
+            128);
+        var screenBrightness = Math.Clamp(brightness / 255f, 0f, 1f);
+
+        UpdateViewBrightness(_selectionView, _selectionLayout, screenBrightness);
+        UpdateViewBrightness(_actionBar, _actionBarLayout, screenBrightness);
+        UpdateViewBrightness(_instruction, _instructionLayout, screenBrightness);
+    }
+
+    private void UpdateViewBrightness(View? view, WindowManagerLayoutParams? layout, float screenBrightness)
+    {
+        if (view is null || layout is null)
+        {
+            return;
+        }
+
+        layout.ScreenBrightness = screenBrightness;
+        _windowManager.UpdateViewLayout(view, layout);
+    }
+
+    private sealed class BrightnessObserver(CaptureRegionSelectorOverlay owner, Handler handler) : ContentObserver(handler)
+    {
+        public override void OnChange(bool selfChange)
+        {
+            base.OnChange(selfChange);
+            owner.UpdateBrightness();
+        }
     }
 
     private sealed partial class RegionSelectionView : View
