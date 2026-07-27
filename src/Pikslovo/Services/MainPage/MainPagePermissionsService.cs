@@ -12,8 +12,8 @@ internal sealed class MainPagePermissionsService
     {
         var alreadyAllowed = AndroidTranslationHost.RequestOverlayPermission(activity);
         statusMessage = alreadyAllowed
-            ? "Uprawnienie nakładki jest już przyznane."
-            : "Otwieram ustawienia nakładki Androida.";
+            ? AppStrings.Keys.OverlayPermissionIsAlreadyGranted
+            : AppStrings.Keys.OpeningAndroidOverlaySettings;
         return alreadyAllowed;
     }
 
@@ -21,8 +21,8 @@ internal sealed class MainPagePermissionsService
     {
         var alreadyAllowed = AndroidTranslationHost.RequestNotificationPermission(activity);
         statusMessage = alreadyAllowed
-            ? "Uprawnienie powiadomień jest już przyznane."
-            : "Wyświetlam prośbę Androida o zgodę na powiadomienia.";
+            ? AppStrings.Keys.NotificationPermissionIsAlreadyGranted
+            : AppStrings.Keys.ShowingAndroidNotificationPermissionRequest;
         return alreadyAllowed;
     }
 

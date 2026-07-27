@@ -42,6 +42,7 @@ public sealed partial class MainPage : Page
         _isLoading = true;
         ConfigureCommands();
         InitializeComponent();
+        PopulateLanguageSelectors();
         DataContext = _viewModel;
         _viewModel.PropertyChanged += ViewModel_PropertyChanged;
         AppVersionText.Text = AppMetadata.DisplayVersionLabel;
@@ -56,7 +57,7 @@ public sealed partial class MainPage : Page
         catch (Exception exception)
         {
             SelectLanguage(SourceLanguageBox, "ja");
-            SelectLanguage(TargetLanguageBox, "pl");
+            SelectLanguage(TargetLanguageBox, LanguageCatalog.GetDefaultTargetLanguage());
             ShowStatus(AppStrings.Format(AppStrings.Keys.SettingsReadFailed, exception.Message));
         }
         finally
@@ -107,14 +108,14 @@ public sealed partial class MainPage : Page
 
         DetailTitle.Text = AppStrings.Get(section switch
         {
-            "translation" => "Tłumaczenie",
-            "api" => "Google Cloud API",
-            "appTheme" => "Wygląd aplikacji",
-            "recognition" => "Przetwarzanie tekstu",
-            "triggers" => "Globalny hotkey",
-            "floatingButton" => "Przycisk pływający",
-            "permissions" => "Uprawnienia",
-            "diagnostics" => "Diagnostyka",
+            "translation" => AppStrings.Keys.Translation,
+            "api" => AppStrings.Keys.GoogleCloudApi,
+            "appTheme" => AppStrings.Keys.AppAppearance,
+            "recognition" => AppStrings.Keys.TextProcessing,
+            "triggers" => AppStrings.Keys.GlobalHotkey,
+            "floatingButton" => AppStrings.Keys.FloatingButton,
+            "permissions" => AppStrings.Keys.Permissions,
+            "diagnostics" => AppStrings.Keys.Diagnostics,
             _ => string.Empty
         });
 
@@ -519,13 +520,15 @@ public sealed partial class MainPage : Page
     }
 
     private static string GetLanguage(ComboBox box) =>
-        (box.SelectedItem as ComboBoxItem)?.Tag?.ToString() ?? string.Empty;
+        LanguageCatalog.NormalizeCode((box.SelectedItem as ComboBoxItem)?.Tag?.ToString());
 
     private static void SelectLanguage(ComboBox box, string language)
     {
+        var normalized = LanguageCatalog.NormalizeCode(language);
         for (var index = 0; index < box.Items.Count; index++)
         {
-            if (box.Items[index] is ComboBoxItem item && item.Tag?.ToString() == language)
+            if (box.Items[index] is ComboBoxItem item &&
+                string.Equals(LanguageCatalog.NormalizeCode(item.Tag?.ToString()), normalized, StringComparison.OrdinalIgnoreCase))
             {
                 box.SelectedIndex = index;
                 return;
@@ -533,6 +536,25 @@ public sealed partial class MainPage : Page
         }
 
         box.SelectedIndex = 0;
+    }
+
+    private void PopulateLanguageSelectors()
+    {
+        PopulateLanguageSelector(SourceLanguageBox, isSource: true);
+        PopulateLanguageSelector(TargetLanguageBox, isSource: false);
+    }
+
+    private static void PopulateLanguageSelector(ComboBox box, bool isSource)
+    {
+        box.Items.Clear();
+        foreach (var language in LanguageCatalog.GetOptions(isSource))
+        {
+            box.Items.Add(new ComboBoxItem
+            {
+                Tag = language.Code,
+                Content = language.Name
+            });
+        }
     }
 
     private void RefreshFloatingButtonConfiguration()
@@ -651,22 +673,22 @@ public sealed partial class MainPage : Page
         switch (element)
         {
             case TextBlock textBlock:
-                textBlock.Text = AppStrings.Get(textBlock.Text ?? string.Empty);
+                if (AppStrings.HasKey(textBlock.Text)) textBlock.Text = AppStrings.Get(textBlock.Text ?? string.Empty);
                 break;
             case Button { Content: string content } button:
-                button.Content = AppStrings.Get(content);
+                if (AppStrings.HasKey(content)) button.Content = AppStrings.Get(content);
                 break;
             case ComboBoxItem { Content: string content } item:
-                item.Content = AppStrings.Get(content);
+                if (AppStrings.HasKey(content)) item.Content = AppStrings.Get(content);
                 break;
             case PasswordBox passwordBox:
-                passwordBox.PlaceholderText = AppStrings.Get(passwordBox.PlaceholderText ?? string.Empty);
+                if (AppStrings.HasKey(passwordBox.PlaceholderText)) passwordBox.PlaceholderText = AppStrings.Get(passwordBox.PlaceholderText ?? string.Empty);
                 break;
         }
 
         if (ToolTipService.GetToolTip(element) is string toolTip)
         {
-            ToolTipService.SetToolTip(element, AppStrings.Get(toolTip));
+            if (AppStrings.HasKey(toolTip)) ToolTipService.SetToolTip(element, AppStrings.Get(toolTip));
         }
 
         for (var index = 0; index < VisualTreeHelper.GetChildrenCount(element); index++)

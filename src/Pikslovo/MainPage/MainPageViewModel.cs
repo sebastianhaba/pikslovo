@@ -400,10 +400,10 @@ public sealed class MainPageViewModel : INotifyPropertyChanged
 
     public string FloatingButtonVisibilityDescription =>
         FloatingButtonAlwaysVisible
-            ? "W aktywnej sesji jest widoczny niezależnie od globalnego hotkeya."
+            ? AppStrings.Get(AppStrings.Keys.ItIsVisibleDuringAnActiveSessionRegardlessOfTheGlobalHotkey)
             : GlobalHotkeyEnabled
-                ? "W aktywnej sesji jest ukryty, gdy globalny hotkey jest włączony."
-                : "W aktywnej sesji jest widoczny, ponieważ globalny hotkey jest wyłączony.";
+                ? AppStrings.Get(AppStrings.Keys.ItIsHiddenDuringAnActiveSessionWhenTheGlobalHotkeyIsEnabled)
+                : AppStrings.Get(AppStrings.Keys.ItIsVisibleDuringAnActiveSessionBecauseTheGlobalHotkeyIsDisabled);
 
     public string ThemeModeSummary => $"{AppStrings.GetThemeModeLabel(ThemeMode)} · {AppStrings.GetAccentLabel(Accent)}";
 

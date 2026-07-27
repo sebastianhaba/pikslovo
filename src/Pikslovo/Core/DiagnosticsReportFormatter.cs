@@ -46,10 +46,10 @@ public static class DiagnosticsReportFormatter
         report.AppendLine(AppStrings.Get(AppStrings.Keys.DiagnosticsLatestMeasurements));
         AppendDuration(report, AppStrings.Get(AppStrings.Keys.CapturePlusEncoding), diagnostics.CaptureAndImageEncodingMilliseconds);
         AppendDuration(report, AppStrings.Get(AppStrings.Keys.OcrImageEncoding), diagnostics.OcrImageEncodingMilliseconds);
-        AppendImageSize(report, "OCR image size", diagnostics.OcrImageBytes);
-        AppendDuration(report, "Cloud Vision OCR", diagnostics.CloudVisionOcrMilliseconds);
-        AppendDuration(report, "Cloud Translation", diagnostics.CloudTranslationMilliseconds);
-        AppendDuration(report, "Overlay render", diagnostics.OverlayRenderMilliseconds);
+        AppendImageSize(report, AppStrings.Get(AppStrings.Keys.OcrImageSize), diagnostics.OcrImageBytes);
+        AppendDuration(report, AppStrings.Get(AppStrings.Keys.CloudVisionOcrLabel), diagnostics.CloudVisionOcrMilliseconds);
+        AppendDuration(report, AppStrings.Get(AppStrings.Keys.CloudTranslationLabel), diagnostics.CloudTranslationMilliseconds);
+        AppendDuration(report, AppStrings.Get(AppStrings.Keys.OverlayRender), diagnostics.OverlayRenderMilliseconds);
         AppendDuration(report, AppStrings.Get(AppStrings.Keys.TotalTranslation), diagnostics.TranslationTotalMilliseconds);
         AppendDuration(report, AppStrings.Get(AppStrings.Keys.ApiKeyValidation), diagnostics.ApiKeyValidationMilliseconds);
         if (ocrSettings is not null)

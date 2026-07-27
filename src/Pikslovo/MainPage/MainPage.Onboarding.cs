@@ -32,7 +32,7 @@ public sealed partial class MainPage
 
         foreach (var language in _onboardingService.GetLanguageOptions(isSource))
         {
-            picker.Items.Add(new ComboBoxItem { Tag = language.Code, Content = language.Label });
+            picker.Items.Add(new ComboBoxItem { Tag = language.Code, Content = language.Name });
         }
 
         SelectLanguage(picker, selectedLanguage);

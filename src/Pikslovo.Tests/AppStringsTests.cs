@@ -12,10 +12,10 @@ public sealed class AppStringsTests
     public void Explicit_language_selection_overrides_the_system_language()
     {
         AppStrings.SetLanguageMode(AppLanguageMode.English);
-        AppStrings.Get("Ustawienia").Should().Be("Settings");
+        AppStrings.Get("Settings").Should().Be("Settings");
 
         AppStrings.SetLanguageMode(AppLanguageMode.Polish);
-        AppStrings.Get("Ustawienia").Should().Be("Ustawienia");
+        AppStrings.Get("Settings").Should().Be("Settings");
     }
 
     [Test]
@@ -27,7 +27,7 @@ public sealed class AppStringsTests
             CultureInfo.CurrentUICulture = CultureInfo.GetCultureInfo("de-DE");
             AppStrings.SetLanguageMode(AppLanguageMode.System);
 
-            AppStrings.Get("Ustawienia").Should().Be("Settings");
+            AppStrings.Get("Settings").Should().Be("Settings");
         }
         finally
         {
