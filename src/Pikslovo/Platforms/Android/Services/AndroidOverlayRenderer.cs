@@ -291,6 +291,7 @@ internal static class AndroidOverlayRenderer
     private const float MaximumTextSize = 48f;
     private const float PreferredMinimumTextSize = 16f;
     private const float AbsoluteMinimumTextSize = 8f;
+    private const int RegionGap = 6;
 
     public static Bitmap Render(Bitmap source, TranslationResult result, float fontScale, Color borderColor)
     {
@@ -301,10 +302,10 @@ internal static class AndroidOverlayRenderer
         using var border = new Paint { Color = borderColor, StrokeWidth = 6, AntiAlias = true };
         border.SetStyle(Paint.Style.Stroke);
 
-        foreach (var region in result.Regions)
+        var layouts = PlanLayouts(result.Regions, text, fontScale, output.Width, output.Height);
+        foreach (var layout in layouts)
         {
-            var bounds = Clamp(region.Bounds, output.Width, output.Height);
-            DrawWrappedText(canvas, region.TranslatedText, bounds, text, background, fontScale, output.Height);
+            DrawLayout(canvas, layout, text, background);
         }
 
         canvas.DrawRect(3, 3, output.Width - 3, output.Height - 3, border);
@@ -317,26 +318,107 @@ internal static class AndroidOverlayRenderer
         Math.Clamp(Math.Max(bounds.Right, bounds.Left + 1), 1, width),
         Math.Clamp(Math.Max(bounds.Bottom, bounds.Top + 1), 1, height));
 
-    private static void DrawWrappedText(
-        Android.Graphics.Canvas canvas,
+    private static IReadOnlyList<PlannedLayout> PlanLayouts(
+        IReadOnlyList<TranslatedRegion> regions,
+        Paint paint,
+        float fontScale,
+        int outputWidth,
+        int outputHeight)
+    {
+        var clampedScale = float.IsFinite(fontScale)
+            ? Math.Clamp(fontScale, 1f, 3f)
+            : TranslationSettings.DefaultFontScale;
+        var sourceBounds = regions
+            .Select((region, index) => (Region: region, Index: index, Bounds: Clamp(region.Bounds, outputWidth, outputHeight)))
+            .OrderBy(item => item.Bounds.Top)
+            .ThenBy(item => item.Bounds.Left)
+            .ToArray();
+        var layouts = new List<PlannedLayout>(sourceBounds.Length);
+
+        foreach (var item in sourceBounds)
+        {
+            var layout = PlanLayout(
+                item.Index,
+                item.Region.TranslatedText,
+                item.Bounds,
+                sourceBounds,
+                layouts,
+                paint,
+                clampedScale,
+                outputWidth,
+                outputHeight);
+            if (layout is not null)
+            {
+                layouts.Add(layout);
+            }
+        }
+
+        return layouts;
+    }
+
+    private static PlannedLayout? PlanLayout(
+        int regionIndex,
         string value,
         PixelRect bounds,
+        IReadOnlyList<(TranslatedRegion Region, int Index, PixelRect Bounds)> allBounds,
+        IReadOnlyList<PlannedLayout> plannedLayouts,
         Paint paint,
-        Paint background,
         float fontScale,
+        int outputWidth,
         int outputHeight)
     {
         if (string.IsNullOrWhiteSpace(value))
         {
-            return;
+            return null;
         }
 
-        // A fixed 10 px padding consumed the whole content area in short OCR boxes.
+        var preferredTextSize = GetPreferredTextSize(value, bounds, paint, fontScale);
+        var (leftLimit, rightLimit) = GetHorizontalLimits(regionIndex, bounds, allBounds, plannedLayouts, outputWidth);
+        var bestCandidate = SelectBestCandidate(value, bounds, leftLimit, rightLimit, paint, preferredTextSize);
+
+        if (bestCandidate is null)
+        {
+            return null;
+        }
+
+        var placedBounds = PlaceBounds(bestCandidate.Bounds, bounds.Top, plannedLayouts, outputWidth, outputHeight);
+        return new PlannedLayout(
+            placedBounds,
+            bestCandidate.Lines,
+            bestCandidate.TextSize,
+            bestCandidate.HorizontalPadding,
+            bestCandidate.VerticalPadding);
+    }
+
+    private static void DrawLayout(
+        Android.Graphics.Canvas canvas,
+        PlannedLayout layout,
+        Paint paint,
+        Paint background)
+    {
+        paint.TextSize = layout.TextSize;
+        canvas.DrawRect(layout.Bounds.Left, layout.Bounds.Top, layout.Bounds.Right, layout.Bounds.Bottom, background);
+
+        var baseline = layout.Bounds.Top + layout.VerticalPadding - paint.Ascent();
+        var lineHeight = LineHeight(paint);
+        foreach (var line in layout.Lines)
+        {
+            if (baseline + paint.Descent() > layout.Bounds.Bottom - layout.VerticalPadding)
+            {
+                break;
+            }
+
+            canvas.DrawText(line, layout.Bounds.Left + layout.HorizontalPadding, baseline, paint);
+            baseline += lineHeight;
+        }
+    }
+
+    private static float GetPreferredTextSize(string value, PixelRect bounds, Paint paint, float fontScale)
+    {
         var horizontalPadding = Math.Min(10f, Math.Max(2f, bounds.Width * 0.08f));
         var verticalPadding = Math.Min(10f, Math.Max(1f, bounds.Height * 0.10f));
         var usableWidth = Math.Max(1f, bounds.Width - (horizontalPadding * 2));
         var usableHeight = Math.Max(1f, bounds.Height - (verticalPadding * 2));
-
         var visibleCharacterCount = Math.Max(1, value.Count(character => !char.IsWhiteSpace(character)));
         var areaBasedTextSize = MathF.Sqrt((usableWidth * usableHeight / visibleCharacterCount) * 0.7f);
         paint.TextSize = Math.Clamp(areaBasedTextSize, PreferredMinimumTextSize, MaximumTextSize);
@@ -348,29 +430,262 @@ internal static class AndroidOverlayRenderer
             lines = Wrap(value, paint, (int)usableWidth);
         }
 
-        // Fit the baseline size first. Scaling before this loop would always be undone
-        // to make the text fit the original OCR rectangle.
-        var scale = float.IsFinite(fontScale) ? Math.Clamp(fontScale, 1f, 3f) : TranslationSettings.DefaultFontScale;
-        paint.TextSize *= scale;
-        lines = Wrap(value, paint, (int)usableWidth);
+        return Math.Max(AbsoluteMinimumTextSize, paint.TextSize * fontScale);
+    }
 
-        var requiredHeight = (int)MathF.Ceiling(RequiredHeight(lines, paint) + (verticalPadding * 2));
-        var backgroundBottom = Math.Min(outputHeight, Math.Max(bounds.Bottom, bounds.Top + requiredHeight));
-        canvas.DrawRect(bounds.Left, bounds.Top, bounds.Right, backgroundBottom, background);
-
-        var baseline = bounds.Top + verticalPadding - paint.Ascent();
-        var lineHeight = LineHeight(paint);
-        foreach (var line in lines)
+    private static CandidateLayout? SelectBestCandidate(
+        string value,
+        PixelRect originalBounds,
+        int leftLimit,
+        int rightLimit,
+        Paint paint,
+        float preferredTextSize)
+    {
+        var maxWidth = Math.Max(originalBounds.Width, rightLimit - leftLimit);
+        CandidateLayout? best = null;
+        for (var width = originalBounds.Width; width <= maxWidth; width += width < maxWidth ? 8 : 1)
         {
-            if (baseline + paint.Descent() > backgroundBottom - verticalPadding)
+            var candidate = EvaluateCandidate(value, originalBounds, leftLimit, rightLimit, width, paint, preferredTextSize);
+            best = ChooseBetter(best, candidate);
+            if (best is not null && best.BrokenWordCount == 0 && best.Lines.Count == 1)
+            {
+                break;
+            }
+        }
+
+        if (best is null && maxWidth != originalBounds.Width)
+        {
+            best = EvaluateCandidate(value, originalBounds, leftLimit, rightLimit, maxWidth, paint, preferredTextSize);
+        }
+
+        return best;
+    }
+
+    private static CandidateLayout EvaluateCandidate(
+        string value,
+        PixelRect originalBounds,
+        int leftLimit,
+        int rightLimit,
+        int width,
+        Paint paint,
+        float preferredTextSize)
+    {
+        var horizontalPadding = Math.Min(10f, Math.Max(2f, width * 0.08f));
+        var verticalPadding = Math.Min(10f, Math.Max(1f, originalBounds.Height * 0.10f));
+        var usableWidth = Math.Max(1, (int)MathF.Floor(width - (horizontalPadding * 2f)));
+        paint.TextSize = preferredTextSize;
+
+        var wrapped = WrapDetailed(value, paint, usableWidth);
+        while (paint.TextSize > AbsoluteMinimumTextSize && wrapped.Lines.Count > 0)
+        {
+            var requiredHeight = RequiredHeight(wrapped.Lines, paint) + (verticalPadding * 2f);
+            if (requiredHeight <= originalBounds.Height || paint.TextSize <= AbsoluteMinimumTextSize)
             {
                 break;
             }
 
-            canvas.DrawText(line, bounds.Left + horizontalPadding, baseline, paint);
-            baseline += lineHeight;
+            paint.TextSize = Math.Max(AbsoluteMinimumTextSize, paint.TextSize - 1f);
+            wrapped = WrapDetailed(value, paint, usableWidth);
         }
+
+        var requiredTotalHeight = (int)MathF.Ceiling(RequiredHeight(wrapped.Lines, paint) + (verticalPadding * 2f));
+        var bounds = ExpandHorizontally(originalBounds, width, leftLimit, rightLimit);
+        bounds = bounds with { Bottom = Math.Max(bounds.Bottom, bounds.Top + requiredTotalHeight) };
+
+        return new CandidateLayout(
+            bounds,
+            wrapped.Lines,
+            paint.TextSize,
+            horizontalPadding,
+            verticalPadding,
+            wrapped.BrokenWordCount);
     }
+
+    private static CandidateLayout? ChooseBetter(CandidateLayout? current, CandidateLayout candidate)
+    {
+        if (current is null)
+        {
+            return candidate;
+        }
+
+        if (candidate.BrokenWordCount != current.BrokenWordCount)
+        {
+            return candidate.BrokenWordCount < current.BrokenWordCount ? candidate : current;
+        }
+
+        if (candidate.Lines.Count != current.Lines.Count)
+        {
+            return candidate.Lines.Count < current.Lines.Count ? candidate : current;
+        }
+
+        if (Math.Abs(candidate.TextSize - current.TextSize) > 0.01f)
+        {
+            return candidate.TextSize > current.TextSize ? candidate : current;
+        }
+
+        if (candidate.Bounds.Width != current.Bounds.Width)
+        {
+            return candidate.Bounds.Width < current.Bounds.Width ? candidate : current;
+        }
+
+        return candidate.Bounds.Height < current.Bounds.Height ? candidate : current;
+    }
+
+    private static PixelRect ExpandHorizontally(PixelRect originalBounds, int width, int leftLimit, int rightLimit)
+    {
+        var extraWidth = Math.Max(0, width - originalBounds.Width);
+        var leftCapacity = Math.Max(0, originalBounds.Left - leftLimit);
+        var rightCapacity = Math.Max(0, rightLimit - originalBounds.Right);
+        var leftExpansion = Math.Min(leftCapacity, extraWidth / 2);
+        var rightExpansion = Math.Min(rightCapacity, extraWidth - leftExpansion);
+        var remaining = extraWidth - leftExpansion - rightExpansion;
+        if (remaining > 0)
+        {
+            var additionalLeft = Math.Min(leftCapacity - leftExpansion, remaining);
+            leftExpansion += additionalLeft;
+            remaining -= additionalLeft;
+        }
+
+        if (remaining > 0)
+        {
+            rightExpansion += Math.Min(rightCapacity - rightExpansion, remaining);
+        }
+
+        var left = originalBounds.Left - leftExpansion;
+        var right = originalBounds.Right + rightExpansion;
+        return new PixelRect(left, originalBounds.Top, Math.Max(left + 1, right), originalBounds.Bottom);
+    }
+
+    private static (int LeftLimit, int RightLimit) GetHorizontalLimits(
+        int regionIndex,
+        PixelRect bounds,
+        IReadOnlyList<(TranslatedRegion Region, int Index, PixelRect Bounds)> allBounds,
+        IReadOnlyList<PlannedLayout> plannedLayouts,
+        int outputWidth)
+    {
+        var verticalBandPadding = Math.Max(12, bounds.Height / 2);
+        var leftLimit = 0;
+        var rightLimit = outputWidth;
+
+        foreach (var other in allBounds)
+        {
+            if (other.Index == regionIndex)
+            {
+                continue;
+            }
+
+            if (!VerticalRangesOverlap(
+                    bounds.Top - verticalBandPadding,
+                    bounds.Bottom + verticalBandPadding,
+                    other.Bounds.Top,
+                    other.Bounds.Bottom))
+            {
+                continue;
+            }
+
+            if (other.Bounds.Right <= bounds.Left)
+            {
+                leftLimit = Math.Max(leftLimit, other.Bounds.Right + RegionGap);
+            }
+            else if (other.Bounds.Left >= bounds.Right)
+            {
+                rightLimit = Math.Min(rightLimit, other.Bounds.Left - RegionGap);
+            }
+        }
+
+        foreach (var layout in plannedLayouts)
+        {
+            if (!VerticalRangesOverlap(
+                    bounds.Top - verticalBandPadding,
+                    bounds.Bottom + verticalBandPadding,
+                    layout.Bounds.Top,
+                    layout.Bounds.Bottom))
+            {
+                continue;
+            }
+
+            if (layout.Bounds.Right <= bounds.Left)
+            {
+                leftLimit = Math.Max(leftLimit, layout.Bounds.Right + RegionGap);
+            }
+            else if (layout.Bounds.Left >= bounds.Right)
+            {
+                rightLimit = Math.Min(rightLimit, layout.Bounds.Left - RegionGap);
+            }
+        }
+
+        if (rightLimit - leftLimit < bounds.Width)
+        {
+            leftLimit = Math.Max(0, Math.Min(leftLimit, bounds.Left));
+            rightLimit = Math.Min(outputWidth, Math.Max(rightLimit, bounds.Right));
+        }
+
+        return (leftLimit, Math.Max(leftLimit + 1, rightLimit));
+    }
+
+    private static PixelRect PlaceBounds(
+        PixelRect candidate,
+        int preferredTop,
+        IReadOnlyList<PlannedLayout> plannedLayouts,
+        int outputWidth,
+        int outputHeight)
+    {
+        var height = candidate.Height;
+        var horizontalOverlaps = plannedLayouts
+            .Where(layout => HorizontalRangesOverlap(candidate.Left, candidate.Right, layout.Bounds.Left, layout.Bounds.Right))
+            .Select(layout => layout.Bounds)
+            .ToArray();
+        if (horizontalOverlaps.Length == 0)
+        {
+            return Clamp(candidate with { Bottom = Math.Min(outputHeight, candidate.Bottom) }, outputWidth, outputHeight);
+        }
+
+        var downTop = preferredTop;
+        foreach (var obstacle in horizontalOverlaps.OrderBy(bounds => bounds.Top))
+        {
+            if (VerticalRangesOverlap(downTop, downTop + height, obstacle.Top, obstacle.Bottom))
+            {
+                downTop = obstacle.Bottom + RegionGap;
+            }
+        }
+
+        var upTop = preferredTop;
+        foreach (var obstacle in horizontalOverlaps.OrderByDescending(bounds => bounds.Bottom))
+        {
+            if (VerticalRangesOverlap(upTop, upTop + height, obstacle.Top, obstacle.Bottom))
+            {
+                upTop = obstacle.Top - RegionGap - height;
+            }
+        }
+
+        var canPlaceUp = upTop >= 0;
+        var canPlaceDown = downTop + height <= outputHeight;
+        var chosenTop = preferredTop;
+
+        if (canPlaceUp && canPlaceDown)
+        {
+            chosenTop = Math.Abs(preferredTop - upTop) <= Math.Abs(downTop - preferredTop) ? upTop : downTop;
+        }
+        else if (canPlaceUp)
+        {
+            chosenTop = upTop;
+        }
+        else if (canPlaceDown)
+        {
+            chosenTop = downTop;
+        }
+
+        return Clamp(
+            new PixelRect(candidate.Left, chosenTop, candidate.Right, Math.Min(outputHeight, chosenTop + height)),
+            outputWidth,
+            outputHeight);
+    }
+
+    private static bool HorizontalRangesOverlap(int firstLeft, int firstRight, int secondLeft, int secondRight) =>
+        firstLeft < secondRight && secondLeft < firstRight;
+
+    private static bool VerticalRangesOverlap(int firstTop, int firstBottom, int secondTop, int secondBottom) =>
+        firstTop < secondBottom && secondTop < firstBottom;
 
     private static float RequiredHeight(IReadOnlyCollection<string> lines, Paint paint) =>
         lines.Count * LineHeight(paint);
@@ -379,8 +694,12 @@ internal static class AndroidOverlayRenderer
         (paint.Descent() - paint.Ascent()) * 1.15f;
 
     private static List<string> Wrap(string value, Paint paint, int maxWidth)
+        => WrapDetailed(value, paint, maxWidth).Lines.ToList();
+
+    private static WrapResult WrapDetailed(string value, Paint paint, int maxWidth)
     {
         var lines = new List<string>();
+        var brokenWordCount = 0;
         foreach (var paragraph in value.Replace("\r\n", "\n").Split('\n'))
         {
             var words = paragraph.Split(' ', StringSplitOptions.RemoveEmptyEntries);
@@ -407,6 +726,11 @@ internal static class AndroidOverlayRenderer
                 }
 
                 var segments = SplitLongWord(word, paint, maxWidth);
+                if (segments.Count > 1)
+                {
+                    brokenWordCount++;
+                }
+
                 for (var index = 0; index < segments.Count - 1; index++)
                 {
                     lines.Add(segments[index]);
@@ -421,7 +745,7 @@ internal static class AndroidOverlayRenderer
             }
         }
 
-        return lines.Count == 0 ? [string.Empty] : lines;
+        return new WrapResult(lines.Count == 0 ? [string.Empty] : lines, brokenWordCount);
     }
 
     private static List<string> SplitLongWord(string word, Paint paint, int maxWidth)
@@ -454,4 +778,21 @@ internal static class AndroidOverlayRenderer
 
         return segments;
     }
+
+    private sealed record PlannedLayout(
+        PixelRect Bounds,
+        IReadOnlyList<string> Lines,
+        float TextSize,
+        float HorizontalPadding,
+        float VerticalPadding);
+
+    private sealed record CandidateLayout(
+        PixelRect Bounds,
+        IReadOnlyList<string> Lines,
+        float TextSize,
+        float HorizontalPadding,
+        float VerticalPadding,
+        int BrokenWordCount);
+
+    private sealed record WrapResult(IReadOnlyList<string> Lines, int BrokenWordCount);
 }
