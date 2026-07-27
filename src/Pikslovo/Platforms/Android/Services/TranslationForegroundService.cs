@@ -1,17 +1,9 @@
 using Android.App;
 using Android.Content;
 using Android.Content.PM;
-using Android.Graphics;
-using Android.Hardware.Display;
-using Android.Media;
 using Android.Media.Projection;
 using Android.OS;
-using Android.Provider;
-using Android.Views;
 using Android.Widget;
-using System.Diagnostics;
-using Pikslovo.Core;
-using Pikslovo.Services;
 using Java.Interop;
 
 namespace Pikslovo.Droid.Services;
@@ -28,19 +20,11 @@ public sealed class TranslationForegroundService : Service
     public const string ProjectionResultDataExtra = "projection_result_data";
 
     private const int NotificationId = 1001;
-    private const int CaptureSurfaceRefreshDelayMilliseconds = 75;
-    private const int CaptureRetryDelayMilliseconds = 50;
-    private const int CaptureRetryTimeoutMilliseconds = 400;
     private const string NotificationChannelId = "translation_session";
-    private readonly object _stateLock = new();
-    private MediaProjection? _mediaProjection;
-    private VirtualDisplay? _virtualDisplay;
-    private ImageReader? _imageReader;
-    private AndroidOverlayPresenter? _overlayPresenter;
-    private FloatingTranslationTrigger? _floatingTrigger;
-    private CaptureRegionSelectorOverlay? _captureRegionSelector;
-    private CancellationTokenSource? _sessionCancellation;
-    private bool _isProcessing;
+    private AndroidServiceSettingsAdapter? _settingsAdapter;
+    private TranslationSessionCoordinator? _sessionCoordinator;
+    private TranslationOverlayCoordinator? _overlayCoordinator;
+    private TranslationCapturePipeline? _capturePipeline;
     private bool _isStopping;
 
     public static bool IsSessionActive { get; private set; }
@@ -60,13 +44,13 @@ public sealed class TranslationForegroundService : Service
                     _ = CaptureAndTranslateAsync();
                     break;
                 case DismissOverlayAction:
-                    DismissOverlay();
+                    _overlayCoordinator?.DismissOverlay();
                     break;
                 case StopSessionAction:
                     StopSession();
                     break;
                 case RefreshAppearanceAction:
-                    UpdateFloatingTriggerVisibility();
+                    _overlayCoordinator?.RefreshAppearance();
                     RefreshNotification();
                     break;
             }
@@ -94,9 +78,7 @@ public sealed class TranslationForegroundService : Service
 
     private void StartSession(Intent intent)
     {
-        // Android 14 permits one virtual display for each projection token.
-        // A duplicated START_SESSION intent must not reuse the current token.
-        if (IsSessionActive || _mediaProjection is not null)
+        if (IsSessionActive)
         {
             return;
         }
@@ -105,17 +87,7 @@ public sealed class TranslationForegroundService : Service
         StartForeground(NotificationId, BuildNotification(), ForegroundService.TypeMediaProjection);
 
         var resultCode = (Result)intent.GetIntExtra(ProjectionResultCodeExtra, (int)Result.Canceled);
-        Intent? resultData;
-        if (OperatingSystem.IsAndroidVersionAtLeast(33))
-        {
-            resultData = intent.GetParcelableExtra(
-                ProjectionResultDataExtra,
-                Java.Lang.Class.FromType(typeof(Intent))) as Intent;
-        }
-        else
-        {
-            resultData = intent.GetParcelableExtra(ProjectionResultDataExtra) as Intent;
-        }
+        var resultData = GetProjectionResultData(intent);
         if (resultCode != Result.Ok || resultData is null)
         {
             ShowMessage(AppStrings.Keys.ScreenCaptureConsentDenied);
@@ -123,262 +95,57 @@ public sealed class TranslationForegroundService : Service
             return;
         }
 
-        var manager = (MediaProjectionManager?)GetSystemService(MediaProjectionService);
-        _mediaProjection = manager?.GetMediaProjection((int)resultCode, resultData);
-        if (_mediaProjection is null)
+        _settingsAdapter ??= new AndroidServiceSettingsAdapter(this);
+        _overlayCoordinator ??= new TranslationOverlayCoordinator(
+            this,
+            _settingsAdapter,
+            onCaptureRequested: () => _ = CaptureAndTranslateAsync(),
+            isSessionActive: () => _sessionCoordinator?.IsActive == true,
+            isProcessing: () => _sessionCoordinator?.IsProcessing == true,
+            onStopSession: StopSession,
+            showMessage: ShowMessage);
+        _sessionCoordinator ??= new TranslationSessionCoordinator(this);
+        _capturePipeline ??= new TranslationCapturePipeline(
+            _settingsAdapter,
+            _sessionCoordinator,
+            _overlayCoordinator,
+            ShowMessage);
+
+        if (!_sessionCoordinator.Start(resultCode, resultData, StopSession))
         {
             ShowMessage(AppStrings.Keys.ScreenCaptureStartFailed);
             StopSession();
             return;
         }
 
-        _mediaProjection.RegisterCallback(new ProjectionCallback(this), new Handler(Looper.MainLooper!));
-        CreateCaptureSurface();
-        _sessionCancellation = new CancellationTokenSource();
-        _overlayPresenter = new AndroidOverlayPresenter(this);
-        IsSessionActive = true;
-        UpdateFloatingTriggerVisibility();
-        AndroidTranslationHost.NotifySessionStateChanged();
+        SetSessionActive(true);
+        _overlayCoordinator.InitializeSessionUi();
         ShowMessage(AppStrings.Keys.TranslatorIsActive);
-    }
-
-    private void CreateCaptureSurface()
-    {
-        var windowManager = GetSystemService(WindowService)?.JavaCast<IWindowManager>();
-        var bounds = windowManager?.CurrentWindowMetrics?.Bounds;
-        var width = bounds?.Width() ?? 0;
-        var height = bounds?.Height() ?? 0;
-        var density = Resources?.Configuration?.DensityDpi ?? 0;
-        if (width <= 0 || height <= 0 || density <= 0 || _mediaProjection is null)
-        {
-            throw new InvalidOperationException(AppStrings.Get(AppStrings.Keys.CannotReadScreenSize));
-        }
-
-        // ImageFormat.RGBA_8888 is represented as value 1 by the Android API.
-        _imageReader = ImageReader.NewInstance(width, height, (ImageFormatType)1, 2);
-        _virtualDisplay = _mediaProjection.CreateVirtualDisplay(
-            "PikslovoCapture",
-            width,
-            height,
-            (int)density,
-            (DisplayFlags)(int)VirtualDisplayFlags.AutoMirror,
-            _imageReader.Surface,
-            null,
-            null);
-    }
-
-    private void UpdateFloatingTriggerVisibility()
-    {
-        var settings = AndroidSettingsStore.Load(this);
-        var shouldShowButton = settings.FloatingButton.AlwaysVisible || !settings.GlobalHotkeyEnabled;
-        if (!Settings.CanDrawOverlays(this))
-        {
-            _floatingTrigger?.Dismiss();
-            return;
-        }
-
-        _floatingTrigger ??= new FloatingTranslationTrigger(this);
-        if (_floatingTrigger.IsAttached)
-        {
-            _floatingTrigger.RefreshConfiguration();
-            _floatingTrigger.SetButtonVisibility(shouldShowButton);
-            return;
-        }
-
-        _floatingTrigger.Show(
-            () => _ = CaptureAndTranslateAsync(),
-            ShowCaptureRegionSelector,
-            StopSession,
-            shouldShowButton);
-    }
-
-    private void ShowCaptureRegionSelector()
-    {
-        lock (_stateLock)
-        {
-            if (!IsSessionActive || _isProcessing || _captureRegionSelector?.IsShowing == true)
-            {
-                return;
-            }
-        }
-
-        new Handler(Looper.MainLooper!).Post(() =>
-        {
-            _overlayPresenter?.Dismiss();
-            _ = _floatingTrigger?.HideForCaptureAsync();
-
-            _captureRegionSelector ??= new CaptureRegionSelectorOverlay(this);
-            var initialRegion = AndroidSettingsStore.Load(this).CaptureRegion;
-            _captureRegionSelector.Show(
-                initialRegion,
-                region => SaveCaptureRegion(region),
-                RestoreFloatingTrigger);
-        });
-    }
-
-    private void SaveCaptureRegion(CaptureRegionSettings region)
-    {
-        var settings = AndroidSettingsStore.Load(this);
-        AndroidSettingsStore.Save(this, settings with { CaptureRegion = region.Normalize() });
-        ShowMessage(AppStrings.Keys.DialogRegionSaved);
-        RestoreFloatingTrigger();
-    }
-
-    private void RestoreFloatingTrigger()
-    {
-        _captureRegionSelector?.Dismiss();
-        UpdateFloatingTriggerVisibility();
     }
 
     private async Task CaptureAndTranslateAsync()
     {
-        var operationStopwatch = Stopwatch.StartNew();
-        CancellationToken cancellationToken;
-        lock (_stateLock)
+        if (_sessionCoordinator is null || _overlayCoordinator is null || _capturePipeline is null)
         {
-            if (!IsSessionActive || _isProcessing)
-            {
-                return;
-            }
-
-            if (_overlayPresenter?.IsShowing == true)
-            {
-                DismissOverlay();
-                return;
-            }
-
-            _isProcessing = true;
-            cancellationToken = _sessionCancellation?.Token ?? CancellationToken.None;
-            _floatingTrigger?.SetState(FloatingTranslationTriggerState.Processing);
+            return;
         }
 
+        if (_overlayCoordinator.IsOverlayVisible)
+        {
+            _overlayCoordinator.DismissOverlay();
+            return;
+        }
+
+        if (!_sessionCoordinator.TryBeginProcessing(out var cancellationToken))
+        {
+            return;
+        }
+
+        _overlayCoordinator.SetTriggerState(FloatingTranslationTriggerState.Processing);
         var resultShown = false;
         try
         {
-            cancellationToken.ThrowIfCancellationRequested();
-            if (!Settings.CanDrawOverlays(this))
-            {
-                ShowMessage(AppStrings.Keys.GrantOverlayPermission);
-                return;
-            }
-
-            var captureResult = await CaptureBitmapAsync(cancellationToken).ConfigureAwait(false);
-            AppServices.Diagnostics.RecordCaptureAttempt(
-                captureResult.Status switch
-                {
-                    CaptureStatus.Success => CaptureAttemptStatus.Success,
-                    CaptureStatus.NoFreshFrame => CaptureAttemptStatus.NoFreshFrame,
-                    _ => CaptureAttemptStatus.Failed,
-                },
-                captureResult.Attempts,
-                captureResult.ElapsedMilliseconds);
-            if (captureResult.Status == CaptureStatus.NoFreshFrame)
-            {
-                Android.Util.Log.Warn(
-                    "Pikslovo",
-                    $"Screen capture timed out waiting for a fresh frame after {captureResult.Attempts} attempts and {captureResult.ElapsedMilliseconds} ms.");
-                ShowMessage(AppStrings.Keys.ScreenFrameCaptureFailed);
-                return;
-            }
-            if (captureResult.Bitmap is null)
-            {
-                Android.Util.Log.Warn(
-                    "Pikslovo",
-                    $"Screen capture failed while reading the latest frame after {captureResult.Attempts} attempts and {captureResult.ElapsedMilliseconds} ms.");
-                throw new InvalidOperationException(AppStrings.Get(AppStrings.Keys.ScreenFrameCaptureFailed));
-            }
-            var bitmap = captureResult.Bitmap;
-            var processingAccent = global::Pikslovo.App.GetAccentColor(AndroidSettingsStore.Load(this).Accent);
-            new Handler(Looper.MainLooper!).Post(() =>
-                _overlayPresenter?.ShowProcessingFrame(Color.Rgb(processingAccent.R, processingAccent.G, processingAccent.B)));
-            _floatingTrigger?.ShowAfterCapture();
-            cancellationToken.ThrowIfCancellationRequested();
-
-            using (bitmap)
-            using (var stream = new MemoryStream())
-            {
-                var appSettings = AndroidSettingsStore.Load(this);
-                var settings = appSettings.Translation;
-                var cropBounds = appSettings.CaptureRegion.ToPixelRect(bitmap.Width, bitmap.Height);
-                using var croppedBitmap = appSettings.CaptureRegion.IsEnabled
-                    ? Bitmap.CreateBitmap(bitmap, cropBounds.Left, cropBounds.Top, cropBounds.Width, cropBounds.Height)
-                    : null;
-                var bitmapForOcr = croppedBitmap ?? bitmap;
-                using var scaledBitmap = CreateScaledOcrBitmap(bitmapForOcr, settings.OcrImageScale);
-                var bitmapForVision = scaledBitmap ?? bitmapForOcr;
-                var encodingStopwatch = Stopwatch.StartNew();
-                var imageFormat = settings.UseJpegForOcr ? Bitmap.CompressFormat.Jpeg! : Bitmap.CompressFormat.Png!;
-                var imageQuality = settings.UseJpegForOcr ? settings.OcrJpegQuality : 100;
-                if (!bitmapForVision.Compress(imageFormat, imageQuality, stream))
-                {
-                    throw new InvalidOperationException(AppStrings.Get(AppStrings.Keys.CouldNotEncodeOcrImage));
-                }
-
-                var imageBytes = stream.ToArray();
-                var encodingMilliseconds = encodingStopwatch.ElapsedMilliseconds;
-                var captureAndImageEncodingMilliseconds = operationStopwatch.ElapsedMilliseconds;
-                var imageFormatName = settings.UseJpegForOcr ? $"JPEG {imageQuality}%" : "PNG";
-                Android.Util.Log.Debug(
-                    "Pikslovo",
-                    $"Capture + encode: {captureAndImageEncodingMilliseconds} ms; {imageFormatName} encode: {encodingMilliseconds} ms; {bitmapForVision.Width}x{bitmapForVision.Height}; image={imageBytes.Length / 1024d:0.0} KiB");
-                var execution = await AppServices.TranslationOrchestrator
-                    .TranslateWithTimingsAsync(imageBytes, settings, cancellationToken)
-                    .ConfigureAwait(false);
-                var result = execution.Result;
-                AppServices.Diagnostics.RecordTranslation(
-                    captureAndImageEncodingMilliseconds,
-                    encodingMilliseconds,
-                    execution.CloudVisionOcrMilliseconds,
-                    execution.CloudTranslationMilliseconds,
-                    operationStopwatch.ElapsedMilliseconds);
-                Android.Util.Log.Debug(
-                    "Pikslovo",
-                    $"Cloud Vision OCR: {execution.CloudVisionOcrMilliseconds} ms; Cloud Translation: {execution.CloudTranslationMilliseconds} ms; total={operationStopwatch.ElapsedMilliseconds} ms");
-                if (result is null)
-                {
-                    return;
-                }
-
-                if (result.Regions.Count == 0)
-                {
-                    ShowMessage(AppStrings.Keys.NoTextFoundOnScreen);
-                    return;
-                }
-
-                if (scaledBitmap is not null)
-                {
-                    result = ScaleRegions(
-                        result,
-                        bitmapForOcr.Width / (float)bitmapForVision.Width,
-                        bitmapForOcr.Height / (float)bitmapForVision.Height);
-                }
-
-                if (appSettings.CaptureRegion.IsEnabled)
-                {
-                    result = OffsetRegions(result, cropBounds.Left, cropBounds.Top);
-                }
-
-                var accent = global::Pikslovo.App.GetAccentColor(appSettings.Accent);
-                var overlay = AndroidOverlayRenderer.Render(
-                    bitmap,
-                    result,
-                    settings.FontScale,
-                    Color.Rgb(accent.R, accent.G, accent.B));
-                cancellationToken.ThrowIfCancellationRequested();
-                resultShown = true;
-                new Handler(Looper.MainLooper!).Post(() =>
-                {
-                    if (cancellationToken.IsCancellationRequested || !IsSessionActive)
-                    {
-                        overlay.Dispose();
-                        return;
-                    }
-
-                    _overlayPresenter?.Show(overlay, DismissOverlay);
-                    _floatingTrigger?.BringToFront();
-                    _floatingTrigger?.SetState(FloatingTranslationTriggerState.ResultVisible);
-                });
-            }
+            resultShown = await _capturePipeline.ExecuteAsync(cancellationToken).ConfigureAwait(false);
         }
         catch (System.OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
@@ -392,126 +159,12 @@ public sealed class TranslationForegroundService : Service
         }
         finally
         {
-            lock (_stateLock)
-            {
-                _isProcessing = false;
-            }
-
+            _sessionCoordinator.EndProcessing();
             if (!resultShown)
             {
-                DismissOverlay();
+                _overlayCoordinator.DismissOverlay();
             }
         }
-    }
-
-    private static TranslationResult OffsetRegions(TranslationResult result, int offsetX, int offsetY) =>
-        new(result.Regions.Select(region => new TranslatedRegion(
-            region.SourceText,
-            region.TranslatedText,
-            new PixelRect(
-                region.Bounds.Left + offsetX,
-                region.Bounds.Top + offsetY,
-                region.Bounds.Right + offsetX,
-                region.Bounds.Bottom + offsetY))).ToArray());
-
-    private static Bitmap? CreateScaledOcrBitmap(Bitmap bitmap, float scale)
-    {
-        if (scale >= 1f)
-        {
-            return null;
-        }
-
-        var width = Math.Max(1, (int)Math.Round(bitmap.Width * scale));
-        var height = Math.Max(1, (int)Math.Round(bitmap.Height * scale));
-        return Bitmap.CreateScaledBitmap(bitmap, width, height, filter: false);
-    }
-
-    private static TranslationResult ScaleRegions(TranslationResult result, float scaleX, float scaleY) =>
-        new(result.Regions.Select(region => new TranslatedRegion(
-            region.SourceText,
-            region.TranslatedText,
-            new PixelRect(
-                (int)Math.Round(region.Bounds.Left * scaleX),
-                (int)Math.Round(region.Bounds.Top * scaleY),
-                Math.Max((int)Math.Round(region.Bounds.Left * scaleX) + 1, (int)Math.Round(region.Bounds.Right * scaleX)),
-                Math.Max((int)Math.Round(region.Bounds.Top * scaleY) + 1, (int)Math.Round(region.Bounds.Bottom * scaleY))))).ToArray());
-
-    private async Task<CaptureResult> CaptureBitmapAsync(CancellationToken cancellationToken)
-    {
-        if (_floatingTrigger is not null)
-        {
-            await _floatingTrigger.HideForCaptureAsync().ConfigureAwait(false);
-        }
-
-        // Let the virtual display receive a frame after every app-owned overlay is gone.
-        await Task.Delay(CaptureSurfaceRefreshDelayMilliseconds, cancellationToken).ConfigureAwait(false);
-        cancellationToken.ThrowIfCancellationRequested();
-
-        var stopwatch = Stopwatch.StartNew();
-        var attempts = 0;
-        while (true)
-        {
-            cancellationToken.ThrowIfCancellationRequested();
-            attempts++;
-            var image = _imageReader?.AcquireLatestImage();
-            if (image is not null)
-            {
-                return ExtractBitmap(image, attempts, stopwatch.ElapsedMilliseconds);
-            }
-
-            if (stopwatch.ElapsedMilliseconds >= CaptureRetryTimeoutMilliseconds)
-            {
-                return CaptureResult.NoFreshFrame(attempts, stopwatch.ElapsedMilliseconds);
-            }
-
-            await Task.Delay(CaptureRetryDelayMilliseconds, cancellationToken).ConfigureAwait(false);
-        }
-    }
-
-    private static CaptureResult ExtractBitmap(Android.Media.Image image, int attempts, long elapsedMilliseconds)
-    {
-        try
-        {
-            var planes = image.GetPlanes();
-            if (planes is null)
-            {
-                return CaptureResult.Failed(attempts, elapsedMilliseconds);
-            }
-
-            var plane = planes.FirstOrDefault();
-            if (plane is null)
-            {
-                return CaptureResult.Failed(attempts, elapsedMilliseconds);
-            }
-
-            var rowPadding = plane.RowStride - (plane.PixelStride * image.Width);
-            using var paddedBitmap = Bitmap.CreateBitmap(
-                image.Width + (rowPadding / plane.PixelStride),
-                image.Height,
-                Bitmap.Config.Argb8888!);
-            var buffer = plane.Buffer;
-            if (buffer is null)
-            {
-                return CaptureResult.Failed(attempts, elapsedMilliseconds);
-            }
-
-            paddedBitmap.CopyPixelsFromBuffer(buffer);
-            return CaptureResult.Success(Bitmap.CreateBitmap(paddedBitmap, 0, 0, image.Width, image.Height), attempts, elapsedMilliseconds);
-        }
-        finally
-        {
-            image.Close();
-            image.Dispose();
-        }
-    }
-
-    private void DismissOverlay()
-    {
-        new Handler(Looper.MainLooper!).Post(() =>
-        {
-            _overlayPresenter?.Dismiss();
-            _floatingTrigger?.SetState(FloatingTranslationTriggerState.Ready);
-        });
     }
 
     private void StopSession()
@@ -522,33 +175,11 @@ public sealed class TranslationForegroundService : Service
         }
 
         _isStopping = true;
-        CancellationTokenSource? sessionCancellation;
-        lock (_stateLock)
-        {
-            IsSessionActive = false;
-            _isProcessing = false;
-            sessionCancellation = _sessionCancellation;
-            _sessionCancellation = null;
-        }
-        sessionCancellation?.Cancel();
-        AndroidTranslationHost.NotifySessionStateChanged();
-
-        DismissOverlay();
-        _floatingTrigger?.Dismiss();
-        _floatingTrigger = null;
-        _captureRegionSelector?.Dismiss();
-        _captureRegionSelector = null;
-        _virtualDisplay?.Release();
-        _virtualDisplay?.Dispose();
-        _virtualDisplay = null;
-        _imageReader?.Close();
-        _imageReader?.Dispose();
-        _imageReader = null;
         try
         {
-            _mediaProjection?.Stop();
-            _mediaProjection?.Dispose();
-            _mediaProjection = null;
+            SetSessionActive(false);
+            _sessionCoordinator?.Stop();
+            _overlayCoordinator?.DismissAll();
             StopForeground(StopForegroundFlags.Remove);
             StopSelf();
         }
@@ -556,6 +187,24 @@ public sealed class TranslationForegroundService : Service
         {
             _isStopping = false;
         }
+    }
+
+    private void SetSessionActive(bool isActive)
+    {
+        IsSessionActive = isActive;
+        AndroidTranslationHost.NotifySessionStateChanged();
+    }
+
+    private static Intent? GetProjectionResultData(Intent intent)
+    {
+        if (OperatingSystem.IsAndroidVersionAtLeast(33))
+        {
+            return intent.GetParcelableExtra(
+                ProjectionResultDataExtra,
+                Java.Lang.Class.FromType(typeof(Intent))) as Intent;
+        }
+
+        return intent.GetParcelableExtra(ProjectionResultDataExtra) as Intent;
     }
 
     private void CreateNotificationChannel()
@@ -606,32 +255,5 @@ public sealed class TranslationForegroundService : Service
     private void ShowMessage(string message)
     {
         new Handler(Looper.MainLooper!).Post(() => Toast.MakeText(this, AppStrings.Get(message), ToastLength.Long)?.Show());
-    }
-
-    private sealed class ProjectionCallback(TranslationForegroundService service) : MediaProjection.Callback
-    {
-        public override void OnStop()
-        {
-            service.StopSession();
-        }
-    }
-
-    private enum CaptureStatus
-    {
-        Success,
-        NoFreshFrame,
-        Failed
-    }
-
-    private sealed record CaptureResult(CaptureStatus Status, Bitmap? Bitmap, int Attempts, long ElapsedMilliseconds)
-    {
-        public static CaptureResult Success(Bitmap bitmap, int attempts, long elapsedMilliseconds) =>
-            new(CaptureStatus.Success, bitmap, attempts, elapsedMilliseconds);
-
-        public static CaptureResult NoFreshFrame(int attempts, long elapsedMilliseconds) =>
-            new(CaptureStatus.NoFreshFrame, null, attempts, elapsedMilliseconds);
-
-        public static CaptureResult Failed(int attempts, long elapsedMilliseconds) =>
-            new(CaptureStatus.Failed, null, attempts, elapsedMilliseconds);
     }
 }
