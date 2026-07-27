@@ -46,6 +46,7 @@ public static class DiagnosticsReportFormatter
         report.AppendLine(AppStrings.Get(AppStrings.Keys.DiagnosticsLatestMeasurements));
         AppendDuration(report, AppStrings.Get(AppStrings.Keys.CapturePlusEncoding), diagnostics.CaptureAndImageEncodingMilliseconds);
         AppendDuration(report, AppStrings.Get(AppStrings.Keys.OcrImageEncoding), diagnostics.OcrImageEncodingMilliseconds);
+        AppendImageSize(report, "OCR image size", diagnostics.OcrImageBytes);
         AppendDuration(report, "Cloud Vision OCR", diagnostics.CloudVisionOcrMilliseconds);
         AppendDuration(report, "Cloud Translation", diagnostics.CloudTranslationMilliseconds);
         AppendDuration(report, "Overlay render", diagnostics.OverlayRenderMilliseconds);
@@ -72,9 +73,19 @@ public static class DiagnosticsReportFormatter
             .Append(FormatDurationValue(milliseconds))
             .AppendLine();
 
+    private static void AppendImageSize(StringBuilder report, string label, long? bytes) =>
+        report.Append(label)
+            .Append(": ")
+            .Append(FormatImageSizeValue(bytes))
+            .AppendLine();
+
     private static string FormatFloat(float value) => value.ToString("0.##", CultureInfo.InvariantCulture);
 
     private static string FormatScale(float value) => $"{value.ToString("0.##", CultureInfo.InvariantCulture)}x";
+
+    private static string FormatImageSizeValue(long? bytes) => bytes is { } size
+        ? $"{size / 1024d:0.0} KiB"
+        : AppStrings.Get(AppStrings.Keys.NoMeasurement);
 
     private static string FormatCount(int? value) =>
         value is { } count

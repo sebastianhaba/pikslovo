@@ -3,7 +3,7 @@ namespace Pikslovo.Core;
 public sealed class TranslationDiagnostics
 {
     private readonly object _lock = new();
-    private TranslationDiagnosticsSnapshot _snapshot = new(null, null, null, null, null, null, null, null, null, null);
+    private TranslationDiagnosticsSnapshot _snapshot = new(null, null, null, null, null, null, null, null, null, null, null);
 
     public TranslationDiagnosticsSnapshot Snapshot
     {
@@ -19,6 +19,7 @@ public sealed class TranslationDiagnostics
     public void RecordTranslation(
         long captureAndImageEncodingMilliseconds,
         long ocrImageEncodingMilliseconds,
+        long ocrImageBytes,
         long cloudVisionOcrMilliseconds,
         long cloudTranslationMilliseconds,
         long? overlayRenderMilliseconds,
@@ -30,6 +31,7 @@ public sealed class TranslationDiagnostics
             {
                 CaptureAndImageEncodingMilliseconds = captureAndImageEncodingMilliseconds,
                 OcrImageEncodingMilliseconds = ocrImageEncodingMilliseconds,
+                OcrImageBytes = ocrImageBytes,
                 CloudVisionOcrMilliseconds = cloudVisionOcrMilliseconds,
                 CloudTranslationMilliseconds = cloudTranslationMilliseconds,
                 OverlayRenderMilliseconds = overlayRenderMilliseconds,
@@ -66,6 +68,7 @@ public sealed class TranslationDiagnostics
 public sealed record TranslationDiagnosticsSnapshot(
     long? CaptureAndImageEncodingMilliseconds,
     long? OcrImageEncodingMilliseconds,
+    long? OcrImageBytes,
     long? CloudVisionOcrMilliseconds,
     long? CloudTranslationMilliseconds,
     long? OverlayRenderMilliseconds,

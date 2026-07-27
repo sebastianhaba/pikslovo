@@ -39,6 +39,7 @@ public sealed class MainPageViewModel : INotifyPropertyChanged
     private string _onboardingTargetLanguage = "pl";
     private string _captureAndImageEncodingDuration = AppStrings.Get(AppStrings.Keys.NoMeasurement);
     private string _ocrImageEncodingDuration = AppStrings.Get(AppStrings.Keys.NoMeasurement);
+    private string _ocrPayloadSize = AppStrings.Get(AppStrings.Keys.NoMeasurement);
     private string _cloudVisionOcrDuration = AppStrings.Get(AppStrings.Keys.NoMeasurement);
     private string _cloudTranslationDuration = AppStrings.Get(AppStrings.Keys.NoMeasurement);
     private string _overlayRenderDuration = AppStrings.Get(AppStrings.Keys.NoMeasurement);
@@ -422,6 +423,12 @@ public sealed class MainPageViewModel : INotifyPropertyChanged
         private set => SetProperty(ref _ocrImageEncodingDuration, value);
     }
 
+    public string OcrPayloadSize
+    {
+        get => _ocrPayloadSize;
+        private set => SetProperty(ref _ocrPayloadSize, value);
+    }
+
     public string CloudVisionOcrDuration
     {
         get => _cloudVisionOcrDuration;
@@ -494,7 +501,7 @@ public sealed class MainPageViewModel : INotifyPropertyChanged
         FloatingButtonVerticalPosition = 0.1f;
         OnboardingSourceLanguage = "ja";
         OnboardingTargetLanguage = "pl";
-        UpdateDiagnostics(new TranslationDiagnosticsSnapshot(null, null, null, null, null, null, null, null, null, null));
+        UpdateDiagnostics(new TranslationDiagnosticsSnapshot(null, null, null, null, null, null, null, null, null, null, null));
     }
 
     public TranslationSettings CreateTranslationSettings() =>
@@ -516,6 +523,7 @@ public sealed class MainPageViewModel : INotifyPropertyChanged
     {
         CaptureAndImageEncodingDuration = FormatDuration(diagnostics.CaptureAndImageEncodingMilliseconds);
         OcrImageEncodingDuration = FormatDuration(diagnostics.OcrImageEncodingMilliseconds);
+        OcrPayloadSize = FormatImageSize(diagnostics.OcrImageBytes);
         CloudVisionOcrDuration = FormatDuration(diagnostics.CloudVisionOcrMilliseconds);
         CloudTranslationDuration = FormatDuration(diagnostics.CloudTranslationMilliseconds);
         OverlayRenderDuration = FormatDuration(diagnostics.OverlayRenderMilliseconds);
@@ -595,6 +603,10 @@ public sealed class MainPageViewModel : INotifyPropertyChanged
 
     private static string FormatCount(int? value) => value is { } count
         ? count.ToString(CultureInfo.CurrentCulture)
+        : AppStrings.Get(AppStrings.Keys.NoMeasurement);
+
+    private static string FormatImageSize(long? bytes) => bytes is { } size
+        ? $"{size / 1024d:0.0} KiB"
         : AppStrings.Get(AppStrings.Keys.NoMeasurement);
 
     private static string FormatCaptureAttemptStatus(CaptureAttemptStatus? status) => status switch

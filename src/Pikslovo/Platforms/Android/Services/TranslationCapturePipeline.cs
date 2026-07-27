@@ -92,6 +92,7 @@ internal sealed class TranslationCapturePipeline(
             AppServices.Diagnostics.RecordTranslation(
                 captureAndImageEncodingMilliseconds,
                 encodingMilliseconds,
+                imageBytes.Length,
                 execution.CloudVisionOcrMilliseconds,
                 execution.CloudTranslationMilliseconds,
                 null,
@@ -104,6 +105,7 @@ internal sealed class TranslationCapturePipeline(
             AppServices.Diagnostics.RecordTranslation(
                 captureAndImageEncodingMilliseconds,
                 encodingMilliseconds,
+                imageBytes.Length,
                 execution.CloudVisionOcrMilliseconds,
                 execution.CloudTranslationMilliseconds,
                 null,
@@ -136,6 +138,7 @@ internal sealed class TranslationCapturePipeline(
         AppServices.Diagnostics.RecordTranslation(
             captureAndImageEncodingMilliseconds,
             encodingMilliseconds,
+            imageBytes.Length,
             execution.CloudVisionOcrMilliseconds,
             execution.CloudTranslationMilliseconds,
             overlayRenderMilliseconds,

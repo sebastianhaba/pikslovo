@@ -427,6 +427,8 @@
                 <Border Height="1" Margin="16,0" Background="{ThemeResource AppBorderBrush}" />
                 <Grid Margin="16,14"><Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions><TextBlock Text="Kodowanie obrazu OCR" /><TextBlock Text="{Binding OcrImageEncodingDuration}" Grid.Column="1" FontWeight="SemiBold" /></Grid>
                 <Border Height="1" Margin="16,0" Background="{ThemeResource AppBorderBrush}" />
+                <Grid Margin="16,14"><Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions><TextBlock Text="Rozmiar obrazu OCR" /><TextBlock Text="{Binding OcrPayloadSize}" Grid.Column="1" FontWeight="SemiBold" /></Grid>
+                <Border Height="1" Margin="16,0" Background="{ThemeResource AppBorderBrush}" />
                 <Grid Margin="16,14"><Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions><TextBlock Text="Cloud Vision OCR" /><TextBlock Text="{Binding CloudVisionOcrDuration}" Grid.Column="1" FontWeight="SemiBold" /></Grid>
                 <Border Height="1" Margin="16,0" Background="{ThemeResource AppBorderBrush}" />
                 <Grid Margin="16,14"><Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions><TextBlock Text="Cloud Translation" /><TextBlock Text="{Binding CloudTranslationDuration}" Grid.Column="1" FontWeight="SemiBold" /></Grid>
