@@ -372,9 +372,10 @@ internal static class AndroidOverlayRenderer
             return null;
         }
 
-        var preferredTextSize = GetPreferredTextSize(value, bounds, paint, fontScale);
+        var preferredTextSize = GetBaseTextSize(value, bounds, paint);
+        var scaledTextSize = ScaleTextSize(preferredTextSize, fontScale);
         var (leftLimit, rightLimit) = GetHorizontalLimits(regionIndex, bounds, allBounds, plannedLayouts, outputWidth);
-        var bestCandidate = SelectBestCandidate(value, bounds, leftLimit, rightLimit, paint, preferredTextSize);
+        var bestCandidate = SelectBestCandidate(value, bounds, leftLimit, rightLimit, paint, scaledTextSize);
 
         if (bestCandidate is null)
         {
@@ -413,7 +414,7 @@ internal static class AndroidOverlayRenderer
         }
     }
 
-    private static float GetPreferredTextSize(string value, PixelRect bounds, Paint paint, float fontScale)
+    private static float GetBaseTextSize(string value, PixelRect bounds, Paint paint)
     {
         var horizontalPadding = Math.Min(10f, Math.Max(2f, bounds.Width * 0.08f));
         var verticalPadding = Math.Min(10f, Math.Max(1f, bounds.Height * 0.10f));
@@ -430,7 +431,15 @@ internal static class AndroidOverlayRenderer
             lines = Wrap(value, paint, (int)usableWidth);
         }
 
-        return Math.Max(AbsoluteMinimumTextSize, paint.TextSize * fontScale);
+        return Math.Max(AbsoluteMinimumTextSize, paint.TextSize);
+    }
+
+    private static float ScaleTextSize(float baseTextSize, float fontScale)
+    {
+        var scale = float.IsFinite(fontScale)
+            ? Math.Clamp(fontScale, 1f, 3f)
+            : TranslationSettings.DefaultFontScale;
+        return Math.Clamp(baseTextSize * scale, AbsoluteMinimumTextSize, MaximumTextSize);
     }
 
     private static CandidateLayout? SelectBestCandidate(
@@ -439,13 +448,20 @@ internal static class AndroidOverlayRenderer
         int leftLimit,
         int rightLimit,
         Paint paint,
-        float preferredTextSize)
+        float scaledTextSize)
     {
         var maxWidth = Math.Max(originalBounds.Width, rightLimit - leftLimit);
         CandidateLayout? best = null;
         for (var width = originalBounds.Width; width <= maxWidth; width += width < maxWidth ? 8 : 1)
         {
-            var candidate = EvaluateCandidate(value, originalBounds, leftLimit, rightLimit, width, paint, preferredTextSize);
+            var candidate = EvaluateCandidate(
+                value,
+                originalBounds,
+                leftLimit,
+                rightLimit,
+                width,
+                paint,
+                scaledTextSize);
             best = ChooseBetter(best, candidate);
             if (best is not null && best.BrokenWordCount == 0 && best.Lines.Count == 1)
             {
@@ -455,7 +471,14 @@ internal static class AndroidOverlayRenderer
 
         if (best is null && maxWidth != originalBounds.Width)
         {
-            best = EvaluateCandidate(value, originalBounds, leftLimit, rightLimit, maxWidth, paint, preferredTextSize);
+            best = EvaluateCandidate(
+                value,
+                originalBounds,
+                leftLimit,
+                rightLimit,
+                maxWidth,
+                paint,
+                scaledTextSize);
         }
 
         return best;
@@ -468,29 +491,23 @@ internal static class AndroidOverlayRenderer
         int rightLimit,
         int width,
         Paint paint,
-        float preferredTextSize)
+        float scaledTextSize)
     {
         var horizontalPadding = Math.Min(10f, Math.Max(2f, width * 0.08f));
         var verticalPadding = Math.Min(10f, Math.Max(1f, originalBounds.Height * 0.10f));
         var usableWidth = Math.Max(1, (int)MathF.Floor(width - (horizontalPadding * 2f)));
-        paint.TextSize = preferredTextSize;
+        paint.TextSize = scaledTextSize;
 
         var wrapped = WrapDetailed(value, paint, usableWidth);
-        while (paint.TextSize > AbsoluteMinimumTextSize && wrapped.Lines.Count > 0)
-        {
-            var requiredHeight = RequiredHeight(wrapped.Lines, paint) + (verticalPadding * 2f);
-            if (requiredHeight <= originalBounds.Height || paint.TextSize <= AbsoluteMinimumTextSize)
-            {
-                break;
-            }
-
-            paint.TextSize = Math.Max(AbsoluteMinimumTextSize, paint.TextSize - 1f);
-            wrapped = WrapDetailed(value, paint, usableWidth);
-        }
-
-        var requiredTotalHeight = (int)MathF.Ceiling(RequiredHeight(wrapped.Lines, paint) + (verticalPadding * 2f));
+        var requiredTotalHeight = Math.Max(
+            originalBounds.Height,
+            (int)MathF.Ceiling(RequiredHeight(wrapped.Lines, paint) + (verticalPadding * 2f)));
         var bounds = ExpandHorizontally(originalBounds, width, leftLimit, rightLimit);
-        bounds = bounds with { Bottom = Math.Max(bounds.Bottom, bounds.Top + requiredTotalHeight) };
+        bounds = new PixelRect(
+            bounds.Left,
+            originalBounds.Top,
+            bounds.Right,
+            Math.Max(originalBounds.Bottom, originalBounds.Top + requiredTotalHeight));
 
         return new CandidateLayout(
             bounds,
