@@ -87,22 +87,27 @@ internal sealed class TranslationCapturePipeline(
             .TranslateWithTimingsAsync(imageBytes, settings, cancellationToken)
             .ConfigureAwait(false);
         var result = execution.Result;
-        AppServices.Diagnostics.RecordTranslation(
-            captureAndImageEncodingMilliseconds,
-            encodingMilliseconds,
-            execution.CloudVisionOcrMilliseconds,
-            execution.CloudTranslationMilliseconds,
-            operationStopwatch.ElapsedMilliseconds);
-        Android.Util.Log.Debug(
-            "Pikslovo",
-            $"Cloud Vision OCR: {execution.CloudVisionOcrMilliseconds} ms; Cloud Translation: {execution.CloudTranslationMilliseconds} ms; total={operationStopwatch.ElapsedMilliseconds} ms");
         if (result is null)
         {
+            AppServices.Diagnostics.RecordTranslation(
+                captureAndImageEncodingMilliseconds,
+                encodingMilliseconds,
+                execution.CloudVisionOcrMilliseconds,
+                execution.CloudTranslationMilliseconds,
+                null,
+                operationStopwatch.ElapsedMilliseconds);
             return false;
         }
 
         if (result.Regions.Count == 0)
         {
+            AppServices.Diagnostics.RecordTranslation(
+                captureAndImageEncodingMilliseconds,
+                encodingMilliseconds,
+                execution.CloudVisionOcrMilliseconds,
+                execution.CloudTranslationMilliseconds,
+                null,
+                operationStopwatch.ElapsedMilliseconds);
             showMessage(AppStrings.Keys.NoTextFoundOnScreen);
             return false;
         }
@@ -121,11 +126,23 @@ internal sealed class TranslationCapturePipeline(
         }
 
         var accent = global::Pikslovo.App.GetAccentColor(appSettings.Accent);
+        var overlayRenderStopwatch = Stopwatch.StartNew();
         var overlay = AndroidOverlayRenderer.Render(
             bitmap,
             result,
             settings.FontScale,
             Color.Rgb(accent.R, accent.G, accent.B));
+        var overlayRenderMilliseconds = overlayRenderStopwatch.ElapsedMilliseconds;
+        AppServices.Diagnostics.RecordTranslation(
+            captureAndImageEncodingMilliseconds,
+            encodingMilliseconds,
+            execution.CloudVisionOcrMilliseconds,
+            execution.CloudTranslationMilliseconds,
+            overlayRenderMilliseconds,
+            operationStopwatch.ElapsedMilliseconds);
+        Android.Util.Log.Debug(
+            "Pikslovo",
+            $"Cloud Vision OCR: {execution.CloudVisionOcrMilliseconds} ms; Cloud Translation: {execution.CloudTranslationMilliseconds} ms; overlay render: {overlayRenderMilliseconds} ms; total={operationStopwatch.ElapsedMilliseconds} ms");
         cancellationToken.ThrowIfCancellationRequested();
         overlayCoordinator.ShowResult(overlay, cancellationToken, () => sessionCoordinator.IsActive);
         return true;

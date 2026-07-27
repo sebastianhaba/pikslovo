@@ -41,6 +41,7 @@ public sealed class MainPageViewModel : INotifyPropertyChanged
     private string _ocrImageEncodingDuration = AppStrings.Get(AppStrings.Keys.NoMeasurement);
     private string _cloudVisionOcrDuration = AppStrings.Get(AppStrings.Keys.NoMeasurement);
     private string _cloudTranslationDuration = AppStrings.Get(AppStrings.Keys.NoMeasurement);
+    private string _overlayRenderDuration = AppStrings.Get(AppStrings.Keys.NoMeasurement);
     private string _translationTotalDuration = AppStrings.Get(AppStrings.Keys.NoMeasurement);
     private string _apiKeyValidationDuration = AppStrings.Get(AppStrings.Keys.NoMeasurement);
     private string _lastCaptureAttemptStatus = AppStrings.Get(AppStrings.Keys.NoMeasurement);
@@ -433,6 +434,12 @@ public sealed class MainPageViewModel : INotifyPropertyChanged
         private set => SetProperty(ref _cloudTranslationDuration, value);
     }
 
+    public string OverlayRenderDuration
+    {
+        get => _overlayRenderDuration;
+        private set => SetProperty(ref _overlayRenderDuration, value);
+    }
+
     public string TranslationTotalDuration
     {
         get => _translationTotalDuration;
@@ -487,7 +494,7 @@ public sealed class MainPageViewModel : INotifyPropertyChanged
         FloatingButtonVerticalPosition = 0.1f;
         OnboardingSourceLanguage = "ja";
         OnboardingTargetLanguage = "pl";
-        UpdateDiagnostics(new TranslationDiagnosticsSnapshot(null, null, null, null, null, null, null, null, null));
+        UpdateDiagnostics(new TranslationDiagnosticsSnapshot(null, null, null, null, null, null, null, null, null, null));
     }
 
     public TranslationSettings CreateTranslationSettings() =>
@@ -511,6 +518,7 @@ public sealed class MainPageViewModel : INotifyPropertyChanged
         OcrImageEncodingDuration = FormatDuration(diagnostics.OcrImageEncodingMilliseconds);
         CloudVisionOcrDuration = FormatDuration(diagnostics.CloudVisionOcrMilliseconds);
         CloudTranslationDuration = FormatDuration(diagnostics.CloudTranslationMilliseconds);
+        OverlayRenderDuration = FormatDuration(diagnostics.OverlayRenderMilliseconds);
         TranslationTotalDuration = FormatDuration(diagnostics.TranslationTotalMilliseconds);
         ApiKeyValidationDuration = FormatDuration(diagnostics.ApiKeyValidationMilliseconds);
         LastCaptureAttemptStatus = FormatCaptureAttemptStatus(diagnostics.LastCaptureAttemptStatus);

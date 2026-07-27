@@ -48,6 +48,7 @@ public static class DiagnosticsReportFormatter
         AppendDuration(report, AppStrings.Get(AppStrings.Keys.OcrImageEncoding), diagnostics.OcrImageEncodingMilliseconds);
         AppendDuration(report, "Cloud Vision OCR", diagnostics.CloudVisionOcrMilliseconds);
         AppendDuration(report, "Cloud Translation", diagnostics.CloudTranslationMilliseconds);
+        AppendDuration(report, "Overlay render", diagnostics.OverlayRenderMilliseconds);
         AppendDuration(report, AppStrings.Get(AppStrings.Keys.TotalTranslation), diagnostics.TranslationTotalMilliseconds);
         AppendDuration(report, AppStrings.Get(AppStrings.Keys.ApiKeyValidation), diagnostics.ApiKeyValidationMilliseconds);
         if (ocrSettings is not null)

@@ -431,6 +431,8 @@
                 <Border Height="1" Margin="16,0" Background="{ThemeResource AppBorderBrush}" />
                 <Grid Margin="16,14"><Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions><TextBlock Text="Cloud Translation" /><TextBlock Text="{Binding CloudTranslationDuration}" Grid.Column="1" FontWeight="SemiBold" /></Grid>
                 <Border Height="1" Margin="16,0" Background="{ThemeResource AppBorderBrush}" />
+                <Grid Margin="16,14"><Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions><TextBlock Text="Render nakładki" /><TextBlock Text="{Binding OverlayRenderDuration}" Grid.Column="1" FontWeight="SemiBold" /></Grid>
+                <Border Height="1" Margin="16,0" Background="{ThemeResource AppBorderBrush}" />
                 <Grid Margin="16,14"><Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions><TextBlock Text="Całość" FontWeight="SemiBold" /><TextBlock Text="{Binding TranslationTotalDuration}" Grid.Column="1" FontWeight="SemiBold" /></Grid>
               </StackPanel>
             </Border>
