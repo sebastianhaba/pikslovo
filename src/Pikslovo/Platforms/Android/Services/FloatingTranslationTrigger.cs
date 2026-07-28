@@ -44,14 +44,14 @@ internal sealed partial class FloatingTranslationTrigger
 
     public bool IsAttached => _isAttached;
 
-    public void Show(Action onClick, Action onEditRegion, Action onStopSession, bool buttonVisible = true)
+    public void Show(Action onClick, Action onEditRegion, Action onOpenSettings, Action onStopSession, bool buttonVisible = true)
     {
-        ShowCore(onClick, onEditRegion, onStopSession, buttonVisible);
+        ShowCore(onClick, onEditRegion, onOpenSettings, onStopSession, buttonVisible);
     }
 
     public void ShowPreview()
     {
-        ShowCore(static () => { }, static () => { }, static () => { }, buttonVisible: true);
+        ShowCore(static () => { }, static () => { }, static () => { }, static () => { }, buttonVisible: true);
     }
 
     public void SetButtonVisibility(bool visible)
@@ -60,7 +60,7 @@ internal sealed partial class FloatingTranslationTrigger
         _mainHandler.Post(ApplyButtonVisibility);
     }
 
-    private void ShowCore(Action onClick, Action onEditRegion, Action onStopSession, bool buttonVisible)
+    private void ShowCore(Action onClick, Action onEditRegion, Action onOpenSettings, Action onStopSession, bool buttonVisible)
     {
         Dismiss();
         _buttonShouldBeVisible = buttonVisible;
@@ -86,7 +86,7 @@ internal sealed partial class FloatingTranslationTrigger
 
             onClick();
         };
-        _button.LongClick += (_, _) => ToggleMenu(onEditRegion, onStopSession);
+        _button.LongClick += (_, _) => ToggleMenu(onEditRegion, onOpenSettings, onStopSession);
 
         _layout = new WindowManagerLayoutParams(
             size,
@@ -203,7 +203,7 @@ internal sealed partial class FloatingTranslationTrigger
         _layout = null;
     }
 
-    private void ExpandMenu(Action onEditRegion, Action onStopSession)
+    private void ExpandMenu(Action onEditRegion, Action onOpenSettings, Action onStopSession)
     {
         if (_button is null || _layout is null || !_isAttached || !_buttonShouldBeVisible ||
             _state == FloatingTranslationTriggerState.Processing || _isMenuExpanded)
@@ -218,7 +218,7 @@ internal sealed partial class FloatingTranslationTrigger
         var containerPadding = ToPixels(8f);
         var actionGap = ToPixels(8f);
         var menuWidth = actionSize + (containerPadding * 2);
-        var menuHeight = (actionSize * 2) + actionGap + (containerPadding * 2);
+        var menuHeight = (actionSize * 3) + (actionGap * 2) + (containerPadding * 2);
         var screenHeight = _windowManager.CurrentWindowMetrics?.Bounds?.Height() ?? menuHeight;
         var direction = GetVerticalMenuDirection(mainSize, menuHeight, spacing);
         var menuX = GetCenteredMenuX(mainSize, menuWidth);
@@ -277,10 +277,26 @@ internal sealed partial class FloatingTranslationTrigger
                 CollapseMenu(animated: true);
                 onStopSession();
             });
+        var settingsButton = CreateMenuActionButton(
+            Resource.Drawable.ic_settings,
+            AppStrings.Get(AppStrings.Keys.BackToSettings),
+            actionSize,
+            CreateBackground(),
+            () =>
+            {
+                CollapseMenu(animated: true);
+                onOpenSettings();
+            });
         if (direction > 0)
         {
             menu.AddView(
                 editButton,
+                new LinearLayout.LayoutParams(actionSize, actionSize)
+                {
+                    BottomMargin = actionGap,
+                });
+            menu.AddView(
+                settingsButton,
                 new LinearLayout.LayoutParams(actionSize, actionSize)
                 {
                     BottomMargin = actionGap,
@@ -293,6 +309,12 @@ internal sealed partial class FloatingTranslationTrigger
         {
             menu.AddView(
                 stopButton,
+                new LinearLayout.LayoutParams(actionSize, actionSize)
+                {
+                    BottomMargin = actionGap,
+                });
+            menu.AddView(
+                settingsButton,
                 new LinearLayout.LayoutParams(actionSize, actionSize)
                 {
                     BottomMargin = actionGap,
@@ -343,7 +365,7 @@ internal sealed partial class FloatingTranslationTrigger
             .Start();
     }
 
-    private void ToggleMenu(Action onEditRegion, Action onStopSession)
+    private void ToggleMenu(Action onEditRegion, Action onOpenSettings, Action onStopSession)
     {
         if (_isMenuExpanded)
         {
@@ -351,7 +373,7 @@ internal sealed partial class FloatingTranslationTrigger
             return;
         }
 
-        ExpandMenu(onEditRegion, onStopSession);
+        ExpandMenu(onEditRegion, onOpenSettings, onStopSession);
     }
 
     private ImageButton CreateMenuActionButton(

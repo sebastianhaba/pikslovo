@@ -98,6 +98,7 @@ internal sealed class TranslationOverlayCoordinator(
         _floatingTrigger.Show(
             onCaptureRequested,
             ShowCaptureRegionSelector,
+            OpenMainSettings,
             onStopSession,
             shouldShowButton);
     }
@@ -135,6 +136,11 @@ internal sealed class TranslationOverlayCoordinator(
     {
         _captureRegionSelector?.Dismiss();
         UpdateFloatingTriggerVisibility();
+    }
+
+    private void OpenMainSettings()
+    {
+        AndroidTranslationHost.OpenMainSettings(context);
     }
 
     private void EnsureOverlayPresenter()

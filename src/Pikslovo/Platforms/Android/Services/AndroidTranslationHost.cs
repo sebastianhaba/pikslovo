@@ -136,6 +136,13 @@ internal static class AndroidTranslationHost
         activity.StartActivity(new Intent(Settings.ActionAccessibilitySettings));
     }
 
+    public static void OpenMainSettings(Context context)
+    {
+        var intent = new Intent(context, typeof(MainActivity));
+        intent.AddFlags(ActivityFlags.NewTask | ActivityFlags.SingleTop | ActivityFlags.ClearTop);
+        context.StartActivity(intent);
+    }
+
     public static void OpenWebPage(Activity activity, string address)
     {
         var intent = new Intent(Intent.ActionView, Android.Net.Uri.Parse(address));
