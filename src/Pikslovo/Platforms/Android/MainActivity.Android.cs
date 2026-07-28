@@ -24,6 +24,7 @@ public class MainActivity : Microsoft.UI.Xaml.ApplicationActivity
 
         base.OnCreate(savedInstanceState);
         CurrentActivity = this;
+        HandleIntent(Intent);
     }
 
     protected override void OnActivityResult(int requestCode, Result resultCode, Intent? data)
@@ -56,6 +57,13 @@ public class MainActivity : Microsoft.UI.Xaml.ApplicationActivity
         (global::Microsoft.UI.Xaml.Application.Current as App)?.ReloadMainPage();
     }
 
+    protected override void OnNewIntent(Intent? intent)
+    {
+        base.OnNewIntent(intent);
+        Intent = intent;
+        HandleIntent(intent);
+    }
+
     protected override void OnDestroy()
     {
         if (ReferenceEquals(CurrentActivity, this))
@@ -64,5 +72,19 @@ public class MainActivity : Microsoft.UI.Xaml.ApplicationActivity
         }
 
         base.OnDestroy();
+    }
+
+    private void HandleIntent(Intent? intent)
+    {
+        if (intent is null)
+        {
+            return;
+        }
+
+        if (intent.GetBooleanExtra(AndroidTranslationHost.OpenSettingsImportExtra, false))
+        {
+            intent.RemoveExtra(AndroidTranslationHost.OpenSettingsImportExtra);
+            AndroidTranslationHost.OpenSettingsImportFile(this);
+        }
     }
 }

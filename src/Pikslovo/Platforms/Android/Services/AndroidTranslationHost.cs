@@ -12,6 +12,7 @@ internal static class AndroidTranslationHost
     public const int ProjectionRequestCode = 4817;
     public const int ExportSettingsRequestCode = 4819;
     public const int ImportSettingsRequestCode = 4820;
+    public const string OpenSettingsImportExtra = "open_settings_import";
     private const int NotificationRequestCode = 4818;
 
     public static event Action? SessionStateChanged;
@@ -81,6 +82,14 @@ internal static class AndroidTranslationHost
         intent.AddCategory(Intent.CategoryOpenable);
         intent.SetType("application/json");
         activity.StartActivityForResult(intent, ImportSettingsRequestCode);
+    }
+
+    public static void OpenSettingsImportFile(Context context)
+    {
+        var intent = new Intent(context, typeof(MainActivity));
+        intent.AddFlags(ActivityFlags.NewTask | ActivityFlags.SingleTop | ActivityFlags.ClearTop);
+        intent.PutExtra(OpenSettingsImportExtra, true);
+        context.StartActivity(intent);
     }
 
     public static bool HandleSettingsFileResult(int requestCode, Result resultCode, Intent? data)
