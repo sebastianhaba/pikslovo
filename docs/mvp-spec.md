@@ -75,6 +75,14 @@ a kolejne go ukrywa.
 Nie kazdy fizyczny przycisk urzadzenia jest dostepny dla uslug dostepnosci;
 MVP obsluguje tylko zdarzenia przekazywane przez Android jako key events.
 
+Na czesci urzadzen z niestandardowym ROM-em, w tym w testach na
+LineageOS/GammaOS z lipca 2026, systemowe Ustawienia potrafia force-stopowac
+pakiet po wlaczeniu lub przelaczeniu AccessibilityService. W takim przypadku
+Android sam usuwa aktywna usluge dostepnosci dla aplikacji, a zachowanie nie
+jest specyficzne dla Pikslovo; zaobserwowano je tez w PlayTranslate. Traktujemy
+to jako znane ograniczenie platformy, a nie zamierzony efekt logiki hotkeya w
+aplikacji.
+
 ### Publiczny broadcast
 
 Zewnetrzny menedzer hotkeyow moze wyslac broadcast:
