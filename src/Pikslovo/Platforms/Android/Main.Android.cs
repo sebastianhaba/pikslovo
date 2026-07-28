@@ -15,7 +15,7 @@ namespace Pikslovo.Droid;
 
 [global::Android.App.ApplicationAttribute(
     Label = "@string/ApplicationName",
-    Icon = "@mipmap/icon",
+    Icon = "@mipmap/ic_launcher",
     LargeHeap = true,
     HardwareAccelerated = true,
     Theme = "@style/Theme.App.Starting"
@@ -45,4 +45,3 @@ public class Application : Microsoft.UI.Xaml.NativeApplication
         ImageSource.DefaultImageLoader = ImageLoader.Instance.LoadImageAsync;
     }
 }
-

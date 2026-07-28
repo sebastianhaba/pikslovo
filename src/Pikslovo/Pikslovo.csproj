@@ -35,6 +35,11 @@
   <PropertyGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">
     <SupportedOSPlatformVersion>31</SupportedOSPlatformVersion>
     <EmbedAssembliesIntoApk>true</EmbedAssembliesIntoApk>
+    <DisableDefaultUnoResizetizerItems>true</DisableDefaultUnoResizetizerItems>
   </PropertyGroup>
+
+  <ItemGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">
+    <AndroidResource Include="Assets/Icons/icon.png" Link="Resources/drawable/icon.png" />
+  </ItemGroup>
 
 </Project>
