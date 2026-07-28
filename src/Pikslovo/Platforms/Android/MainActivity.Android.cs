@@ -17,6 +17,7 @@ namespace Pikslovo.Droid;
 public class MainActivity : Microsoft.UI.Xaml.ApplicationActivity
 {
     public static MainActivity? CurrentActivity { get; private set; }
+    public static event Action? Resumed;
 
     protected override void OnCreate(Bundle? savedInstanceState)
     {
@@ -55,6 +56,13 @@ public class MainActivity : Microsoft.UI.Xaml.ApplicationActivity
 
         AndroidTranslationHost.RefreshFloatingTriggerConfiguration(this);
         (global::Microsoft.UI.Xaml.Application.Current as App)?.ReloadMainPage();
+    }
+
+    protected override void OnResume()
+    {
+        base.OnResume();
+        CurrentActivity = this;
+        Resumed?.Invoke();
     }
 
     protected override void OnNewIntent(Intent? intent)

@@ -15,7 +15,7 @@ public sealed class AppStringsTests
         AppStrings.Get("Settings").Should().Be("Settings");
 
         AppStrings.SetLanguageMode(AppLanguageMode.Polish);
-        AppStrings.Get("Settings").Should().Be("Settings");
+        AppStrings.Get("Settings").Should().Be("Ustawienia");
     }
 
     [Test]

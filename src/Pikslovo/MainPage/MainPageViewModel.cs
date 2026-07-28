@@ -28,6 +28,7 @@ public sealed class MainPageViewModel : INotifyPropertyChanged
     private int[] _hotkeyCodes = [];
     private string _hotkeyCodesSummary = AppStrings.Get(AppStrings.Keys.NotSet);
     private bool _globalHotkeyEnabled;
+    private bool _hasAccessibilityPermission;
     private AppThemeMode _themeMode = AppThemeMode.System;
     private AppAccent _accent = AppAccent.Lavender;
     private AppLanguageMode _languageMode = AppLanguageMode.System;
@@ -233,7 +234,15 @@ public sealed class MainPageViewModel : INotifyPropertyChanged
     public int[] HotkeyCodes
     {
         get => _hotkeyCodes;
-        set => SetProperty(ref _hotkeyCodes, value);
+        set
+        {
+            if (!SetProperty(ref _hotkeyCodes, value))
+            {
+                return;
+            }
+
+            OnPropertyChanged(nameof(GlobalHotkeySummary));
+        }
     }
 
     public string HotkeyCodesSummary
@@ -253,6 +262,21 @@ public sealed class MainPageViewModel : INotifyPropertyChanged
             }
 
             OnPropertyChanged(nameof(FloatingButtonVisibilityDescription));
+            OnPropertyChanged(nameof(GlobalHotkeySummary));
+        }
+    }
+
+    public bool HasAccessibilityPermission
+    {
+        get => _hasAccessibilityPermission;
+        set
+        {
+            if (!SetProperty(ref _hasAccessibilityPermission, value))
+            {
+                return;
+            }
+
+            OnPropertyChanged(nameof(GlobalHotkeySummary));
         }
     }
 
@@ -405,6 +429,13 @@ public sealed class MainPageViewModel : INotifyPropertyChanged
                 ? AppStrings.Get(AppStrings.Keys.ItIsHiddenDuringAnActiveSessionWhenTheGlobalHotkeyIsEnabled)
                 : AppStrings.Get(AppStrings.Keys.ItIsVisibleDuringAnActiveSessionBecauseTheGlobalHotkeyIsDisabled);
 
+    public string GlobalHotkeySummary =>
+        !HasAccessibilityPermission
+            ? AppStrings.Get(AppStrings.Keys.EnableTheSystemServiceForTheGlobalHotkey)
+            : GlobalHotkeyEnabled && HotkeyCodes.Length > 0
+                ? HotkeyCodesSummary
+                : AppStrings.Get(AppStrings.Keys.TapToSetShortcut);
+
     public string ThemeModeSummary => $"{AppStrings.GetThemeModeLabel(ThemeMode)} · {AppStrings.GetAccentLabel(Accent)}";
 
     public string OnboardingSourceLanguageLabel => AppStrings.GetLanguageName(OnboardingSourceLanguage);
@@ -492,6 +523,7 @@ public sealed class MainPageViewModel : INotifyPropertyChanged
         HotkeyCodes = [];
         HotkeyCodesSummary = AppStrings.Get(AppStrings.Keys.NotSet);
         GlobalHotkeyEnabled = false;
+        HasAccessibilityPermission = false;
         ThemeMode = AppThemeMode.System;
         Accent = AppAccent.Lavender;
         LanguageMode = AppLanguageMode.System;
@@ -517,7 +549,11 @@ public sealed class MainPageViewModel : INotifyPropertyChanged
             UseJpegForOcr,
             OcrJpegQuality);
 
-    public void SetHotkeyCodesSummary(string summary) => HotkeyCodesSummary = summary;
+    public void SetHotkeyCodesSummary(string summary)
+    {
+        HotkeyCodesSummary = summary;
+        OnPropertyChanged(nameof(GlobalHotkeySummary));
+    }
 
     public void UpdateDiagnostics(TranslationDiagnosticsSnapshot diagnostics)
     {
@@ -542,7 +578,6 @@ public sealed class MainPageViewModel : INotifyPropertyChanged
         nameof(OcrImageScale) or
         nameof(UseJpegForOcr) or
         nameof(OcrJpegQuality) or
-        nameof(GlobalHotkeyEnabled) or
         nameof(FloatingButtonAlwaysVisible) or
         nameof(FloatingButtonScale) or
         nameof(FloatingButtonHorizontalPosition) or

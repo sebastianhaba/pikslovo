@@ -11,6 +11,7 @@ public sealed partial class MainPage
     {
         _settingsPersistence.Load(_viewModel);
         UpdateHotkeyCodesSummary();
+        RefreshAccessibilityPermissionState();
         UpdateDiagnostics();
         ApplyViewModelToControls();
         UpdateSessionToggle();
@@ -42,15 +43,19 @@ public sealed partial class MainPage
 #if __ANDROID__
     private void MainPage_Loaded(object sender, RoutedEventArgs e)
     {
+        MainActivity.Resumed += OnActivityResumed;
         AndroidTranslationHost.SessionStateChanged += OnSessionStateChanged;
         AndroidTranslationHost.SettingsExportFileCreated += OnSettingsExportFileCreated;
         AndroidTranslationHost.SettingsImportFileSelected += OnSettingsImportFileSelected;
         AndroidTranslationHost.NotificationPermissionResult += OnNotificationPermissionResult;
+        RefreshAccessibilityPermissionState();
+        SyncGlobalHotkeyToggle();
         UpdateSessionToggle();
     }
 
     private void MainPage_Unloaded(object sender, RoutedEventArgs e)
     {
+        MainActivity.Resumed -= OnActivityResumed;
         AndroidTranslationHost.SessionStateChanged -= OnSessionStateChanged;
         AndroidTranslationHost.SettingsExportFileCreated -= OnSettingsExportFileCreated;
         AndroidTranslationHost.SettingsImportFileSelected -= OnSettingsImportFileSelected;
@@ -109,6 +114,7 @@ public sealed partial class MainPage
         {
             ApplyViewModelToControls();
             UpdateHotkeyCodesSummary();
+            RefreshAccessibilityPermissionState();
             UpdateDiagnostics();
             UpdateSessionToggle();
         }
@@ -188,6 +194,7 @@ public sealed partial class MainPage
         ApiKeyInput.Password = _viewModel.ApiKey;
         SelectLanguage(SourceLanguageBox, _viewModel.SourceLanguage);
         SelectLanguage(TargetLanguageBox, _viewModel.TargetLanguage);
+        GlobalHotkeyToggle.IsOn = _viewModel.GlobalHotkeyEnabled;
         SetThemeMode(_viewModel.ThemeMode);
         SetAccent(_viewModel.Accent);
         SetApplicationLanguage(_viewModel.LanguageMode);
@@ -208,4 +215,7 @@ public sealed partial class MainPage
         _viewModel.SetHotkeyCodesSummary(AppStrings.Get(AppStrings.Keys.NotSet));
 #endif
     }
+
+    private void RefreshAccessibilityPermissionState() =>
+        _viewModel.HasAccessibilityPermission = _permissionsService.HasAccessibilityPermission();
 }

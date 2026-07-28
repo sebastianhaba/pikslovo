@@ -34,6 +34,7 @@ public sealed partial class MainPage : Page
 #if __ANDROID__
     private bool _updatingSessionToggle;
     private bool _awaitingOnboardingNotificationPermission;
+    private bool _updatingGlobalHotkeyToggle;
     private FloatingTranslationTrigger? _floatingButtonPreview;
 #endif
 
@@ -133,6 +134,7 @@ public sealed partial class MainPage : Page
         HomeView.Visibility = Visibility.Collapsed;
         DetailLayout.Visibility = Visibility.Visible;
         DetailView.ChangeView(null, 0, null, true);
+        RefreshAccessibilityPermissionState();
         UpdateDiagnostics();
         UpdateFloatingButtonPreview();
     }
@@ -393,6 +395,13 @@ public sealed partial class MainPage : Page
     private async Task EditHotkeyCodeAsync()
     {
 #if __ANDROID__
+        RefreshAccessibilityPermissionState();
+        if (!_viewModel.HasAccessibilityPermission)
+        {
+            ShowStatus(AppStrings.Keys.EnableTheSystemServiceForTheGlobalHotkey);
+            return;
+        }
+
         if (MainActivity.CurrentActivity is not { } activity)
         {
             ShowStatus(AppStrings.Keys.AndroidActivityNotReady);
@@ -403,9 +412,86 @@ public sealed partial class MainPage : Page
         if (hotkeyCodes is { Length: > 0 })
         {
             _viewModel.HotkeyCodes = hotkeyCodes;
-            UpdateHotkeyCodesSummary();
-            SaveSettings(requireValidTranslationSettings: false);
+            _viewModel.GlobalHotkeyEnabled = true;
+            ApplyGlobalHotkeyState();
         }
+        else if (!_viewModel.GlobalHotkeyEnabled)
+        {
+            ClearGlobalHotkey();
+        }
+        else
+        {
+            SyncGlobalHotkeyToggle();
+            UpdateHotkeyCodesSummary();
+        }
+#endif
+    }
+
+    private async void GlobalHotkeyToggle_Toggled(object sender, RoutedEventArgs e)
+    {
+#if __ANDROID__
+        if (_isLoading || _updatingGlobalHotkeyToggle)
+        {
+            return;
+        }
+
+        RefreshAccessibilityPermissionState();
+        if (!_viewModel.HasAccessibilityPermission)
+        {
+            _viewModel.GlobalHotkeyEnabled = false;
+            SyncGlobalHotkeyToggle();
+            ShowStatus(AppStrings.Keys.EnableTheSystemServiceForTheGlobalHotkey);
+            return;
+        }
+
+        if (GlobalHotkeyToggle.IsOn)
+        {
+            await EditHotkeyCodeAsync();
+            return;
+        }
+
+        ClearGlobalHotkey();
+#endif
+    }
+
+    private void ApplyGlobalHotkeyState()
+    {
+        UpdateHotkeyCodesSummary();
+        SyncGlobalHotkeyToggle();
+        SaveSettings(requireValidTranslationSettings: false);
+        RefreshFloatingButtonConfiguration();
+    }
+
+    private void ClearGlobalHotkey()
+    {
+        _viewModel.HotkeyCodes = [];
+        _viewModel.GlobalHotkeyEnabled = false;
+        ApplyGlobalHotkeyState();
+    }
+
+    private void SyncGlobalHotkeyToggle()
+    {
+#if __ANDROID__
+        _updatingGlobalHotkeyToggle = true;
+        try
+        {
+            GlobalHotkeyToggle.IsOn = _viewModel.GlobalHotkeyEnabled;
+        }
+        finally
+        {
+            _updatingGlobalHotkeyToggle = false;
+        }
+#endif
+    }
+
+    private void OnActivityResumed()
+    {
+#if __ANDROID__
+        _ = DispatcherQueue.TryEnqueue(() =>
+        {
+            RefreshAccessibilityPermissionState();
+            SyncGlobalHotkeyToggle();
+        });
 #endif
     }
 

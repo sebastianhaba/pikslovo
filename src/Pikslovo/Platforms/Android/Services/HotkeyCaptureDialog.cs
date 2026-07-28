@@ -10,7 +10,7 @@ namespace Pikslovo.Droid.Services;
 
 internal sealed class HotkeyCaptureDialog : Dialog
 {
-    private const int CaptureDelayMilliseconds = 2000;
+    private const int CaptureDelayMilliseconds = 1000;
     private static string CaptureInstruction => AppStrings.Get(AppStrings.Keys.HoldKeysForTwoSeconds);
     private readonly TaskCompletionSource<int[]?> _completion = new(TaskCreationOptions.RunContinuationsAsynchronously);
     private readonly Handler _handler = new(Looper.MainLooper!);
