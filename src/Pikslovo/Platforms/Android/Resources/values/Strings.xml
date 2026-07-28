@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 	<string name="ApplicationName">Pikslovo</string>
-	<string name="hotkey_accessibility_label">Pikslovo shortcut</string>
-	<string name="hotkey_accessibility_description">Handles the global shortcut to show the screen translation during an active session.</string>
+	<string name="hotkey_accessibility_label">Pikslovo</string>
+	<string name="hotkey_accessibility_summary">For translating game text on screen.</string>
+	<string name="hotkey_accessibility_description">For translating game text on screen.</string>
 </resources>

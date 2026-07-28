@@ -5,5 +5,6 @@
     android:accessibilityFlags="flagRequestFilterKeyEvents"
     android:canRequestFilterKeyEvents="true"
     android:canRetrieveWindowContent="false"
+    android:summary="@string/hotkey_accessibility_summary"
     android:description="@string/hotkey_accessibility_description"
     android:notificationTimeout="100" />
