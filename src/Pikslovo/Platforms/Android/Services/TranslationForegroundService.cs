@@ -235,7 +235,7 @@ public sealed class TranslationForegroundService : Service
         return new Notification.Builder(this, NotificationChannelId)
             .SetContentTitle(AppStrings.Get(AppStrings.Keys.PikslovoIsActive))
             .SetContentText(AppStrings.Get(AppStrings.Keys.HotkeyAndFloatingButtonReady))
-            .SetSmallIcon(Resource.Mipmap.icon)
+            .SetSmallIcon(Resource.Drawable.ic_translate)
             .SetOngoing(true)
             .AddAction(new Notification.Action.Builder(null, AppStrings.Get(AppStrings.Keys.Stop), pendingIntent).Build())
             .Build();
