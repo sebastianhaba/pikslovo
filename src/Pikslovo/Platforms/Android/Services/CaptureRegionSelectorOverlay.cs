@@ -58,6 +58,7 @@ internal sealed partial class CaptureRegionSelectorOverlay
                 Dismiss();
                 onCancel();
             },
+            () => selection.SetRegion(CaptureRegionSettings.FullScreen),
             () =>
             {
                 var region = selection.Region;
@@ -132,7 +133,7 @@ internal sealed partial class CaptureRegionSelectorOverlay
         _isAttached = false;
     }
 
-    private LinearLayout CreateActionBar(float density, Action onCancel, Action onConfirm)
+    private LinearLayout CreateActionBar(float density, Action onCancel, Action onRestoreFullScreen, Action onConfirm)
     {
         var size = (int)(52f * density + 0.5f);
         var bar = new LinearLayout(_context)
@@ -144,20 +145,29 @@ internal sealed partial class CaptureRegionSelectorOverlay
         bar.Background = RoundedBackground(Color.Argb(230, 35, 35, 35), (int)(24f * density + 0.5f));
 
         var cancel = CreateActionButton("×", Color.Rgb(70, 70, 70), Color.White, size, onCancel);
+        var restore = CreateActionButton("⛶", Color.Rgb(70, 70, 70), Color.White, size, onRestoreFullScreen, AppStrings.Keys.RestoreFullScreenRegion, 22f);
         var confirm = CreateActionButton("✓", AccentColor(), Color.Black, size, onConfirm);
         bar.AddView(cancel, new LinearLayout.LayoutParams(size, size) { RightMargin = (int)(16f * density + 0.5f) });
+        bar.AddView(restore, new LinearLayout.LayoutParams(size, size) { RightMargin = (int)(16f * density + 0.5f) });
         bar.AddView(confirm, new LinearLayout.LayoutParams(size, size));
         return bar;
     }
 
-    private TextView CreateActionButton(string text, Color background, Color foreground, int size, Action action)
+    private TextView CreateActionButton(
+        string text,
+        Color background,
+        Color foreground,
+        int size,
+        Action action,
+        string? contentDescriptionKey = null,
+        float textSize = 28f)
     {
         var button = new TextView(_context)
         {
             Text = text,
-            TextSize = 28f,
+            TextSize = textSize,
             Gravity = GravityFlags.Center,
-            ContentDescription = AppStrings.Get(text == "✓" ? AppStrings.Keys.SaveRegion : AppStrings.Keys.CancelRegionSelection),
+            ContentDescription = AppStrings.Get(contentDescriptionKey ?? (text == "✓" ? AppStrings.Keys.SaveRegion : AppStrings.Keys.CancelRegionSelection)),
             Background = RoundedBackground(background, size / 2),
         };
         button.SetTextColor(foreground);
@@ -249,6 +259,12 @@ internal sealed partial class CaptureRegionSelectorOverlay
         }
 
         public CaptureRegionSettings Region => _region.Normalize();
+
+        public void SetRegion(CaptureRegionSettings region)
+        {
+            _region = region.Normalize();
+            Invalidate();
+        }
 
         protected override void OnDraw(Android.Graphics.Canvas? canvas)
         {

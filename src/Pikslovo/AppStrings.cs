@@ -127,6 +127,7 @@ public static class AppStrings
         public const string DragDialogRegionCorners = nameof(DragDialogRegionCorners);
         public const string SaveRegion = nameof(SaveRegion);
         public const string CancelRegionSelection = nameof(CancelRegionSelection);
+        public const string RestoreFullScreenRegion = nameof(RestoreFullScreenRegion);
         public const string ConfigurationFileMissing = nameof(ConfigurationFileMissing);
         public const string UnsupportedConfigurationVersion = nameof(UnsupportedConfigurationVersion);
         public const string IncompleteConfigurationFile = nameof(IncompleteConfigurationFile);
@@ -371,6 +372,7 @@ public static class AppStrings
         [Keys.DragDialogRegionCorners] = "Przeciągnij narożniki obszaru dialogu",
         [Keys.SaveRegion] = "Zapisz obszar",
         [Keys.CancelRegionSelection] = "Anuluj wybór obszaru",
+        [Keys.RestoreFullScreenRegion] = "Przywróć pełny ekran",
         [Keys.ConfigurationFileMissing] = "Plik nie zawiera konfiguracji.",
         [Keys.UnsupportedConfigurationVersion] = "Ten plik konfiguracji pochodzi z nieobsługiwanej wersji aplikacji.",
         [Keys.IncompleteConfigurationFile] = "Plik konfiguracji jest niekompletny.",
@@ -613,6 +615,7 @@ public static class AppStrings
         [Keys.DragDialogRegionCorners] = "Drag the dialog region corners",
         [Keys.SaveRegion] = "Save region",
         [Keys.CancelRegionSelection] = "Cancel region selection",
+        [Keys.RestoreFullScreenRegion] = "Restore full-screen region",
         [Keys.ConfigurationFileMissing] = "The file does not contain configuration.",
         [Keys.UnsupportedConfigurationVersion] = "This configuration file comes from an unsupported app version.",
         [Keys.IncompleteConfigurationFile] = "The configuration file is incomplete.",
