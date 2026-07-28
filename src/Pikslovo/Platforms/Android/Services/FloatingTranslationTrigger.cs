@@ -219,18 +219,21 @@ internal sealed partial class FloatingTranslationTrigger
         var actionGap = ToPixels(8f);
         var menuWidth = actionSize + (containerPadding * 2);
         var menuHeight = (actionSize * 2) + actionGap + (containerPadding * 2);
+        var screenHeight = _windowManager.CurrentWindowMetrics?.Bounds?.Height() ?? menuHeight;
         var direction = GetVerticalMenuDirection(mainSize, menuHeight, spacing);
         var menuX = GetCenteredMenuX(mainSize, menuWidth);
-        var menuY = direction > 0
+        var unclampedMenuY = direction > 0
             ? _layout.Y + mainSize + spacing
             : _layout.Y - menuHeight - spacing;
+        var menuY = Math.Clamp(unclampedMenuY, 0, Math.Max(0, screenHeight - menuHeight));
         var outerGap = containerPadding;
         var containerWidth = menuWidth;
         var containerHeight = mainSize + spacing + menuHeight + outerGap;
         var containerX = menuX;
-        var containerY = direction > 0
+        var unclampedContainerY = direction > 0
             ? _layout.Y - outerGap
             : menuY;
+        var containerY = Math.Clamp(unclampedContainerY, 0, Math.Max(0, screenHeight - containerHeight));
 
         _isMenuExpanded = true;
         var container = new View(_context)
@@ -376,7 +379,7 @@ internal sealed partial class FloatingTranslationTrigger
             return -1;
         }
 
-        return freeSpaceBelow >= freeSpaceAbove ? 1 : -1;
+        return freeSpaceAbove > 0 ? -1 : 1;
     }
 
     private int GetCenteredMenuX(int mainSize, int menuWidth)
