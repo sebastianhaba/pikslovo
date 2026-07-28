@@ -257,33 +257,50 @@ internal sealed partial class FloatingTranslationTrigger
         };
         menu.SetGravity(GravityFlags.Center);
         menu.SetPadding(containerPadding, containerPadding, containerPadding, containerPadding);
-        menu.AddView(
-            CreateMenuActionButton(
-                Resource.Drawable.ic_edit,
-                AppStrings.Get(AppStrings.Keys.EditCaptureRegion),
-                actionSize,
-                CreateBackground(),
-                () =>
-                {
-                    CollapseMenu(animated: true);
-                    onEditRegion();
-                }),
-            new LinearLayout.LayoutParams(actionSize, actionSize)
+        var editButton = CreateMenuActionButton(
+            Resource.Drawable.ic_edit,
+            AppStrings.Get(AppStrings.Keys.EditCaptureRegion),
+            actionSize,
+            CreateBackground(),
+            () =>
             {
-                BottomMargin = actionGap,
+                CollapseMenu(animated: true);
+                onEditRegion();
             });
-        menu.AddView(
-            CreateMenuActionButton(
-                Resource.Drawable.ic_stop,
-                AppStrings.Get(AppStrings.Keys.StopTranslator),
-                actionSize,
-                CreateBackground(Color.Rgb(183, 28, 28)),
-                () =>
+        var stopButton = CreateMenuActionButton(
+            Resource.Drawable.ic_stop,
+            AppStrings.Get(AppStrings.Keys.StopTranslator),
+            actionSize,
+            CreateBackground(Color.Rgb(183, 28, 28)),
+            () =>
+            {
+                CollapseMenu(animated: true);
+                onStopSession();
+            });
+        if (direction > 0)
+        {
+            menu.AddView(
+                editButton,
+                new LinearLayout.LayoutParams(actionSize, actionSize)
                 {
-                    CollapseMenu(animated: true);
-                    onStopSession();
-                }),
-            new LinearLayout.LayoutParams(actionSize, actionSize));
+                    BottomMargin = actionGap,
+                });
+            menu.AddView(
+                stopButton,
+                new LinearLayout.LayoutParams(actionSize, actionSize));
+        }
+        else
+        {
+            menu.AddView(
+                stopButton,
+                new LinearLayout.LayoutParams(actionSize, actionSize)
+                {
+                    BottomMargin = actionGap,
+                });
+            menu.AddView(
+                editButton,
+                new LinearLayout.LayoutParams(actionSize, actionSize));
+        }
 
         var menuLayout = new WindowManagerLayoutParams(
             menuWidth,
