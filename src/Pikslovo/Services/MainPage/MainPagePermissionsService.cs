@@ -29,8 +29,19 @@ internal sealed class MainPagePermissionsService
         return alreadyAllowed;
     }
 
-    public void OpenAccessibilitySettings(Activity activity) =>
-        AndroidTranslationHost.OpenAccessibilitySettings(activity);
+    public bool RequestAccessibilityPermission(Activity activity, out string statusMessage)
+    {
+        var alreadyAllowed = HasAccessibilityPermission();
+        statusMessage = alreadyAllowed
+            ? AppStrings.Keys.AccessibilityPermissionIsAlreadyGranted
+            : AppStrings.Keys.OpeningAccessibilitySettings;
+        if (!alreadyAllowed)
+        {
+            AndroidTranslationHost.OpenAccessibilitySettings(activity);
+        }
+
+        return alreadyAllowed;
+    }
 
     public bool HasAccessibilityPermission()
     {

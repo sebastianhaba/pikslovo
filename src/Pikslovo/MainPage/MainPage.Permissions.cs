@@ -57,8 +57,9 @@ public sealed partial class MainPage
         {
             try
             {
-                ShowStatus(AppStrings.Keys.OpeningAccessibilitySettings);
-                _permissionsService.OpenAccessibilitySettings(activity);
+                RefreshAccessibilityPermissionState();
+                _permissionsService.RequestAccessibilityPermission(activity, out var statusMessage);
+                ShowStatus(statusMessage);
             }
             catch (Exception exception)
             {
