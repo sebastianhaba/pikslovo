@@ -26,7 +26,7 @@ internal sealed record FloatingButtonSettings(
 {
     public const float DefaultScale = 1f;
     public const float DefaultHorizontalPosition = 0.97f;
-    public const float DefaultVerticalPosition = 0.03f;
+    public const float DefaultVerticalPosition = 0.2f;
 }
 
 internal sealed record CaptureRegionSettings(

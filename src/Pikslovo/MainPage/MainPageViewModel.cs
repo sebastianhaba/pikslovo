@@ -34,7 +34,7 @@ public sealed class MainPageViewModel : INotifyPropertyChanged
     private bool _floatingButtonAlwaysVisible = true;
     private float _floatingButtonScale = 1f;
     private float _floatingButtonHorizontalPosition = 0.97f;
-    private float _floatingButtonVerticalPosition = 0.03f;
+    private float _floatingButtonVerticalPosition = 0.2f;
     private string _onboardingSourceLanguage = "ja";
     private string _onboardingTargetLanguage = "pl";
     private string _captureAndImageEncodingDuration = AppStrings.Get(AppStrings.Keys.NoMeasurement);
@@ -498,7 +498,7 @@ public sealed class MainPageViewModel : INotifyPropertyChanged
         FloatingButtonAlwaysVisible = true;
         FloatingButtonScale = 1f;
         FloatingButtonHorizontalPosition = 0.97f;
-        FloatingButtonVerticalPosition = 0.03f;
+        FloatingButtonVerticalPosition = 0.2f;
         OnboardingSourceLanguage = "ja";
         OnboardingTargetLanguage = "pl";
         UpdateDiagnostics(new TranslationDiagnosticsSnapshot(null, null, null, null, null, null, null, null, null, null, null));

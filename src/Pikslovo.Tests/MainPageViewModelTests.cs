@@ -46,7 +46,7 @@ public sealed class MainPageViewModelTests
         viewModel.FloatingButtonAlwaysVisible.Should().BeTrue();
         viewModel.FloatingButtonScale.Should().Be(1f);
         viewModel.FloatingButtonHorizontalPosition.Should().Be(0.97f);
-        viewModel.FloatingButtonVerticalPosition.Should().Be(0.03f);
+        viewModel.FloatingButtonVerticalPosition.Should().Be(0.2f);
     }
 
     [Test]
