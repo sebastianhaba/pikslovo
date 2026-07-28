@@ -21,7 +21,7 @@ public sealed class MainPageViewModel : INotifyPropertyChanged
     private float _recognitionConfidence = TranslationSettings.DefaultRecognitionConfidence;
     private float _groupingPower = TranslationSettings.DefaultGroupingPower;
     private float _fontScale = TranslationSettings.DefaultFontScale;
-    private bool _hideIdenticalTranslations;
+    private bool _hideIdenticalTranslations = TranslationSettings.DefaultHideIdenticalTranslations;
     private float _ocrImageScale = TranslationSettings.DefaultOcrImageScale;
     private bool _useJpegForOcr = TranslationSettings.DefaultUseJpegForOcr;
     private int _ocrJpegQuality = TranslationSettings.DefaultOcrJpegQuality;
@@ -33,8 +33,8 @@ public sealed class MainPageViewModel : INotifyPropertyChanged
     private AppLanguageMode _languageMode = AppLanguageMode.System;
     private bool _floatingButtonAlwaysVisible = true;
     private float _floatingButtonScale = 1f;
-    private float _floatingButtonHorizontalPosition = 1f;
-    private float _floatingButtonVerticalPosition = 0.1f;
+    private float _floatingButtonHorizontalPosition = 0.97f;
+    private float _floatingButtonVerticalPosition = 0.03f;
     private string _onboardingSourceLanguage = "ja";
     private string _onboardingTargetLanguage = "pl";
     private string _captureAndImageEncodingDuration = AppStrings.Get(AppStrings.Keys.NoMeasurement);
@@ -485,7 +485,7 @@ public sealed class MainPageViewModel : INotifyPropertyChanged
         RecognitionConfidence = TranslationSettings.DefaultRecognitionConfidence;
         GroupingPower = TranslationSettings.DefaultGroupingPower;
         FontScale = TranslationSettings.DefaultFontScale;
-        HideIdenticalTranslations = false;
+        HideIdenticalTranslations = TranslationSettings.DefaultHideIdenticalTranslations;
         OcrImageScale = TranslationSettings.DefaultOcrImageScale;
         UseJpegForOcr = TranslationSettings.DefaultUseJpegForOcr;
         OcrJpegQuality = TranslationSettings.DefaultOcrJpegQuality;
@@ -497,8 +497,8 @@ public sealed class MainPageViewModel : INotifyPropertyChanged
         LanguageMode = AppLanguageMode.System;
         FloatingButtonAlwaysVisible = true;
         FloatingButtonScale = 1f;
-        FloatingButtonHorizontalPosition = 1f;
-        FloatingButtonVerticalPosition = 0.1f;
+        FloatingButtonHorizontalPosition = 0.97f;
+        FloatingButtonVerticalPosition = 0.03f;
         OnboardingSourceLanguage = "ja";
         OnboardingTargetLanguage = "pl";
         UpdateDiagnostics(new TranslationDiagnosticsSnapshot(null, null, null, null, null, null, null, null, null, null, null));

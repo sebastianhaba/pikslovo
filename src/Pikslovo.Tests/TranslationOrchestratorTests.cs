@@ -48,7 +48,7 @@ public sealed class TranslationOrchestratorTests
 
         var result = await orchestrator.TranslateAsync(
             new byte[] { 1 },
-            new TranslationSettings("key", "en", "pl"),
+            new TranslationSettings("key", "en", "pl", HideIdenticalTranslations: false),
             CancellationToken.None);
 
         translator.RequestedSourceTexts.Should().Equal("Options", "The door is\nlocked.");
@@ -124,7 +124,7 @@ public sealed class TranslationOrchestratorTests
 
         var result = await orchestrator.TranslateAsync(
             new byte[] { 1 },
-            new TranslationSettings("key", "en", "pl"),
+            new TranslationSettings("key", "en", "pl", HideIdenticalTranslations: false),
             CancellationToken.None);
 
         result!.Regions.Should().ContainSingle()

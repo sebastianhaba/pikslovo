@@ -25,8 +25,8 @@ internal sealed record FloatingButtonSettings(
     float VerticalPosition)
 {
     public const float DefaultScale = 1f;
-    public const float DefaultHorizontalPosition = 1f;
-    public const float DefaultVerticalPosition = 0.1f;
+    public const float DefaultHorizontalPosition = 0.97f;
+    public const float DefaultVerticalPosition = 0.03f;
 }
 
 internal sealed record CaptureRegionSettings(
@@ -120,7 +120,7 @@ internal static class AndroidSettingsStore
                 preferences.GetFloat(RecognitionConfidenceName, TranslationSettings.DefaultRecognitionConfidence),
                 Clamp(preferences.GetFloat(GroupingPowerName, TranslationSettings.DefaultGroupingPower), TranslationSettings.DefaultGroupingPower, 1f),
                 preferences.GetFloat(FontScaleName, TranslationSettings.DefaultFontScale),
-                preferences.GetBoolean(HideIdenticalTranslationsName, false),
+                preferences.GetBoolean(HideIdenticalTranslationsName, TranslationSettings.DefaultHideIdenticalTranslations),
                 NormalizeOcrImageScale(preferences.GetFloat(OcrImageScaleName, TranslationSettings.DefaultOcrImageScale)),
                 preferences.GetBoolean(UseJpegForOcrName, TranslationSettings.DefaultUseJpegForOcr),
                 NormalizeOcrJpegQuality(preferences.GetInt(OcrJpegQualityName, TranslationSettings.DefaultOcrJpegQuality))),

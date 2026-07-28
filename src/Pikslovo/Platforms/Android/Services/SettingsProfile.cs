@@ -49,7 +49,7 @@ internal sealed record SettingsProfile(
             TranslationSettings.DefaultOcrImageScale,
             TranslationSettings.DefaultGroupingPower,
             TranslationSettings.DefaultFontScale,
-            false)
+            TranslationSettings.DefaultHideIdenticalTranslations)
         {
             UseJpeg = TranslationSettings.DefaultUseJpegForOcr,
             JpegQuality = TranslationSettings.DefaultOcrJpegQuality,

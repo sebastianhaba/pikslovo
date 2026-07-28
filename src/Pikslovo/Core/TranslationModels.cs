@@ -6,15 +6,16 @@ public sealed record TranslationSettings(
     string TargetLanguage,
     float RecognitionConfidence = 0.6f,
     float GroupingPower = TextRegionGrouper.DefaultGroupingPower,
-    float FontScale = 1f,
-    bool HideIdenticalTranslations = false,
+    float FontScale = 1.3f,
+    bool HideIdenticalTranslations = true,
     float OcrImageScale = 1f,
     bool UseJpegForOcr = true,
     int OcrJpegQuality = 85)
 {
     public const float DefaultRecognitionConfidence = 0.6f;
     public const float DefaultGroupingPower = TextRegionGrouper.DefaultGroupingPower;
-    public const float DefaultFontScale = 1f;
+    public const float DefaultFontScale = 1.3f;
+    public const bool DefaultHideIdenticalTranslations = true;
     public const float DefaultOcrImageScale = 1f;
     public const bool DefaultUseJpegForOcr = true;
     public const int DefaultOcrJpegQuality = 85;

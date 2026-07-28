@@ -22,10 +22,10 @@
   przenoszalna przez systemowy restore, dlatego backup danych aplikacji jest
   wylaczony. Prog pewnosci OCR ma zakres od `0` do `1` i domyslnie wynosi
   `0.6`; regiony ponizej progu nie sa wysylane do tlumaczenia. Skala czcionki
-  nakladki ma zakres od `1.0` do `3.0` i domyslnie wynosi `1.0`. Opcja
-  ukrywania identycznych tlumaczen jest domyslnie wylaczona; po wlaczeniu nie
-  rysujemy regionu, gdy tekst OCR i tlumaczenie sa rowne po usunieciu bialych
-  znakow na brzegach i bez rozrozniania wielkosci liter.
+  nakladki ma zakres od `1.0` do `3.0` i domyslnie wynosi `1.3`. Opcja
+  ukrywania identycznych tlumaczen jest domyslnie wlaczona; nie rysujemy
+  regionu, gdy tekst OCR i tlumaczenie sa rowne po usunieciu bialych znakow
+  na brzegach i bez rozrozniania wielkosci liter.
 - `TranslationSession` jest jedynym wlascicielem MediaProjection, uslugi
   pierwszoplanowej, uchwytu VirtualDisplay, nakladki i anulowania biezacej
   operacji.

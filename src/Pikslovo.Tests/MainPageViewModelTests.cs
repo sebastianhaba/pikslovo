@@ -36,8 +36,8 @@ public sealed class MainPageViewModelTests
         viewModel.TargetLanguage.Should().Be("pl");
         viewModel.RecognitionConfidence.Should().Be(0.6f);
         viewModel.GroupingPower.Should().BeGreaterThan(0f);
-        viewModel.FontScale.Should().Be(1f);
-        viewModel.HideIdenticalTranslations.Should().BeFalse();
+        viewModel.FontScale.Should().Be(1.3f);
+        viewModel.HideIdenticalTranslations.Should().BeTrue();
         viewModel.OcrImageScale.Should().Be(1f);
         viewModel.UseJpegForOcr.Should().BeTrue();
         viewModel.OcrJpegQuality.Should().Be(85);
@@ -45,8 +45,8 @@ public sealed class MainPageViewModelTests
         viewModel.GlobalHotkeyEnabled.Should().BeFalse();
         viewModel.FloatingButtonAlwaysVisible.Should().BeTrue();
         viewModel.FloatingButtonScale.Should().Be(1f);
-        viewModel.FloatingButtonHorizontalPosition.Should().Be(1f);
-        viewModel.FloatingButtonVerticalPosition.Should().Be(0.1f);
+        viewModel.FloatingButtonHorizontalPosition.Should().Be(0.97f);
+        viewModel.FloatingButtonVerticalPosition.Should().Be(0.03f);
     }
 
     [Test]
