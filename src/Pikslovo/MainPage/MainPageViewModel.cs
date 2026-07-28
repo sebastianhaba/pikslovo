@@ -80,6 +80,8 @@ public sealed class MainPageViewModel : INotifyPropertyChanged
 
     public ICommand EditHotkeyCodeCommand { get; set; } = NoOpCommand;
 
+    public ICommand OpenHotkeyBlockedHelpCommand { get; set; } = NoOpCommand;
+
     public ICommand RequestOverlayPermissionCommand { get; set; } = NoOpCommand;
 
     public ICommand RequestNotificationPermissionCommand { get; set; } = NoOpCommand;

@@ -72,6 +72,12 @@ Uzytkownik wybiera klawisz lub kombinacje wysylana przez jego urzadzenie.
 AccessibilityService dziala w trybie przelaczania: nacisniecie pokazuje wynik,
 a kolejne go ukrywa.
 
+Elementy ustawien, ktore otwieraja zewnetrzna strone WWW lub dokumentacje,
+powinny uzywac tego samego wzorca ikon co pozostale linki zewnetrzne w
+aplikacji: po lewej globus `&#xE774;`, a po prawej ikona otwarcia linku
+zewnetrznego `&#xE8A7;`. Nie uzywamy tam ikony chevron `&#xE76C;`, bo ta zostaje
+dla wewnetrznych przejsc i ekranow wyboru w aplikacji.
+
 Nie kazdy fizyczny przycisk urzadzenia jest dostepny dla uslug dostepnosci;
 MVP obsluguje tylko zdarzenia przekazywane przez Android jako key events.
 

@@ -85,6 +85,7 @@ public sealed partial class MainPage : Page
         _viewModel.OpenGoogleCloudCredentialsCommand = new RelayCommand(OpenGoogleCloudCredentials);
         _viewModel.OpenAccessibilitySettingsCommand = new RelayCommand(OpenAccessibilitySettings);
         _viewModel.EditHotkeyCodeCommand = new RelayCommand(async () => await EditHotkeyCodeAsync());
+        _viewModel.OpenHotkeyBlockedHelpCommand = new RelayCommand(OpenHotkeyBlockedHelpPage);
         _viewModel.RequestOverlayPermissionCommand = new RelayCommand(RequestOverlayPermission);
         _viewModel.RequestNotificationPermissionCommand = new RelayCommand(RequestNotificationPermission);
         _viewModel.TestApiKeyCommand = new RelayCommand(async () => await TestApiKeyMainAsync());
@@ -280,6 +281,15 @@ public sealed partial class MainPage : Page
 
     private void OpenSupportPage() =>
         OpenSupportWebPage("https://ko-fi.com/pikslovo", AppStrings.Keys.OpenSupportPageFailed);
+
+    private void OpenHotkeyBlockedHelpPage()
+    {
+        var url = AppStrings.IsCurrentLanguagePolish
+            ? "https://support.google.com/android/answer/12623953?hl=pl"
+            : "https://support.google.com/android/answer/12623953?hl=en";
+
+        OpenSupportWebPage(url, AppStrings.Keys.OpenSupportPageFailed);
+    }
 
     private void OpenSupportWebPage(string url, string errorMessage)
     {

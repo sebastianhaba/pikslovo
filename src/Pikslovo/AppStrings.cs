@@ -43,6 +43,8 @@ public static class AppStrings
         public const string OpenGoogleCloudPageFailed = nameof(OpenGoogleCloudPageFailed);
         public const string OpenPikslovoPageFailed = nameof(OpenPikslovoPageFailed);
         public const string OpenSupportPageFailed = nameof(OpenSupportPageFailed);
+        public const string HotkeyBlockedHelp = nameof(HotkeyBlockedHelp);
+        public const string IfShortcutConfigurationIsBlockedOpenThisGuideToUnlockItInAndroid = nameof(IfShortcutConfigurationIsBlockedOpenThisGuideToUnlockItInAndroid);
         public const string ApiKeyNoAccess = nameof(ApiKeyNoAccess);
         public const string ApiKeyCheckFailed = nameof(ApiKeyCheckFailed);
         public const string StartScreenCaptureFailed = nameof(StartScreenCaptureFailed);
@@ -289,6 +291,8 @@ public static class AppStrings
         [Keys.OpenGoogleCloudPageFailed] = "Nie można otworzyć strony Google Cloud: {0}",
         [Keys.OpenPikslovoPageFailed] = "Nie można otworzyć strony Pikslovo: {0}",
         [Keys.OpenSupportPageFailed] = "Nie można otworzyć strony wsparcia: {0}",
+        [Keys.HotkeyBlockedHelp] = "Jak odblokować ustawienie skrótu",
+        [Keys.IfShortcutConfigurationIsBlockedOpenThisGuideToUnlockItInAndroid] = "Jeżeli opcja ustawienia skrótu jest zablokowana, pod tym linkiem znajdziesz instrukcję, jak odblokować ją w Androidzie.",
         [Keys.ApiKeyNoAccess] = "Klucz nie ma dostępu do {0}. Sprawdź poprawność klucza oraz czy to API jest włączone w projekcie Google Cloud.",
         [Keys.ApiKeyCheckFailed] = "Nie udało się sprawdzić dostępu do {0}. Usługa Google zwróciła błąd {1}.",
         [Keys.StartScreenCaptureFailed] = "Nie można uruchomić przechwytywania ekranu: {0}",
@@ -533,6 +537,8 @@ public static class AppStrings
         [Keys.OpenGoogleCloudPageFailed] = "Cannot open the Google Cloud page: {0}",
         [Keys.OpenPikslovoPageFailed] = "Cannot open the Pikslovo page: {0}",
         [Keys.OpenSupportPageFailed] = "Cannot open the support page: {0}",
+        [Keys.HotkeyBlockedHelp] = "How to unlock shortcut setup",
+        [Keys.IfShortcutConfigurationIsBlockedOpenThisGuideToUnlockItInAndroid] = "If shortcut setup is blocked, open this guide to learn how to unlock it in Android.",
         [Keys.ApiKeyNoAccess] = "The key cannot access {0}. Check that the key is valid and that this API is enabled in the Google Cloud project.",
         [Keys.ApiKeyCheckFailed] = "Could not check access to {0}. Google returned error {1}.",
         [Keys.StartScreenCaptureFailed] = "Cannot start screen capture: {0}",
@@ -736,6 +742,8 @@ public static class AppStrings
     };
 
     public static AppLanguageMode LanguageMode => _languageMode;
+
+    public static bool IsCurrentLanguagePolish => UsesPolish;
 
     public static void SetLanguageMode(AppLanguageMode languageMode) => _languageMode = languageMode;
 
