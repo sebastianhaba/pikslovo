@@ -179,6 +179,9 @@ public static class AppStrings
         public const string SourceCodeBugReportsAndProjectDevelopment = nameof(SourceCodeBugReportsAndProjectDevelopment);
         public const string PikslovoWiki = nameof(PikslovoWiki);
         public const string GuidesAndSetupInstructions = nameof(GuidesAndSetupInstructions);
+        public const string SharePikslovo = nameof(SharePikslovo);
+        public const string RecommendPikslovoToOtherPlayers = nameof(RecommendPikslovoToOtherPlayers);
+        public const string SharePikslovoMessage = nameof(SharePikslovoMessage);
         public const string SupportPikslovo = nameof(SupportPikslovo);
         public const string IfYouLikeThisAppSupportItsFurtherDevelopment = nameof(IfYouLikeThisAppSupportItsFurtherDevelopment);
         public const string ExportDiagnosticsLog = nameof(ExportDiagnosticsLog);
@@ -430,6 +433,9 @@ public static class AppStrings
         [Keys.SourceCodeBugReportsAndProjectDevelopment] = "Kod źródłowy, zgłoszenia błędów i rozwój projektu.",
         [Keys.PikslovoWiki] = "Wiki Pikslovo",
         [Keys.GuidesAndSetupInstructions] = "Instrukcje i przewodniki konfiguracji.",
+        [Keys.SharePikslovo] = "Udostępnij Pikslovo",
+        [Keys.RecommendPikslovoToOtherPlayers] = "Poleć aplikację innym graczom.",
+        [Keys.SharePikslovoMessage] = "Cześć! Znalazłem świetną aplikację na Androida, która tłumaczy tekst w grach. Sprawdź Pikslovo: https://pikslovo.app",
         [Keys.SupportPikslovo] = "Wspomóż Pikslovo",
         [Keys.IfYouLikeThisAppSupportItsFurtherDevelopment] = "Jeżeli podoba Ci się ta aplikacja, wesprzyj jej dalszy rozwój.",
         [Keys.ExportDiagnosticsLog] = "Eksportuj dziennik diagnostyczny",
@@ -679,6 +685,9 @@ public static class AppStrings
         [Keys.SourceCodeBugReportsAndProjectDevelopment] = "Source code, bug reports and project development.",
         [Keys.PikslovoWiki] = "Pikslovo Wiki",
         [Keys.GuidesAndSetupInstructions] = "Guides and setup instructions.",
+        [Keys.SharePikslovo] = "Share Pikslovo",
+        [Keys.RecommendPikslovoToOtherPlayers] = "Recommend the app to other players.",
+        [Keys.SharePikslovoMessage] = "I found a great Android app that translates text in games. Check out Pikslovo: https://pikslovo.app",
         [Keys.SupportPikslovo] = "Support Pikslovo",
         [Keys.IfYouLikeThisAppSupportItsFurtherDevelopment] = "If you like this app, support its further development.",
         [Keys.ExportDiagnosticsLog] = "Export diagnostics log",

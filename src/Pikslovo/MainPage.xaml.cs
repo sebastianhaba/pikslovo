@@ -80,6 +80,7 @@ public sealed partial class MainPage : Page
         _viewModel.ExportDiagnosticsCommand = new RelayCommand(async () => await ExportDiagnostics());
         _viewModel.OpenGitHubPageCommand = new RelayCommand(OpenGitHubPage);
         _viewModel.OpenWikiPageCommand = new RelayCommand(OpenWikiPage);
+        _viewModel.SharePikslovoCommand = new RelayCommand(SharePikslovo);
         _viewModel.OpenSupportPageCommand = new RelayCommand(OpenSupportPage);
         _viewModel.EditSourceLanguageCommand = new RelayCommand(async () => await EditSourceLanguageAsync());
         _viewModel.EditTargetLanguageCommand = new RelayCommand(async () => await EditTargetLanguageAsync());
@@ -262,6 +263,29 @@ public sealed partial class MainPage : Page
 
     private void OpenWikiPage() =>
         OpenSupportWebPage("https://github.com/sebastianhaba/pikslovo/wiki", AppStrings.Keys.OpenPikslovoPageFailed);
+
+    private void SharePikslovo()
+    {
+#if __ANDROID__
+        if (MainActivity.CurrentActivity is not { } activity)
+        {
+            ShowStatus(AppStrings.Keys.AndroidActivityNotReady);
+            return;
+        }
+
+        try
+        {
+            AndroidTranslationHost.ShareText(
+                activity,
+                AppStrings.Get(AppStrings.Keys.SharePikslovoMessage),
+                AppStrings.Get(AppStrings.Keys.SharePikslovo));
+        }
+        catch
+        {
+            ShowStatus(AppStrings.Keys.CannotOpenSharePanel);
+        }
+#endif
+    }
 
     private void OpenGoogleCloudApiKeyGuide() =>
         OpenSupportWebPage(

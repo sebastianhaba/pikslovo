@@ -158,6 +158,16 @@ internal static class AndroidTranslationHost
         activity.StartActivity(intent);
     }
 
+    public static void ShareText(Activity activity, string text, string chooserTitle)
+    {
+        var intent = new Intent(Intent.ActionSend);
+        intent.SetType("text/plain");
+        intent.PutExtra(Intent.ExtraText, text);
+        var chooser = Intent.CreateChooser(intent, chooserTitle)
+            ?? throw new InvalidOperationException(AppStrings.Get(AppStrings.Keys.CannotOpenSharePanel));
+        activity.StartActivity(chooser);
+    }
+
     public static void HideKeyboard(Activity activity)
     {
         var inputManager = activity.GetSystemService(Context.InputMethodService) as InputMethodManager;

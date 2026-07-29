@@ -68,6 +68,8 @@ public sealed class MainPageViewModel : INotifyPropertyChanged
 
     public ICommand OpenWikiPageCommand { get; set; } = NoOpCommand;
 
+    public ICommand SharePikslovoCommand { get; set; } = NoOpCommand;
+
     public ICommand OpenSupportPageCommand { get; set; } = NoOpCommand;
 
     public ICommand EditSourceLanguageCommand { get; set; } = NoOpCommand;
