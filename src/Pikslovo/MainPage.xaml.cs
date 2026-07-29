@@ -288,14 +288,10 @@ public sealed partial class MainPage : Page
     private void OpenSupportPage() =>
         OpenSupportWebPage("https://ko-fi.com/pikslovo", AppStrings.Keys.OpenSupportPageFailed);
 
-    private void OpenHotkeyBlockedHelpPage()
-    {
-        var url = AppStrings.IsCurrentLanguagePolish
-            ? "https://support.google.com/android/answer/12623953?hl=pl"
-            : "https://support.google.com/android/answer/12623953?hl=en";
-
-        OpenSupportWebPage(url, AppStrings.Keys.OpenSupportPageFailed);
-    }
+    private void OpenHotkeyBlockedHelpPage() =>
+        OpenSupportWebPage(
+            "https://github.com/sebastianhaba/pikslovo/wiki/Enable-accessibility-for-the-global-hotkey",
+            AppStrings.Keys.OpenSupportPageFailed);
 
     private void OpenSupportWebPage(string url, string errorMessage)
     {
