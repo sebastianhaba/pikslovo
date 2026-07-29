@@ -83,6 +83,7 @@ public sealed partial class MainPage : Page
         _viewModel.EditSourceLanguageCommand = new RelayCommand(async () => await EditSourceLanguageAsync());
         _viewModel.EditTargetLanguageCommand = new RelayCommand(async () => await EditTargetLanguageAsync());
         _viewModel.OpenGoogleCloudCredentialsCommand = new RelayCommand(OpenGoogleCloudCredentials);
+        _viewModel.OpenGoogleCloudApiKeyGuideCommand = new RelayCommand(OpenGoogleCloudApiKeyGuide);
         _viewModel.OpenAccessibilitySettingsCommand = new RelayCommand(OpenAccessibilitySettings);
         _viewModel.EditHotkeyCodeCommand = new RelayCommand(async () => await EditHotkeyCodeAsync());
         _viewModel.OpenHotkeyBlockedHelpCommand = new RelayCommand(OpenHotkeyBlockedHelpPage);
@@ -278,6 +279,11 @@ public sealed partial class MainPage : Page
 
     private void OpenGitHubPage() =>
         OpenSupportWebPage("https://github.com/sebastianhaba/pikslovo", AppStrings.Keys.OpenPikslovoPageFailed);
+
+    private void OpenGoogleCloudApiKeyGuide() =>
+        OpenSupportWebPage(
+            "https://github.com/sebastianhaba/pikslovo/wiki/Set-up-a-Google-Cloud-API-key",
+            AppStrings.Keys.OpenPikslovoPageFailed);
 
     private void OpenSupportPage() =>
         OpenSupportWebPage("https://ko-fi.com/pikslovo", AppStrings.Keys.OpenSupportPageFailed);

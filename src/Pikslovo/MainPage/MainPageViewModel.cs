@@ -76,6 +76,8 @@ public sealed class MainPageViewModel : INotifyPropertyChanged
 
     public ICommand OpenGoogleCloudCredentialsCommand { get; set; } = NoOpCommand;
 
+    public ICommand OpenGoogleCloudApiKeyGuideCommand { get; set; } = NoOpCommand;
+
     public ICommand OpenAccessibilitySettingsCommand { get; set; } = NoOpCommand;
 
     public ICommand EditHotkeyCodeCommand { get; set; } = NoOpCommand;
