@@ -50,3 +50,24 @@ It does not aim to be a constant live translator running on every screen update.
 - The app runs on Android only.
 - The user provides their own Google Cloud API key.
 - The app is currently intended for Android 12 and newer.
+
+## Tested devices and systems
+
+Manual testing was performed on the following devices and operating systems:
+
+- ANBERNIC RG 477M running GammaOS
+- Samsung Galaxy S21 FE running Android 16
+
+## Credits and inspiration
+
+The original idea for Pikslovo came from using [Decky-Translator](https://github.com/cat-in-a-box/Decky-Translator) on a Steam Deck. Its screenshot-based OCR, translation, and temporary translated-screen overlay inspired this app's translation workflow.
+
+The visual direction of Pikslovo is inspired by [PlayTranslate](https://github.com/dominostars/playtranslate), an Android-focused screen translation app.
+
+## Built with Uno Platform
+
+Pikslovo is built with [Uno Platform](https://platform.uno/), which lets us develop the Android app in C# and XAML.
+
+## How AI was used
+
+This app was not created from a single prompt. It is the result of several weeks of manual testing, iterative fixes, refactoring, and many prompts. Codex and OpenGo were used as part of an experiment in using AI tools to build a complete Android application that looks polished while using XAML and C#.
