@@ -7,9 +7,12 @@ internal sealed record SettingsProfile(
     int SchemaVersion,
     OcrProfile Ocr,
     CaptureRegionProfile CaptureRegion,
-    FloatingButtonProfile FloatingButton)
+    FloatingButtonProfile FloatingButton,
+    TranslationProfile? Translation = null,
+    GlobalHotkeyProfile? GlobalHotkey = null,
+    AppearanceProfile? Appearance = null)
 {
-    public const int CurrentSchemaVersion = 1;
+    public const int CurrentSchemaVersion = 2;
 
     private static readonly JsonSerializerOptions JsonOptions = new()
     {
@@ -40,7 +43,17 @@ internal sealed record SettingsProfile(
             settings.FloatingButton.AlwaysVisible,
             settings.FloatingButton.Scale,
             settings.FloatingButton.HorizontalPosition,
-            settings.FloatingButton.VerticalPosition));
+            settings.FloatingButton.VerticalPosition),
+        new TranslationProfile(
+            settings.Translation.SourceLanguage,
+            settings.Translation.TargetLanguage),
+        new GlobalHotkeyProfile(
+            settings.GlobalHotkeyEnabled,
+            settings.HotkeyCodes),
+        new AppearanceProfile(
+            settings.ThemeMode,
+            settings.Accent,
+            settings.LanguageMode));
 
     public static SettingsProfile Defaults { get; } = new(
         CurrentSchemaVersion,
@@ -59,7 +72,13 @@ internal sealed record SettingsProfile(
             true,
             FloatingButtonSettings.DefaultScale,
             FloatingButtonSettings.DefaultHorizontalPosition,
-            FloatingButtonSettings.DefaultVerticalPosition));
+            FloatingButtonSettings.DefaultVerticalPosition),
+        new TranslationProfile("ja", "pl"),
+        new GlobalHotkeyProfile(false, []),
+        new AppearanceProfile(
+            AppThemeMode.System,
+            AppAccent.Lavender,
+            AppLanguageMode.System));
 
     public static Task WriteAsync(Stream stream, SettingsProfile profile, CancellationToken cancellationToken) =>
         JsonSerializer.SerializeAsync(stream, profile, JsonOptions, cancellationToken).AsTask();
@@ -80,6 +99,8 @@ internal sealed record SettingsProfile(
     {
         Translation = settings.Translation with
         {
+            SourceLanguage = Translation?.SourceLanguage ?? settings.Translation.SourceLanguage,
+            TargetLanguage = Translation?.TargetLanguage ?? settings.Translation.TargetLanguage,
             RecognitionConfidence = Ocr.RecognitionConfidence,
             OcrImageScale = Ocr.ImageScale,
             GroupingPower = Ocr.GroupingPower,
@@ -98,12 +119,17 @@ internal sealed record SettingsProfile(
             FloatingButton.AlwaysVisible,
             FloatingButton.Scale,
             FloatingButton.HorizontalPosition,
-            FloatingButton.VerticalPosition)
+            FloatingButton.VerticalPosition),
+        HotkeyCodes = GlobalHotkey?.Codes ?? settings.HotkeyCodes,
+        GlobalHotkeyEnabled = GlobalHotkey?.IsEnabled ?? settings.GlobalHotkeyEnabled,
+        ThemeMode = Appearance?.ThemeMode ?? settings.ThemeMode,
+        Accent = Appearance?.Accent ?? settings.Accent,
+        LanguageMode = Appearance?.LanguageMode ?? settings.LanguageMode
     };
 
     private void Validate()
     {
-        if (SchemaVersion != CurrentSchemaVersion)
+        if (SchemaVersion is not 1 and not CurrentSchemaVersion)
         {
             throw new InvalidDataException(AppStrings.Get(AppStrings.Keys.UnsupportedConfigurationVersion));
         }
@@ -111,6 +137,37 @@ internal sealed record SettingsProfile(
         if (Ocr is null || CaptureRegion is null || FloatingButton is null)
         {
             throw new InvalidDataException(AppStrings.Get(AppStrings.Keys.IncompleteConfigurationFile));
+        }
+
+        // Version 1 files did not contain these profiles. They remain importable
+        // and leave the corresponding local settings unchanged.
+        if (SchemaVersion == 1)
+        {
+            return;
+        }
+
+        if (Translation is null || GlobalHotkey is null || Appearance is null)
+        {
+            throw new InvalidDataException(AppStrings.Get(AppStrings.Keys.IncompleteConfigurationFile));
+        }
+
+        if (string.IsNullOrWhiteSpace(Translation.SourceLanguage) ||
+            string.IsNullOrWhiteSpace(Translation.TargetLanguage))
+        {
+            throw new InvalidDataException(AppStrings.Get(AppStrings.Keys.InvalidTranslationLanguages));
+        }
+
+        if (GlobalHotkey.Codes is null || GlobalHotkey.Codes.Any(code => code <= 0) ||
+            GlobalHotkey.Codes.Distinct().Count() != GlobalHotkey.Codes.Length)
+        {
+            throw new InvalidDataException(AppStrings.Get(AppStrings.Keys.InvalidGlobalHotkey));
+        }
+
+        if (!Enum.IsDefined(Appearance.ThemeMode) ||
+            !Enum.IsDefined(Appearance.Accent) ||
+            !Enum.IsDefined(Appearance.LanguageMode))
+        {
+            throw new InvalidDataException(AppStrings.Get(AppStrings.Keys.InvalidAppearanceSettings));
         }
 
         if (!IsInRange(Ocr.RecognitionConfidence, 0f, 1f) ||
@@ -169,3 +226,12 @@ internal sealed record FloatingButtonProfile(
     float Scale,
     float HorizontalPosition,
     float VerticalPosition);
+
+internal sealed record TranslationProfile(string SourceLanguage, string TargetLanguage);
+
+internal sealed record GlobalHotkeyProfile(bool IsEnabled, int[] Codes);
+
+internal sealed record AppearanceProfile(
+    AppThemeMode ThemeMode,
+    AppAccent Accent,
+    AppLanguageMode LanguageMode);

@@ -137,6 +137,9 @@ public static class AppStrings
         public const string InvalidOcrOrOverlaySettings = nameof(InvalidOcrOrOverlaySettings);
         public const string InvalidFloatingButtonSettings = nameof(InvalidFloatingButtonSettings);
         public const string InvalidCaptureRegion = nameof(InvalidCaptureRegion);
+        public const string InvalidTranslationLanguages = nameof(InvalidTranslationLanguages);
+        public const string InvalidGlobalHotkey = nameof(InvalidGlobalHotkey);
+        public const string InvalidAppearanceSettings = nameof(InvalidAppearanceSettings);
         public const string CannotSaveAppConfigurationState = nameof(CannotSaveAppConfigurationState);
         public const string CannotSaveAppSettings = nameof(CannotSaveAppSettings);
         public const string KeystoreMissingInitializationVector = nameof(KeystoreMissingInitializationVector);
@@ -391,6 +394,9 @@ public static class AppStrings
         [Keys.InvalidOcrOrOverlaySettings] = "Plik zawiera nieprawidłowe ustawienia OCR lub nakładki.",
         [Keys.InvalidFloatingButtonSettings] = "Plik zawiera nieprawidłowe ustawienia przycisku pływającego.",
         [Keys.InvalidCaptureRegion] = "Plik zawiera nieprawidłowy obszar przechwytywania.",
+        [Keys.InvalidTranslationLanguages] = "Plik zawiera nieprawidłowe języki tłumaczenia.",
+        [Keys.InvalidGlobalHotkey] = "Plik zawiera nieprawidłową konfigurację globalnego skrótu.",
+        [Keys.InvalidAppearanceSettings] = "Plik zawiera nieprawidłowe ustawienia wyglądu aplikacji.",
         [Keys.CannotSaveAppConfigurationState] = "Nie można zapisać stanu konfiguracji aplikacji.",
         [Keys.CannotSaveAppSettings] = "Nie można zapisać ustawień aplikacji.",
         [Keys.KeystoreMissingInitializationVector] = "Android Keystore nie zwrócił wektora inicjalizacyjnego.",
@@ -421,11 +427,11 @@ public static class AppStrings
         [Keys.AppAppearance] = "Wygląd aplikacji",
         [Keys.Configurations] = "Konfiguracje",
         [Keys.ExportSettings] = "Eksportuj ustawienia",
-        [Keys.SaveOcrJpegCompressionRegionAndButtonSettingsToAJsonFile] = "Zapisz OCR, kompresję JPEG, obszar i przycisk do pliku JSON.",
+        [Keys.SaveOcrJpegCompressionRegionAndButtonSettingsToAJsonFile] = "Zapisz wszystkie ustawienia oprócz klucza Google Cloud API do pliku JSON.",
         [Keys.ImportSettings] = "Importuj ustawienia",
-        [Keys.LoadOcrJpegCompressionAndTheRemainingConfigurationFromAJsonFile] = "Wczytaj OCR, kompresję JPEG i pozostałą konfigurację z pliku JSON.",
+        [Keys.LoadOcrJpegCompressionAndTheRemainingConfigurationFromAJsonFile] = "Wczytaj wszystkie ustawienia z pliku JSON; klucz Google Cloud API pozostanie bez zmian.",
         [Keys.RestoreDefaults] = "Przywróć domyślne",
-        [Keys.ClearOcrJpegCompressionRegionAndButtonSettings] = "Wyczyść OCR wraz z kompresją JPEG, obszarem i przyciskiem.",
+        [Keys.ClearOcrJpegCompressionRegionAndButtonSettings] = "Przywróć wszystkie ustawienia oprócz klucza Google Cloud API.",
         [Keys.Support] = "Wsparcie",
         [Keys.Diagnostics] = "Diagnostyka",
         [Keys.LatestTranslationAndApiKeyValidationTimings] = "Ostatnie czasy tłumaczenia i sprawdzenia klucza API",
@@ -493,7 +499,7 @@ public static class AppStrings
         [Keys.Continue] = "Continue",
         [Keys.GrantPermission] = "Przyznaj uprawnienie",
         [Keys.NotSelected] = "Nie wybrano",
-        [Keys.ThisWillClearOcrJpegCaptureRegionAndFloatingButtonSettingsTheApiKeyLanguagesHotkeyAndAppAppearanceWillRemainUnchanged] = "Ta operacja wyczyści ustawienia OCR, JPEG, obszaru przechwytywania i przycisku pływającego. Klucz API, języki, globalny skrót i wygląd aplikacji pozostaną bez zmian.",
+        [Keys.ThisWillClearOcrJpegCaptureRegionAndFloatingButtonSettingsTheApiKeyLanguagesHotkeyAndAppAppearanceWillRemainUnchanged] = "Ta operacja przywróci wszystkie ustawienia domyślne oprócz klucza Google Cloud API.",
         [Keys.OverlayPermissionIsAlreadyGranted] = "Uprawnienie nakładki jest już przyznane.",
         [Keys.OpeningAndroidOverlaySettings] = "Otwieram ustawienia nakładki Androida.",
         [Keys.NotificationPermissionIsAlreadyGranted] = "Uprawnienie powiadomień jest już przyznane.",
@@ -643,6 +649,9 @@ public static class AppStrings
         [Keys.InvalidOcrOrOverlaySettings] = "The file contains invalid OCR or overlay settings.",
         [Keys.InvalidFloatingButtonSettings] = "The file contains invalid floating button settings.",
         [Keys.InvalidCaptureRegion] = "The file contains an invalid capture region.",
+        [Keys.InvalidTranslationLanguages] = "The configuration file contains invalid translation languages.",
+        [Keys.InvalidGlobalHotkey] = "The configuration file contains an invalid global hotkey configuration.",
+        [Keys.InvalidAppearanceSettings] = "The configuration file contains invalid app appearance settings.",
         [Keys.CannotSaveAppConfigurationState] = "Cannot save app configuration state.",
         [Keys.CannotSaveAppSettings] = "Cannot save app settings.",
         [Keys.KeystoreMissingInitializationVector] = "Android Keystore did not return an initialization vector.",
@@ -673,11 +682,11 @@ public static class AppStrings
         [Keys.AppAppearance] = "App appearance",
         [Keys.Configurations] = "Configurations",
         [Keys.ExportSettings] = "Export settings",
-        [Keys.SaveOcrJpegCompressionRegionAndButtonSettingsToAJsonFile] = "Save OCR, JPEG compression, region and button settings to a JSON file.",
+        [Keys.SaveOcrJpegCompressionRegionAndButtonSettingsToAJsonFile] = "Save all settings except the Google Cloud API key to a JSON file.",
         [Keys.ImportSettings] = "Import settings",
-        [Keys.LoadOcrJpegCompressionAndTheRemainingConfigurationFromAJsonFile] = "Load OCR, JPEG compression and the remaining configuration from a JSON file.",
+        [Keys.LoadOcrJpegCompressionAndTheRemainingConfigurationFromAJsonFile] = "Load all settings from a JSON file; the Google Cloud API key stays unchanged.",
         [Keys.RestoreDefaults] = "Restore defaults",
-        [Keys.ClearOcrJpegCompressionRegionAndButtonSettings] = "Clear OCR, JPEG compression, region and button settings.",
+        [Keys.ClearOcrJpegCompressionRegionAndButtonSettings] = "Restore all settings except the Google Cloud API key.",
         [Keys.Support] = "Support",
         [Keys.Diagnostics] = "Diagnostics",
         [Keys.LatestTranslationAndApiKeyValidationTimings] = "Latest translation and API key validation timings",
@@ -745,7 +754,7 @@ public static class AppStrings
         [Keys.Continue] = "Continue",
         [Keys.GrantPermission] = "Grant permission",
         [Keys.NotSelected] = "Not selected",
-        [Keys.ThisWillClearOcrJpegCaptureRegionAndFloatingButtonSettingsTheApiKeyLanguagesHotkeyAndAppAppearanceWillRemainUnchanged] = "This will clear OCR, JPEG, capture region and floating button settings. The API key, languages, global shortcut and app appearance will remain unchanged.",
+        [Keys.ThisWillClearOcrJpegCaptureRegionAndFloatingButtonSettingsTheApiKeyLanguagesHotkeyAndAppAppearanceWillRemainUnchanged] = "This will restore all default settings except the Google Cloud API key.",
         [Keys.OverlayPermissionIsAlreadyGranted] = "Overlay permission is already granted.",
         [Keys.OpeningAndroidOverlaySettings] = "Opening Android overlay settings.",
         [Keys.NotificationPermissionIsAlreadyGranted] = "Notification permission is already granted.",
