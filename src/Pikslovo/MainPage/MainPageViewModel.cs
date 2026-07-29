@@ -66,6 +66,8 @@ public sealed class MainPageViewModel : INotifyPropertyChanged
 
     public ICommand OpenGitHubPageCommand { get; set; } = NoOpCommand;
 
+    public ICommand OpenWikiPageCommand { get; set; } = NoOpCommand;
+
     public ICommand OpenSupportPageCommand { get; set; } = NoOpCommand;
 
     public ICommand EditSourceLanguageCommand { get; set; } = NoOpCommand;
@@ -73,8 +75,6 @@ public sealed class MainPageViewModel : INotifyPropertyChanged
     public ICommand EditTargetLanguageCommand { get; set; } = NoOpCommand;
 
     public ICommand ToggleApiKeyVisibilityCommand { get; set; } = NoOpCommand;
-
-    public ICommand OpenGoogleCloudCredentialsCommand { get; set; } = NoOpCommand;
 
     public ICommand OpenGoogleCloudApiKeyGuideCommand { get; set; } = NoOpCommand;
 

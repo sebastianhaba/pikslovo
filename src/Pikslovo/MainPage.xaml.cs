@@ -79,10 +79,10 @@ public sealed partial class MainPage : Page
         _viewModel.RestoreDefaultSettingsCommand = new RelayCommand(async () => await RestoreDefaultSettingsAsync());
         _viewModel.ExportDiagnosticsCommand = new RelayCommand(async () => await ExportDiagnostics());
         _viewModel.OpenGitHubPageCommand = new RelayCommand(OpenGitHubPage);
+        _viewModel.OpenWikiPageCommand = new RelayCommand(OpenWikiPage);
         _viewModel.OpenSupportPageCommand = new RelayCommand(OpenSupportPage);
         _viewModel.EditSourceLanguageCommand = new RelayCommand(async () => await EditSourceLanguageAsync());
         _viewModel.EditTargetLanguageCommand = new RelayCommand(async () => await EditTargetLanguageAsync());
-        _viewModel.OpenGoogleCloudCredentialsCommand = new RelayCommand(OpenGoogleCloudCredentials);
         _viewModel.OpenGoogleCloudApiKeyGuideCommand = new RelayCommand(OpenGoogleCloudApiKeyGuide);
         _viewModel.OpenAccessibilitySettingsCommand = new RelayCommand(OpenAccessibilitySettings);
         _viewModel.EditHotkeyCodeCommand = new RelayCommand(async () => await EditHotkeyCodeAsync());
@@ -257,28 +257,11 @@ public sealed partial class MainPage : Page
         UpdateFloatingButtonPreview();
     }
 
-    private void OpenGoogleCloudCredentials()
-    {
-#if __ANDROID__
-        if (MainActivity.CurrentActivity is not { } activity)
-        {
-            ShowStatus(AppStrings.Keys.AndroidActivityNotReady);
-            return;
-        }
-
-        try
-        {
-            AndroidTranslationHost.OpenWebPage(activity, "https://console.cloud.google.com/apis/credentials");
-        }
-        catch (Exception exception)
-        {
-            ShowStatus(AppStrings.Format(AppStrings.Keys.OpenGoogleCloudPageFailed, exception.Message));
-        }
-#endif
-    }
-
     private void OpenGitHubPage() =>
         OpenSupportWebPage("https://github.com/sebastianhaba/pikslovo", AppStrings.Keys.OpenPikslovoPageFailed);
+
+    private void OpenWikiPage() =>
+        OpenSupportWebPage("https://github.com/sebastianhaba/pikslovo/wiki", AppStrings.Keys.OpenPikslovoPageFailed);
 
     private void OpenGoogleCloudApiKeyGuide() =>
         OpenSupportWebPage(
