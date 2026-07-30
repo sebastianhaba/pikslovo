@@ -92,11 +92,22 @@ public sealed partial class MainPage
         ShowOnboardingStep(OnboardingApiKeyStep);
     }
 
-    private async Task TestOnboardingApiKeyAsync() =>
-        await TestApiKeyAsync(OnboardingApiKeyInput, OnboardingApiKeyTestButton);
+    private async Task TestOnboardingApiKeyAsync()
+    {
+        OnboardingContinueButton.IsEnabled = false;
+        OnboardingContinueButton.IsEnabled = await TestApiKeyAsync(OnboardingApiKeyInput, OnboardingApiKeyTestButton);
+    }
+
+    private void OnboardingApiKeyInput_PasswordChanged(object sender, RoutedEventArgs e) =>
+        OnboardingContinueButton.IsEnabled = false;
 
     private void FinishOnboarding()
     {
+        if (!OnboardingContinueButton.IsEnabled)
+        {
+            return;
+        }
+
         ApiKeyInput.Password = OnboardingApiKeyInput.Password.Trim();
         SaveSettings(requireValidTranslationSettings: false);
         _settingsPersistence.CompleteOnboarding();

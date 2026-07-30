@@ -22,6 +22,7 @@ namespace Pikslovo;
 
 public sealed partial class MainPage : Page
 {
+    private static readonly TimeSpan ApiKeyValidationTimeout = TimeSpan.FromSeconds(30);
     private static string ApiKeyTestButtonText => AppStrings.Get(AppStrings.Keys.CheckKey);
     private static string ApiKeyValidationInProgressButtonText => AppStrings.Get(AppStrings.Keys.Checking);
 
@@ -356,7 +357,7 @@ public sealed partial class MainPage : Page
 
     private async Task TestApiKeyMainAsync() => await TestApiKeyAsync(ApiKeyInput, ApiKeyTestButton);
 
-    private async Task TestApiKeyAsync(ApiKeyInputControl apiKeyInput, Button button)
+    private async Task<bool> TestApiKeyAsync(ApiKeyInputControl apiKeyInput, Button button)
     {
         var apiKey = apiKeyInput.Password.Trim();
         if (string.IsNullOrWhiteSpace(apiKey))
@@ -364,17 +365,18 @@ public sealed partial class MainPage : Page
             await ShowMessageAsync(
                 AppStrings.Keys.MissingApiKeyTitle,
                 AppStrings.Keys.MissingApiKeyMessage);
-            return;
+            return false;
         }
 
         button.IsEnabled = false;
         button.Content = ApiKeyValidationInProgressButtonText;
         var stopwatch = Stopwatch.StartNew();
+        using var cancellationTokenSource = new CancellationTokenSource(ApiKeyValidationTimeout);
         string? errorTitle = null;
         string? errorMessage = null;
         try
         {
-            await AppServices.GoogleCloudApiKeyValidator.ValidateAsync(apiKey, CancellationToken.None);
+            await AppServices.GoogleCloudApiKeyValidator.ValidateAsync(apiKey, cancellationTokenSource.Token);
         }
         catch (GoogleCloudApiKeyValidationException exception)
         {
@@ -384,6 +386,11 @@ public sealed partial class MainPage : Page
                 : AppStrings.Format(AppStrings.Keys.ApiKeyCheckFailed, exception.ServiceName, (int)exception.StatusCode);
         }
         catch (HttpRequestException)
+        {
+            errorTitle = AppStrings.Keys.NoConnectionTitle;
+            errorMessage = AppStrings.Keys.NoConnectionMessage;
+        }
+        catch (WebException)
         {
             errorTitle = AppStrings.Keys.NoConnectionTitle;
             errorMessage = AppStrings.Keys.NoConnectionMessage;
@@ -403,12 +410,13 @@ public sealed partial class MainPage : Page
         if (errorTitle is not null)
         {
             await ShowMessageAsync(errorTitle, errorMessage!);
-            return;
+            return false;
         }
 
         await ShowMessageAsync(
             AppStrings.Keys.KeyWorksTitle,
             AppStrings.Keys.KeyWorksMessage);
+        return true;
     }
 
     private async Task EditHotkeyCodeAsync()
