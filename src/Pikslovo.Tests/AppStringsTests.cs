@@ -19,6 +19,14 @@ public sealed class AppStringsTests
     }
 
     [Test]
+    public void Continue_is_localized_to_polish()
+    {
+        AppStrings.SetLanguageMode(AppLanguageMode.Polish);
+
+        AppStrings.Get(AppStrings.Keys.Continue).Should().Be("Kontynuuj");
+    }
+
+    [Test]
     public void System_language_falls_back_to_english_when_polish_is_not_available()
     {
         var previousCulture = CultureInfo.CurrentUICulture;

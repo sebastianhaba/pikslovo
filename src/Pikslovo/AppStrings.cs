@@ -496,7 +496,7 @@ public static class AppStrings
         [Keys.OnlyOnDemand] = "Tylko na żądanie",
         [Keys.TheOverlayIsShownOnlyAfterTranslationIsTriggered] = "Nakładka jest pokazywana wyłącznie po wywołaniu tłumaczenia.",
         [Keys.PikslovoRequiresYourOwnGoogleCloudApiKeyForTextRecognitionAndTranslationYouCanConfigureItNowOrLaterInSettingsTranslationWillNotWorkWithoutIt] = "Pikslovo wymaga własnego klucza Google Cloud API do rozpoznawania i tłumaczenia tekstu. Możesz skonfigurować go teraz albo później w ustawieniach. Bez klucza tłumaczenie nie będzie działać.",
-        [Keys.Continue] = "Continue",
+        [Keys.Continue] = "Kontynuuj",
         [Keys.GrantPermission] = "Przyznaj uprawnienie",
         [Keys.NotSelected] = "Nie wybrano",
         [Keys.ThisWillClearOcrJpegCaptureRegionAndFloatingButtonSettingsTheApiKeyLanguagesHotkeyAndAppAppearanceWillRemainUnchanged] = "Ta operacja przywróci wszystkie ustawienia domyślne oprócz klucza Google Cloud API.",
