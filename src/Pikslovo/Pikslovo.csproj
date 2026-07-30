@@ -38,6 +38,19 @@
     <DisableDefaultUnoResizetizerItems>true</DisableDefaultUnoResizetizerItems>
   </PropertyGroup>
 
+  <!--
+    Release signing secrets are supplied at build time through environment variables:
+    AndroidSigningKeyStore, AndroidSigningKeyAlias, AndroidSigningKeyPass, and
+    AndroidSigningStorePass. Do not place the keystore or passwords in source control.
+  -->
+  <PropertyGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android' And '$(Configuration)' == 'Release' And '$(AndroidSigningKeyStore)' != ''">
+    <AndroidKeyStore>true</AndroidKeyStore>
+    <AndroidSigningKeyStore>$(AndroidSigningKeyStore)</AndroidSigningKeyStore>
+    <AndroidSigningKeyAlias>$(AndroidSigningKeyAlias)</AndroidSigningKeyAlias>
+    <AndroidSigningKeyPass>$(AndroidSigningKeyPass)</AndroidSigningKeyPass>
+    <AndroidSigningStorePass>$(AndroidSigningStorePass)</AndroidSigningStorePass>
+  </PropertyGroup>
+
   <ItemGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">
     <AndroidResource Include="Assets/Icons/icon.png" Link="Resources/drawable/icon.png" />
   </ItemGroup>

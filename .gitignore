@@ -9,3 +9,9 @@
 **/bin/
 **/obj/
 publish/
+
+# Android release-signing material (must never be committed)
+*.keystore
+*.jks
+signing.properties
+scripts/build-release.sh
