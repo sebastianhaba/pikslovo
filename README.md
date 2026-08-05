@@ -26,7 +26,7 @@ The following example shows the translation flow, from selecting text on screen 
 <p align="center">
   <img src="assets/demo/11.jpg" alt="Pikslovo home screen" width="30%" />
   <img src="assets/demo/12.jpg" alt="Pikslovo translation settings" width="30%" />
-  <img src="assets/demo/13.jpg" alt="Pikslovo settings screen" width="30%" />
+  <img src="assets/demo/13.jpg?v=2" alt="Pikslovo settings screen" width="30%" />
   <img src="assets/demo/14.jpg" alt="Pikslovo app interface" width="30%" />
 </p>
 
