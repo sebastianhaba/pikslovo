@@ -4,6 +4,32 @@ Pikslovo is an Android app for translating text visible inside games and other a
 
 It is meant for quick, on-demand translation of what is currently on screen, especially dialogue boxes, menus, and interface text.
 
+![Pikslovo promotional preview](assets/demo/promo.jpg)
+
+## Translation in action
+
+The following example shows the translation flow, from selecting text on screen to reading the translated result.
+
+<p align="center">
+  <img src="assets/demo/5.jpg" alt="Starting a translation session" width="30%" />
+  <img src="assets/demo/6.jpg" alt="Selecting the text to translate" width="30%" />
+  <img src="assets/demo/7.jpg" alt="Preparing the translation" width="30%" />
+</p>
+<p align="center">
+  <img src="assets/demo/8.jpg" alt="Recognizing text on screen" width="30%" />
+  <img src="assets/demo/9.jpg" alt="Displaying the translated overlay" width="30%" />
+  <img src="assets/demo/10.jpg" alt="Reading the completed translation" width="30%" />
+</p>
+
+## App preview
+
+<p align="center">
+  <img src="assets/demo/11.jpg" alt="Pikslovo home screen" width="30%" />
+  <img src="assets/demo/12.jpg" alt="Pikslovo translation settings" width="30%" />
+  <img src="assets/demo/13.jpg" alt="Pikslovo settings screen" width="30%" />
+  <img src="assets/demo/14.jpg" alt="Pikslovo app interface" width="30%" />
+</p>
+
 ## What it does
 
 Pikslovo lets you:
